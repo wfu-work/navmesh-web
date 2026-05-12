@@ -2,7 +2,7 @@
   <div class="device-edit-header">
     <title-label
       title="编辑设备"
-      description="维护设备注册信息、主机基础信息和标签。"
+      description="维护设备注册身份、接入端口和 Web 映射参数。"
       [showBack]="true"
     />
   </div>
@@ -11,31 +11,26 @@
     <nz-spin [nzSpinning]="loading">
       <form nz-form [formGroup]="form" (ngSubmit)="submit()">
         <se-container col="2" nzLayout="vertical">
-          <se label="设备名称" required error="请输入设备名称">
-            <input id="name" nz-input formControlName="name" placeholder="例如 prod-device-01" />
+          <se label="序列号" required error="请输入设备序列号">
+            <input id="sncode" nz-input formControlName="sncode" placeholder="例如 test01" />
+          </se>
+          <se label="设备别名" required error="请输入设备别名">
+            <input id="alias" nz-input formControlName="alias" placeholder="默认与序列号一致，例如 test01" />
+          </se>
+          <se label="业务设备 ID">
+            <input id="deviceId" nz-input formControlName="deviceId" placeholder="例如 1050001" />
+          </se>
+          <se label="设备类型" required error="请输入设备类型">
+            <input id="deviceType" nz-input formControlName="deviceType" placeholder="例如 ssh、radar、rain、data" />
+          </se>
+          <se label="备注">
+            <input id="remark" nz-input formControlName="remark" placeholder="例如 深圳工厂1号测试网关" />
           </se>
           <se label="主机名" required error="请输入主机名">
             <input id="hostname" nz-input formControlName="hostname" placeholder="例如 web-01" />
           </se>
-          <se label="IP">
-            <input id="ip" nz-input formControlName="ip" placeholder="例如 192.168.1.10" />
-          </se>
-          <se label="操作系统">
-            <input id="os" nz-input formControlName="os" placeholder="例如 Linux" />
-          </se>
-          <se label="系统版本">
-            <input
-              id="osVersion"
-              nz-input
-              formControlName="osVersion"
-              placeholder="例如 Ubuntu 24.04"
-            />
-          </se>
-          <se label="内核版本">
-            <input id="kernel" nz-input formControlName="kernel" placeholder="例如 6.8.0" />
-          </se>
-          <se label="架构">
-            <input id="arch" nz-input formControlName="arch" placeholder="例如 amd64" />
+          <se label="本机 IP">
+            <input id="hostIp" nz-input formControlName="hostIp" placeholder="例如 192.168.1.10" />
           </se>
           <se label="客户端版本">
             <input
@@ -45,21 +40,22 @@
               placeholder="例如 v1.0.0"
             />
           </se>
+          <se label="本机 SSH 端口">
+            <nz-input-number id="sshPort" formControlName="sshPort" [nzMin]="1" [nzMax]="65535" />
+          </se>
+          <se label="本机 Web 端口">
+            <nz-input-number id="webPort" formControlName="webPort" [nzMin]="1" [nzMax]="65535" />
+          </se>
+          <se label="Web 映射域名" col="1">
+            <input id="webDomain" nz-input formControlName="webDomain" placeholder="例如 qx.navfirst.com" />
+          </se>
           <se label="状态">
             <nz-select id="status" formControlName="status">
-              <nz-option [nzValue]="0" nzLabel="已注册" />
-              <nz-option [nzValue]="1" nzLabel="在线" />
-              <nz-option [nzValue]="2" nzLabel="离线" />
+              <nz-option [nzValue]="1" nzLabel="已注册" />
+              <nz-option [nzValue]="2" nzLabel="在线" />
+              <nz-option [nzValue]="3" nzLabel="离线" />
+              <nz-option [nzValue]="4" nzLabel="已禁用" />
             </nz-select>
-          </se>
-          <se label="标签" col="1">
-            <textarea
-              id="tags"
-              nz-input
-              formControlName="tags"
-              rows="3"
-              placeholder="多个标签用英文逗号分隔，例如 prod, web, linux"
-            ></textarea>
           </se>
         </se-container>
 

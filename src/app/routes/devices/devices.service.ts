@@ -18,12 +18,16 @@ export interface DeviceTokenPayload {
 
 export interface DevicePayload {
   guid?: string;
-  name: string;
+  name?: string;
+  sncode?: string;
+  deviceId?: string;
   hostname: string;
   alias?: string;
   remark?: string;
   deviceType?: string;
+  type?: string;
   hostIp?: string;
+  sourceIp?: string;
   sshPort?: number;
   webPort?: number;
   webDomain?: string;
@@ -170,6 +174,10 @@ export class DevicesService {
 
   disableToken(deviceGuid: string, tokenGuid: string): Observable<boolean> {
     return this.http.delete<boolean>(`/devices/${deviceGuid}/tokens/${tokenGuid}`);
+  }
+
+  enableToken(deviceGuid: string, tokenGuid: string): Observable<boolean> {
+    return this.http.post<boolean>(`/devices/${deviceGuid}/tokens/${tokenGuid}/enable`, {});
   }
 
   rotateToken(guid: string): Observable<DeviceTokenResult> {

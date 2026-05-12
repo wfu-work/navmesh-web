@@ -44,7 +44,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
                 <span>设备列表</span>
               </li>
               <li nz-menu-item nzMatchRouter routerLink="/devices/tokens">
-                <span>设备令牌</span>
+                <span>接入凭证</span>
               </li>
               <li nz-menu-item nzMatchRouter routerLink="/devices/type-defaults">
                 <span>设备类型</span>

@@ -41,7 +41,6 @@ export class DeviceListComponent implements OnInit {
   protected loading = false;
 
   protected statusTag: STColumnTag = {
-    0: { text: '已注册', color: 'gold' },
     1: { text: '已注册', color: 'gold' },
     2: { text: '在线', color: 'green' },
     3: { text: '离线', color: 'red' },
@@ -53,14 +52,16 @@ export class DeviceListComponent implements OnInit {
   };
 
   columns: STColumn<Device>[] = [
-    { title: '设备', index: 'name', render: 'nameRender', fixed: 'left', width: 220 },
-    { title: '主机名', index: 'hostname', render: 'hostnameRender', width: 180 },
-    { title: 'IP', index: 'ip', render: 'ipRender', width: 220 },
-    { title: '设备类型', index: 'deviceType', width: 130, default: '-' },
-    { title: '客户端版本', index: 'clientVersion', width: 130, default: '-' },
+    { title: '设备', index: 'alias', render: 'nameRender', fixed: 'left', width: 240 },
+    { title: '设备类型', index: 'deviceType', width: 120, default: '-' },
+    { title: '业务设备 ID', index: 'deviceId', width: 150, default: '-' },
+    { title: '主机 / 本机 IP', index: 'hostIp', render: 'hostRender', width: 220 },
+    { title: '来源 IP', index: 'sourceIp', width: 150, default: '-' },
+    { title: '接入端口', index: 'sshPort', render: 'accessRender', width: 160 },
+    { title: 'Web 映射域名', index: 'webDomain', render: 'webDomainRender', width: 200 },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 120 },
     {
-      title: '最近心跳',
+      title: '最后在线',
       index: 'lastHeartbeatAt',
       type: 'date',
       dateFormat: 'yyyy-MM-dd HH:mm:ss',
@@ -95,7 +96,7 @@ export class DeviceListComponent implements OnInit {
           className: 'text-error',
           click: (item) => this.delete(item.guid),
           pop: {
-            title: '删除后会禁用该设备接入，确认继续？',
+            title: '禁用后设备将无法继续接入，确认继续？',
             okType: 'danger',
             icon: 'delete',
           },
@@ -143,13 +144,13 @@ export class DeviceListComponent implements OnInit {
     this.devicesService.delete(guid).subscribe({
       next: (r) => {
         if (r) {
-          this.message.success('删除成功');
+          this.message.success('设备已禁用');
           this.getData();
         } else {
-          this.message.error('删除失败');
+          this.message.error('设备禁用失败');
         }
       },
-      error: () => this.message.error('删除失败'),
+      error: () => this.message.error('设备禁用失败'),
     });
   }
 
@@ -238,16 +239,19 @@ export class DeviceListComponent implements OnInit {
   private normalizeDevice(item: Device): Device {
     return {
       ...item,
-      name: this.firstText(item.name, item.alias, item.sncode, item.guid),
+      name: this.firstText(item.alias, item.name, item.sncode, item.deviceId, item.device_id, item.hostname, item.guid),
       hostname: this.firstText(item.hostname, item.remark),
-      ip: this.firstText(item.ip, item.hostIp, item.host_ip, item.sourceIp, item.source_ip),
+      ip: this.firstText(item.sourceIp, item.source_ip, item.ip),
+      sourceIp: this.firstText(item.sourceIp, item.source_ip, item.ip),
+      hostIp: this.firstText(item.hostIp, item.host_ip, item.privateIp, item.private_ip),
+      deviceId: this.firstText(item.deviceId, item.device_id),
       deviceType: this.firstText(item.deviceType, item.device_type),
       sshPort: this.firstNumber(item.sshPort, item.ssh_port),
       webPort: this.firstNumber(item.webPort, item.web_port),
       webDomain: this.firstText(item.webDomain, item.web_domain),
       osVersion: this.firstText(item.osVersion, item.os_version),
       kernel: this.firstText(item.kernel, item.kernelVersion, item.kernel_version),
-      privateIp: this.firstText(item.privateIp, item.private_ip),
+      privateIp: this.firstText(item.privateIp, item.private_ip, item.hostIp, item.host_ip),
       clientVersion: this.firstText(item.clientVersion, item.client_version, item.clientVersion, item.client_version),
       lastHeartbeatAt: this.firstNumber(item.lastHeartbeatAt, item.last_heartbeat_at, item.lastSeenTime, item.last_seen_time),
       lastMetricAt: this.firstNumber(item.lastMetricAt, item.last_metric_at),

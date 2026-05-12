@@ -34,16 +34,18 @@ export class DeviceEditComponent implements OnInit {
   protected saving = false;
 
   protected form = this.fb.group({
-    name: ['', [Validators.required]],
+    sncode: ['', [Validators.required]],
+    alias: ['', [Validators.required]],
+    deviceId: [''],
+    deviceType: ['', [Validators.required]],
+    remark: [''],
     hostname: ['', [Validators.required]],
-    os: [''],
-    osVersion: [''],
-    kernel: [''],
-    arch: [''],
-    ip: [''],
+    hostIp: [''],
     clientVersion: [''],
-    status: [0],
-    tags: [''],
+    sshPort: [22],
+    webPort: [0],
+    webDomain: [''],
+    status: [1],
   });
 
   ngOnInit(): void {
@@ -68,16 +70,18 @@ export class DeviceEditComponent implements OnInit {
       .subscribe({
         next: ({ device }) => {
           this.form.patchValue({
-            name: device.name,
+            sncode: device.sncode,
+            alias: device.alias || device.sncode,
+            deviceId: device.deviceId || device.device_id || '',
+            deviceType: device.deviceType || device.device_type || '',
+            remark: device.remark || '',
             hostname: device.hostname,
-            os: device.os,
-            osVersion: device.osVersion,
-            kernel: device.kernel,
-            arch: device.arch,
-            ip: device.ip,
+            hostIp: device.hostIp || device.host_ip || device.privateIp || device.private_ip || '',
             clientVersion: device.clientVersion,
+            sshPort: device.sshPort || device.ssh_port || 22,
+            webPort: device.webPort || device.web_port || 0,
+            webDomain: device.webDomain || device.web_domain || '',
             status: this.normalizeStatus(device.status),
-            tags: this.formatTags(device.tags).join(', '),
           });
         },
         error: () => this.message.error('设备信息加载失败'),
@@ -119,42 +123,31 @@ export class DeviceEditComponent implements OnInit {
   private toPayload(): DevicePayload {
     const value = this.form.getRawValue();
     return {
-      name: value.name.trim(),
+      name: value.alias.trim(),
+      sncode: value.sncode.trim(),
+      alias: value.alias.trim(),
+      deviceId: value.deviceId.trim(),
+      deviceType: value.deviceType.trim(),
+      type: value.deviceType.trim(),
+      remark: value.remark.trim(),
       hostname: value.hostname.trim(),
-      os: value.os.trim(),
-      osVersion: value.osVersion.trim(),
-      kernel: value.kernel.trim(),
-      arch: value.arch.trim(),
-      ip: value.ip.trim(),
+      hostIp: value.hostIp.trim(),
       clientVersion: value.clientVersion.trim(),
+      sshPort: value.sshPort,
+      webPort: value.webPort,
+      webDomain: value.webDomain.trim(),
       status: this.normalizeStatus(value.status),
-      tags: value.tags
-        .split(',')
-        .map((tag) => tag.trim())
-        .filter(Boolean),
     };
   }
 
-  private normalizeStatus(status: DevicePayload['status'] | number): 0 | 1 | 2 {
-    const map: Record<string, 0 | 1 | 2> = {
-      registered: 0,
-      online: 1,
-      offline: 2,
+  private normalizeStatus(status: DevicePayload['status'] | number): 1 | 2 | 3 | 4 {
+    const map: Record<string, 1 | 2 | 3 | 4> = {
+      registered: 1,
+      online: 2,
+      offline: 3,
+      disabled: 4,
     };
     const normalized = map[String(status)] ?? Number(status);
-    return normalized === 1 || normalized === 2 ? normalized : 0;
-  }
-
-  private formatTags(value: string): string[] {
-    if (!value) return [];
-    try {
-      const tags = JSON.parse(value) as unknown;
-      return Array.isArray(tags) ? tags.map(String) : [];
-    } catch {
-      return value
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
-    }
+    return normalized === 2 || normalized === 3 || normalized === 4 ? normalized : 1;
   }
 }

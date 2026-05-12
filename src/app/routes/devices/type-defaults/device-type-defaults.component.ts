@@ -13,7 +13,7 @@ import { DevicesService, DeviceTypeDefault } from '../devices.service';
     <section class="device-page">
       <div class="device-header">
         <title-label
-          title="设备类型默认值"
+          title="设备类型"
           description="查看不同设备类型的默认 Web 端口、默认映射域名和接入说明。"
         />
       </div>

@@ -40,8 +40,8 @@ export class DeviceDetailComponent implements OnInit {
   };
 
   protected readonly tokenColumns: STColumn<DeviceToken>[] = [
-    { title: '令牌', index: 'name', render: 'tokenNameRender', width: 240 },
-    { title: '前缀', index: 'tokenPrefix', render: 'tokenPrefixRender', width: 160 },
+    { title: '凭证名称', index: 'name', render: 'tokenNameRender', width: 240 },
+    { title: '凭证前缀', index: 'tokenPrefix', render: 'tokenPrefixRender', width: 160 },
     { title: '状态', index: 'status', type: 'tag', tag: this.tokenStatusTag, width: 100 },
     { title: '过期时间', index: 'expiresAt', render: 'expiresAtRender', width: 180 },
     {
@@ -57,12 +57,22 @@ export class DeviceDetailComponent implements OnInit {
       width: 100,
       buttons: [
         {
+          icon: 'check-circle',
+          iif: (item) => item.status === 0,
+          click: (item) => this.enableToken(item),
+          pop: {
+            title: '启用后设备可继续使用该凭证接入，确认继续？',
+            okType: 'primary',
+            icon: 'check-circle',
+          },
+        },
+        {
           icon: 'stop',
           className: 'text-error',
           iif: (item) => item.status !== 0,
           click: (item) => this.disableToken(item),
           pop: {
-            title: '禁用后设备将无法使用该 Token 接入，确认继续？',
+            title: '禁用后设备将无法使用该凭证接入，确认继续？',
             okType: 'danger',
             icon: 'stop',
           },
@@ -203,19 +213,32 @@ export class DeviceDetailComponent implements OnInit {
     const deviceGuid = token.deviceGuid || this.guid;
     this.devicesService.disableToken(deviceGuid, token.guid).subscribe({
       next: () => {
-        this.message.success('Token 已禁用');
+        this.message.success('凭证已禁用');
         this.load();
       },
-      error: () => this.message.error('Token 禁用失败'),
+      error: () => this.message.error('凭证禁用失败'),
+    });
+  }
+
+  protected enableToken(token: DeviceToken): void {
+    const deviceGuid = token.deviceGuid || this.guid;
+    this.devicesService.enableToken(deviceGuid, token.guid).subscribe({
+      next: () => {
+        this.message.success('凭证已启用');
+        this.load();
+      },
+      error: () => this.message.error('凭证启用失败'),
     });
   }
 
   private normalizeDevice(item: Device): Device {
     return {
       ...item,
-      name: this.firstText(item.name, item.alias, item.sncode, item.guid),
+      name: this.firstText(item.alias, item.name, item.sncode, item.deviceId, item.device_id, item.hostname, item.guid),
       hostname: this.firstText(item.hostname, item.remark),
-      ip: this.firstText(item.ip, item.hostIp, item.host_ip, item.sourceIp, item.source_ip),
+      ip: this.firstText(item.sourceIp, item.source_ip, item.ip),
+      sourceIp: this.firstText(item.sourceIp, item.source_ip, item.ip),
+      hostIp: this.firstText(item.hostIp, item.host_ip, item.privateIp, item.private_ip),
       deviceId: this.firstText(item.deviceId, item.device_id),
       deviceType: this.firstText(item.deviceType, item.device_type),
       sshPort: this.firstNumber(item.sshPort, item.ssh_port),
@@ -223,7 +246,7 @@ export class DeviceDetailComponent implements OnInit {
       webDomain: this.firstText(item.webDomain, item.web_domain),
       osVersion: this.firstText(item.osVersion, item.os_version),
       kernel: this.firstText(item.kernel, item.kernelVersion, item.kernel_version),
-      privateIp: this.firstText(item.privateIp, item.private_ip),
+      privateIp: this.firstText(item.privateIp, item.private_ip, item.hostIp, item.host_ip),
       clientVersion: this.firstText(item.clientVersion, item.client_version, item.clientVersion, item.client_version),
       lastHeartbeatAt: this.firstNumber(item.lastHeartbeatAt, item.last_heartbeat_at, item.lastSeenTime, item.last_seen_time),
       lastMetricAt: this.firstNumber(item.lastMetricAt, item.last_metric_at),

@@ -3,7 +3,7 @@
     <div>
       <title-label
         title="设备列表"
-        description="查看边缘设备注册信息、在线状态、设备别名、来源 IP、客户端版本和最近心跳。"
+        description="查看设备序列号、业务设备 ID、设备类型、接入地址和最后在线时间。"
       />
     </div>
   </div>
@@ -17,7 +17,7 @@
           <input
             nz-input
             [(ngModel)]="q.content"
-            placeholder="搜索别名、序列号、主机名或 IP"
+            placeholder="搜索序列号、别名、备注或业务设备 ID"
             (keydown.enter)="q.page = 1; getData()"
           />
         </nz-input-wrapper>
@@ -54,31 +54,31 @@
               <strong>{{ item.name || item.hostname || item.guid }}</strong>
             </ellipsis>
             <div class="device-name-meta">
-              <span>{{ item.guid }}</span>
+              <span>{{ item.sncode || item.guid }}</span>
               <span class="device-state-pill">{{ statusText(item.status) }}</span>
             </div>
           </div>
         </div>
       </ng-template>
 
-      <ng-template st-row="ipRender" let-item>
+      <ng-template st-row="hostRender" let-item>
         <div class="device-ip-cell">
-          <span><b>源</b>{{ item.ip || '-' }}</span>
-          <span><b>本</b>{{ item.privateIp || item.hostIp || '-' }}</span>
+          <span><b>主</b>{{ item.hostname || '-' }}</span>
+          <span><b>IP</b>{{ item.hostIp || '-' }}</span>
         </div>
       </ng-template>
 
-      <ng-template st-row="hostnameRender" let-item>
+      <ng-template st-row="accessRender" let-item>
+        <div class="device-ip-cell">
+          <span><b>SSH</b>{{ item.sshPort || '-' }}</span>
+          <span><b>Web</b>{{ item.webPort || '-' }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="webDomainRender" let-item>
         <ellipsis [lines]="1" tooltip>
-          {{ item.hostname || '-' }}
+          {{ item.webDomain || '-' }}
         </ellipsis>
-      </ng-template>
-
-      <ng-template st-row="osRender" let-item>
-        <div class="device-os-cell">
-          <span>{{ item.os || '-' }}</span>
-          <small>{{ item.osVersion || '-' }}</small>
-        </div>
       </ng-template>
 
       <ng-template st-row="tagsRender" let-item>
@@ -94,20 +94,21 @@
       <ng-template #expand let-item>
         <sv-container col="3">
           <sv label="设备名称">{{ item.name || '-' }}</sv>
+          <sv label="别名">{{ item.alias || '-' }}</sv>
           <sv label="GUID">{{ item.guid }}</sv>
           <sv label="序列号">{{ item.sncode || '-' }}</sv>
-          <sv label="设备别名">{{ item.alias || '-' }}</sv>
+          <sv label="业务设备 ID">{{ item.deviceId || '-' }}</sv>
           <sv label="设备类型">{{ item.deviceType || '-' }}</sv>
+          <sv label="备注">{{ item.remark || '-' }}</sv>
           <sv label="主机名">{{ item.hostname || '-' }}</sv>
-          <sv label="来源 IP">{{ item.ip || '-' }}</sv>
-          <sv label="本机 IP">{{ item.privateIp || item.hostIp || '-' }}</sv>
-          <sv label="操作系统">{{ item.os || '-' }}</sv>
-          <sv label="系统版本">{{ item.osVersion || '-' }}</sv>
-          <sv label="内核版本">{{ item.kernel || '-' }}</sv>
-          <sv label="架构">{{ item.arch || '-' }}</sv>
+          <sv label="本机 IP">{{ item.hostIp || '-' }}</sv>
+          <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
+          <sv label="本机 SSH 端口">{{ item.sshPort || '-' }}</sv>
+          <sv label="本机 Web 端口">{{ item.webPort || '-' }}</sv>
+          <sv label="Web 映射域名">{{ item.webDomain || '-' }}</sv>
           <sv label="客户端版本">{{ item.clientVersion || '-' }}</sv>
           <sv label="状态">{{ statusText(item.status) }}</sv>
-          <sv label="最近心跳">{{ item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+          <sv label="最后在线">{{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
           <sv label="创建时间">{{ item.createTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
         </sv-container>
       </ng-template>

@@ -2,20 +2,20 @@
   <div class="device-header">
     <div>
       <title-label
-        title="设备 Token"
-        description="查看设备接入 Token，并禁用不再允许使用的接入凭证。"
+        title="设备接入凭证"
+        description="按设备查看接入凭证，并禁用不再允许使用的凭证。"
       />
     </div>
   </div>
 
   <nz-card class="card-border" [nzBordered]="false">
     <div class="d-flex justify-content-between mb-lg token-toolbar">
-      <h2>令牌列表</h2>
+      <h2>凭证列表</h2>
       <div class="d-flex token-actions">
         <nz-select
           class="token-device-select"
           nzShowSearch
-          nzPlaceHolder="请选择设备"
+          nzPlaceHolder="选择设备"
           [(ngModel)]="selectedDeviceGuid"
           [nzLoading]="loadingDevices"
           (ngModelChange)="deviceChange()"

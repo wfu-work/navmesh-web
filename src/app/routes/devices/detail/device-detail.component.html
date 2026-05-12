@@ -2,7 +2,7 @@
   <div class="device-header">
     <title-label
       [title]="title()"
-      description="查看设备注册信息、运行状态、最近上报时间和接入 Token。"
+      description="查看设备注册身份、接入配置、最后在线时间和接入凭证。"
       [showBack]="true"
     />
 
@@ -23,7 +23,7 @@
           <strong [class]="statusClass(item.status)">{{ statusText(item.status) }}</strong>
         </article>
         <article class="summary-item">
-          <span>最近心跳</span>
+          <span>最后在线</span>
           <strong>{{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</strong>
         </article>
         <article class="summary-item">
@@ -31,7 +31,7 @@
           <strong>{{ item.deviceType || '-' }}</strong>
         </article>
         <article class="summary-item">
-          <span>启用 Token</span>
+          <span>启用凭证</span>
           <strong>{{ enabledTokenCount() }} / {{ tokens.length }}</strong>
         </article>
       </div>
@@ -45,33 +45,33 @@
             <div>
               <strong>{{ item.name || item.hostname || item.guid }}</strong>
               <p class="detail-device-meta">
-                <span>{{ item.remark || item.alias || item.sncode || '未填写备注' }}</span>
+                <span>{{ item.remark || item.sncode || item.deviceId || '未填写备注' }}</span>
                 <span class="device-state-pill">{{ statusText(item.status) }}</span>
               </p>
             </div>
           </div>
           <sv-container col="2">
             <sv label="设备名称">{{ item.name || '-' }}</sv>
+            <sv label="设备别名">{{ item.alias || '-' }}</sv>
             <sv label="GUID">{{ item.guid }}</sv>
             <sv label="序列号">{{ item.sncode || '-' }}</sv>
             <sv label="业务设备 ID">{{ item.deviceId || '-' }}</sv>
-            <sv label="设备别名">{{ item.alias || '-' }}</sv>
             <sv label="设备类型">{{ item.deviceType || '-' }}</sv>
             <sv label="备注">{{ item.remark || '-' }}</sv>
             <sv label="主机名">{{ item.hostname || '-' }}</sv>
-            <sv label="来源 IP">{{ item.sourceIp || item.ip || '-' }}</sv>
-            <sv label="设备本机 IP">{{ item.hostIp || item.privateIp || '-' }}</sv>
           </sv-container>
         </nz-card>
 
-        <nz-card class="card-border" [nzBordered]="false" nzTitle="运行信息">
+        <nz-card class="card-border" [nzBordered]="false" nzTitle="接入信息">
           <sv-container col="2">
-            <sv label="客户端版本">{{ item.clientVersion || '-' }}</sv>
-            <sv label="状态">{{ statusText(item.status) }}</sv>
+            <sv label="本机 IP">{{ item.hostIp || '-' }}</sv>
+            <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
             <sv label="本机 SSH 端口">{{ item.sshPort || '-' }}</sv>
             <sv label="本机 Web 端口">{{ item.webPort || '-' }}</sv>
-            <sv label="Web 映射域">{{ item.webDomain || '-' }}</sv>
-            <sv label="最近心跳">
+            <sv label="Web 映射域名">{{ item.webDomain || '-' }}</sv>
+            <sv label="客户端版本">{{ item.clientVersion || '-' }}</sv>
+            <sv label="状态">{{ statusText(item.status) }}</sv>
+            <sv label="最后在线">
               {{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
             </sv>
             <sv label="创建时间">{{ item.createTime ? (item.createTime | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
@@ -82,10 +82,10 @@
 
       <nz-card class="card-border" [nzBordered]="false">
         <div class="detail-card-title">
-          <h2>接入 Token</h2>
+          <h2>接入凭证</h2>
           <button nz-button nzShape="round" (click)="tokenManage()">
             <nz-icon nzType="key" />
-            管理 Token
+            管理凭证
           </button>
         </div>
 

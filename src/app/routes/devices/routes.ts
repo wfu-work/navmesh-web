@@ -16,12 +16,12 @@ export const routes: Routes = [
   {
     path: 'tokens',
     component: DeviceTokensComponent,
-    data: { title: '设备 Token' },
+    data: { title: '设备接入凭证' },
   },
   {
     path: 'type-defaults',
     component: DeviceTypeDefaultsComponent,
-    data: { title: '设备类型默认值' },
+    data: { title: '设备类型' },
   },
   {
     path: 'edit/:guid',

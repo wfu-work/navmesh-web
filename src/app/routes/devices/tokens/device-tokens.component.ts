@@ -37,8 +37,8 @@ export class DeviceTokensComponent implements OnInit {
   };
 
   protected columns: STColumn<DeviceToken>[] = [
-    { title: '令牌', index: 'name', render: 'nameRender', fixed: 'left', width: 240 },
-    { title: '前缀', index: 'tokenPrefix', render: 'prefixRender', width: 160 },
+    { title: '凭证名称', index: 'name', render: 'nameRender', fixed: 'left', width: 240 },
+    { title: '凭证前缀', index: 'tokenPrefix', render: 'prefixRender', width: 160 },
     { title: '状态', index: 'status', type: 'tag', tag: this.tokenStatusTag, width: 120 },
     {
       title: '最后使用',
@@ -65,12 +65,22 @@ export class DeviceTokensComponent implements OnInit {
       width: 100,
       buttons: [
         {
+          icon: 'check-circle',
+          iif: (item) => item.status === 0,
+          click: (item) => this.enableToken(item),
+          pop: {
+            title: '启用后设备可继续使用该凭证接入，确认继续？',
+            okType: 'primary',
+            icon: 'check-circle',
+          },
+        },
+        {
           icon: 'stop',
           className: 'text-error',
           iif: (item) => item.status !== 0,
           click: (item) => this.disableToken(item),
           pop: {
-            title: '禁用后设备将无法使用该令牌接入，确认继续？',
+            title: '禁用后设备将无法使用该凭证接入，确认继续？',
             okType: 'danger',
             icon: 'stop',
           },
@@ -127,7 +137,7 @@ export class DeviceTokensComponent implements OnInit {
         next: (res) => {
           this.tokens = (res.tokens ?? []).map((token) => this.normalizeToken(token));
         },
-        error: () => this.message.error('令牌加载失败'),
+        error: () => this.message.error('凭证加载失败'),
       });
   }
 
@@ -135,10 +145,21 @@ export class DeviceTokensComponent implements OnInit {
     const deviceGuid = token.deviceGuid || this.selectedDeviceGuid;
     this.devicesService.disableToken(deviceGuid, token.guid).subscribe({
       next: () => {
-        this.message.success('令牌已禁用');
+        this.message.success('凭证已禁用');
         this.loadTokens();
       },
-      error: () => this.message.error('禁用失败'),
+      error: () => this.message.error('凭证禁用失败'),
+    });
+  }
+
+  protected enableToken(token: DeviceToken): void {
+    const deviceGuid = token.deviceGuid || this.selectedDeviceGuid;
+    this.devicesService.enableToken(deviceGuid, token.guid).subscribe({
+      next: () => {
+        this.message.success('凭证已启用');
+        this.loadTokens();
+      },
+      error: () => this.message.error('凭证启用失败'),
     });
   }
 
