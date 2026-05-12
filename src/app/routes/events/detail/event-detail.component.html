@@ -1,0 +1,102 @@
+<section class="event-detail-page">
+  <div class="event-detail-header">
+    <title-label
+      [title]="title()"
+      description="查看事件等级、来源、处理状态、关联设备和原始载荷。"
+      [showBack]="true"
+    />
+
+    <div class="detail-actions">
+      <button nz-button nzShape="round" (click)="back()">返回列表</button>
+      @if (event && event.status !== 1 && event.status !== '1' && event.status !== 2 && event.status !== '2') {
+        <button nz-button nzShape="round" (click)="ack()">
+          <nz-icon nzType="check" />
+          确认
+        </button>
+      }
+      @if (event && event.status !== 2 && event.status !== '2') {
+        <button nz-button nzType="primary" nzDanger nzShape="round" (click)="close()">
+          <nz-icon nzType="close" />
+          关闭
+        </button>
+      }
+    </div>
+  </div>
+
+  <nz-spin [nzSpinning]="loading">
+    @if (event; as item) {
+      <div class="detail-summary">
+        <article class="summary-item">
+          <span>等级</span>
+          <strong>{{ levelText(item.level) }}</strong>
+        </article>
+        <article class="summary-item">
+          <span>状态</span>
+          <strong [class]="statusClass(item.status)">{{ statusText(item.status) }}</strong>
+        </article>
+        <article class="summary-item">
+          <span>来源</span>
+          <strong>{{ sourceText(item.source) }}</strong>
+        </article>
+        <article class="summary-item">
+          <span>发生时间</span>
+          <strong>{{ formatDateTime(item.occurredAt) }}</strong>
+        </article>
+      </div>
+
+      <div class="detail-grid">
+        <nz-card class="card-border" [nzBordered]="false" nzTitle="基础信息">
+          <sv-container col="2">
+            <sv label="事件 GUID">{{ item.guid }}</sv>
+            <sv label="关联设备">{{ deviceName() }}</sv>
+            <sv label="来源">{{ sourceText(item.source) }}</sv>
+            <sv label="等级">{{ levelText(item.level) }}</sv>
+            <sv label="状态">{{ statusText(item.status) }}</sv>
+            <sv label="关闭时间">{{ formatDateTime(item.closedAt) }}</sv>
+            <sv label="标题" col="1">{{ item.title || '-' }}</sv>
+            <sv label="消息" col="1">{{ item.message || '-' }}</sv>
+          </sv-container>
+        </nz-card>
+
+        <nz-card class="card-border" [nzBordered]="false" nzTitle="处理时间线">
+          <div class="timeline">
+            <div class="timeline-item">
+              <span class="dot danger"></span>
+              <div>
+                <strong>事件发生</strong>
+                <p>{{ formatDateTime(item.occurredAt || item.createTime) }}</p>
+              </div>
+            </div>
+            @if (item.status === 1 || item.status === '1' || item.status === 2 || item.status === '2') {
+              <div class="timeline-item">
+                <span class="dot warning"></span>
+                <div>
+                  <strong>事件确认</strong>
+                  <p>{{ formatDateTime(item.updateTime) }}</p>
+                </div>
+              </div>
+            }
+            @if (item.closedAt) {
+              <div class="timeline-item">
+                <span class="dot success"></span>
+                <div>
+                  <strong>事件关闭</strong>
+                  <p>{{ formatDateTime(item.closedAt) }}</p>
+                </div>
+              </div>
+            }
+          </div>
+        </nz-card>
+      </div>
+
+      <nz-card class="card-border" [nzBordered]="false" nzTitle="事件载荷">
+        <pre class="payload">{{ formatPayload(item.payload) }}</pre>
+      </nz-card>
+    } @else if (!loading) {
+      <nz-card class="card-border empty-card" [nzBordered]="false">
+        <h2>未找到事件</h2>
+        <p>当前后端暂未提供单事件详情接口，页面会在最近 500 条事件中查找该 GUID。</p>
+      </nz-card>
+    }
+  </nz-spin>
+</section>

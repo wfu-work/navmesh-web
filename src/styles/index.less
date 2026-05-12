@@ -1,0 +1,320 @@
+/* You can add global styles to this file, and also import other style files */
+@import '@delon/theme/index';
+
+body {
+  margin: 0;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans',
+    sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  color: @heading-color;
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  border-radius: 2px;
+  background: #f0f0f0;
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 2px;
+  background-color: #888;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #555;
+}
+
+* {
+  scrollbar-width: thin;
+}
+
+.card-border {
+  padding: 4px 18px;
+  border-radius: 22px;
+}
+
+.card-border-sm {
+  border-radius: 22px;
+}
+
+.ant-input {
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 32px;
+  font-weight: 460;
+  color: #253044;
+  background-clip: padding-box;
+  outline: none;
+  box-shadow: none;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.ant-input:hover,
+.ant-input:focus {
+  border-color: fade(@primary-color, 24%);
+  border-radius: 32px;
+  background: #f3f7f4;
+  outline: none;
+  box-shadow:
+    inset 0 0 0 0 fade(@primary-color, 10%),
+    0 0 0 0 fade(@primary-color, 8%);
+}
+
+textarea.ant-input {
+  resize: vertical;
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.ant-input-affix-wrapper {
+  border-radius: 32px;
+  background: #f3f7f4;
+}
+
+.ant-input-affix-wrapper-lg {
+  padding: 0 14px;
+}
+
+/* stylelint-disable selector-class-pattern -- Delon sv classes use BEM-style names. */
+.sv__label-width {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+}
+
+.sv__bordered .sv__label {
+  background-color: transparent;
+}
+
+/* stylelint-enable selector-class-pattern */
+.ant-select.ant-select-in-form-item.phone-select {
+  width: 70px;
+}
+
+.ant-card {
+  margin-bottom: 0;
+  color: #fff !important;
+  transition: all 0.3s ease-in-out;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: @primary-color;
+    box-shadow: 0 8px 20px rgb(44 208 205 / 15%);
+  }
+}
+
+.ant-pagination-prev .ant-pagination-item-link,
+.ant-pagination-next .ant-pagination-item-link {
+  border: 1px solid @primary-color-outline;
+  border-radius: 2px;
+  font-size: 12px;
+  text-align: center;
+  background-color: @background-color;
+  outline: none;
+  transition: all 0.3s;
+}
+
+.ant-table {
+  background: transparent;
+}
+
+.ant-table-thead > tr > th {
+  padding-top: 18px;
+  padding-bottom: 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #a2b0c3;
+  background: transparent;
+}
+
+.ant-table-tbody > tr > td {
+  padding-top: 18px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid #eef2f6;
+  background: transparent;
+}
+
+.ant-table-thead > tr > th.ant-table-cell-fix-left,
+.ant-table-thead > tr > th.ant-table-cell-fix-left-last,
+.ant-table-thead > tr > th.ant-table-cell-fix-right,
+.ant-table-thead > tr > th.ant-table-cell-fix-right-first,
+.ant-table-tbody > tr > td.ant-table-cell-fix-left,
+.ant-table-tbody > tr > td.ant-table-cell-fix-left-last,
+.ant-table-tbody > tr > td.ant-table-cell-fix-right,
+.ant-table-tbody > tr > td.ant-table-cell-fix-right-first {
+  background: #fff;
+}
+
+.ant-table-cell-fix-left-last::after,
+.ant-table-cell-fix-right-first::after {
+  top: 12px;
+  bottom: 12px;
+  width: 2px;
+  background: rgb(226 232 240 / 85%);
+  box-shadow: none;
+}
+
+.ant-table-cell-fix-right-first,
+.ant-table-cell-fix-left-last {
+  border-color: #eef2f6;
+}
+
+.ant-pagination {
+  justify-content: end !important;
+}
+
+.ant-modal-content {
+  border-radius: 24px;
+}
+
+.ant-modal-header {
+  border-radius: 24px 24px 0 0;
+}
+
+.ant-dropdown-menu {
+  width: 140px !important;
+  border-radius: 12px !important;
+}
+
+.ant-dropdown-menu-item {
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+
+.ant-form-vertical .ant-form-item-label > label {
+  height: auto;
+  margin-top: 18px;
+}
+
+.ant-select-multiple.ant-select .ant-select-selection-item {
+  background: @brand-emerald-hover;
+}
+
+.ant-select {
+  background: #f3f7f4;
+  border-radius: 32px;
+}
+
+.ant-select:not(.ant-select-customize-input) .ant-select-selector {
+  background: #f3f7f4;
+  border-radius: 32px;
+}
+
+.ant-select-dropdown {
+  overflow: hidden;
+  padding: 8px;
+  border-radius: 18px;
+  box-shadow: 0 14px 36px rgb(36 71 82 / 14%);
+}
+
+.ant-select-item {
+  border-radius: 12px;
+}
+
+.ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+  background: #e6f3ef;
+}
+
+.item-heading {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 15px;
+}
+
+.item-title {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #172033;
+}
+
+.item-heading-title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+.item-heading-bar {
+  flex: none;
+  width: 6px;
+  height: 28px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #9d6200 0%, #b97a12 100%);
+}
+
+.ant-message-notice-content {
+  border-radius: 20px;
+  color: white;
+  background: fade(@brand-emerald-hover, 90%);
+}
+
+.ant-segmented {
+  padding: 5px 8px;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 72%), rgb(238 248 246 / 46%)), rgb(245 249 255 / 58%);
+  backdrop-filter: blur(14px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 78%),
+    0 12px 28px rgb(44 84 98 / 10%);
+}
+
+.ant-segmented-item {
+  border-radius: 10px;
+  color: #60706d;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.ant-segmented-item-label {
+  border-radius: 10px;
+}
+
+.ant-segmented-item-selected {
+  border-radius: 10px;
+  font-weight: 800;
+  color: #117e72;
+  background: rgb(255 255 255 / 74%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 8px 18px rgb(17 126 114 / 13%);
+}
+
+.ant-segmented-thumb {
+  overflow: hidden;
+  border-radius: 10px !important;
+  color: #117e72;
+  background: rgb(255 255 255 / 74%);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 8px 18px rgb(17 126 114 / 13%);
+}
+
+.ant-segmented-thumb-motion {
+  border-radius: 10px !important;
+}

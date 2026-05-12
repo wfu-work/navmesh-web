@@ -1,0 +1,202 @@
+.device-page {
+  min-width: 0;
+}
+
+.device-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.device-name-wrap {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.device-os-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: #4f6174;
+  background: #eef3f1;
+
+  nz-icon {
+    font-size: 16px;
+  }
+}
+
+.os-macos {
+  color: #202733;
+  background: #edf0f5;
+}
+
+.os-windows {
+  color: #1677ff;
+  background: #eaf3ff;
+}
+
+.os-linux {
+  color: #0d8f5d;
+  background: #e7f5f0;
+}
+
+.device-name-cell,
+.device-os-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+
+  strong {
+    color: #223047;
+  }
+
+  span,
+  small {
+    min-width: 0;
+    font-size: 12px;
+    color: #7b8794;
+  }
+}
+
+.device-name-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+
+  > span:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.device-state-pill {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  color: #667789;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 20px;
+  background: #eef2f5;
+}
+
+.device-online {
+  .device-os-icon {
+    border: 1px solid #bfe8d7;
+    color: #0d8f5d;
+    background: #e7f8f0;
+    box-shadow: 0 0 0 3px rgba(13, 143, 93, 0.08);
+  }
+
+  .device-state-pill {
+    color: #0d8f5d;
+    background: #e7f8f0;
+  }
+}
+
+.device-offline {
+  .device-os-icon {
+    border: 1px solid #f1c6c6;
+    color: #b94a48;
+    background: #fff0f0;
+  }
+
+  .device-state-pill {
+    color: #b94a48;
+    background: #fff0f0;
+  }
+
+  .device-name-cell {
+    strong {
+      color: #6f7c89;
+    }
+
+    span {
+      color: #9aa5b1;
+    }
+  }
+}
+
+.device-registered,
+.device-unknown {
+  .device-os-icon {
+    border: 1px solid #f2ddb5;
+    color: #b56a00;
+    background: #fff7e6;
+  }
+
+  .device-state-pill {
+    color: #b56a00;
+    background: #fff7e6;
+  }
+}
+
+.device-ip-cell {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+
+  span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    color: #223047;
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  b {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 6px;
+    color: #0d8f5d;
+    font-size: 11px;
+    font-weight: 850;
+    background: #e7f5f0;
+  }
+}
+
+.tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+
+  span {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #4f6174;
+    background: #f1f5f4;
+  }
+
+  .tag-empty {
+    color: #a4adb7;
+    background: transparent;
+  }
+}
+
+@media (max-width: 767px) {
+  .device-header {
+    display: grid;
+  }
+}

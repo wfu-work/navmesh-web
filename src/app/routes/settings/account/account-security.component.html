@@ -1,0 +1,52 @@
+<section class="account-page">
+  <div class="account-header">
+    <title-label title="账号安全" description="查看当前管理员资料，并维护登录密码。" />
+    <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+      <nz-icon nzType="reload" />
+      刷新
+    </button>
+  </div>
+
+  <div class="account-grid">
+    <nz-card class="card-border" [nzBordered]="false" nzTitle="管理员资料">
+      <nz-spin [nzSpinning]="loading">
+        <sv-container col="1">
+          <sv label="账号">{{ profile?.username || '-' }}</sv>
+          <sv label="状态">{{ statusText(profile?.status) }}</sv>
+          <sv label="创建时间">{{ profile?.createTime ? (timestamp(profile?.createTime) | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
+          <sv label="更新时间">{{ profile?.updateTime ? (timestamp(profile?.updateTime) | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
+        </sv-container>
+      </nz-spin>
+    </nz-card>
+
+    <nz-card class="card-border" [nzBordered]="false" nzTitle="修改密码">
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>当前密码</nz-form-label>
+          <nz-form-control nzErrorTip="请输入当前密码">
+            <password-input formControlName="oldPassword" placeholder="当前密码" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>新密码</nz-form-label>
+          <nz-form-control nzErrorTip="新密码至少 8 位">
+            <password-input formControlName="newPassword" placeholder="至少 8 位" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>确认新密码</nz-form-label>
+          <nz-form-control nzErrorTip="请再次输入新密码">
+            <password-input formControlName="confirmPassword" placeholder="再次输入新密码" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="savePassword()">
+          <nz-icon nzType="save" />
+          保存密码
+        </button>
+      </form>
+    </nz-card>
+  </div>
+</section>

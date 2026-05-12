@@ -1,0 +1,102 @@
+.policy-page {
+  min-width: 0;
+}
+
+.policy-header,
+.policy-toolbar {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.policy-header {
+  margin-bottom: 22px;
+}
+
+.policy-toolbar {
+  margin-bottom: 22px;
+
+  h2 {
+    margin: 0;
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: flex-end;
+
+  input[nz-input],
+  nz-select {
+    width: 170px;
+  }
+}
+
+.policy-name-cell,
+.policy-target-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: #223047;
+  }
+
+  span {
+    color: #7b8794;
+    font-size: 12px;
+  }
+}
+
+.permission-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  color: #0b7d55;
+  font-size: 12px;
+  font-weight: 850;
+  background: #e7f5ef;
+}
+
+.permission-deny {
+  color: #b42318;
+  background: #ffe9e7;
+}
+
+.permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 4px;
+}
+
+@media (max-width: 767px) {
+  .policy-header,
+  .policy-toolbar {
+    display: grid;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-start;
+
+    input[nz-input],
+    nz-select {
+      width: 100%;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+<section class="dashboard-page">
+  <title-label title="工作台" description="实时掌握设备在线、隧道连接、HTTP 映射、访问会话与运行事件。" />
+
+  <div class="dashboard-panels">
+    <app-panel icon="desktop" title="在线设备" value="--" trend="待接入" trendType="neutral" />
+    <app-panel icon="partition" title="活跃隧道" value="--" trend="实时" trendType="neutral" />
+    <app-panel icon="api" title="HTTP 映射" value="--" trend="启用中" trendType="neutral" />
+    <app-panel
+      icon="alert"
+      title="未处理事件"
+      value="--"
+      trend="待处理"
+      trendType="down"
+    />
+  </div>
+
+  <div class="dashboard-widgets">
+    <dashboard-traffic-trend />
+    <dashboard-active-rules />
+  </div>
+</section>

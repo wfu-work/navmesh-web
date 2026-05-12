@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-label="NavMesh logo">
+  <defs>
+    <linearGradient id="navmesh-panel" x1="48" y1="28" x2="154" y2="170" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#f7fffb"/>
+      <stop offset="0.54" stop-color="#e7f6f1"/>
+      <stop offset="1" stop-color="#d7eceb"/>
+    </linearGradient>
+    <linearGradient id="navmesh-ring" x1="40" y1="32" x2="160" y2="168" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10a36d"/>
+      <stop offset="0.58" stop-color="#087f74"/>
+      <stop offset="1" stop-color="#18385d"/>
+    </linearGradient>
+    <linearGradient id="navmesh-link" x1="48" y1="58" x2="152" y2="142" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#14a86f"/>
+      <stop offset="0.58" stop-color="#0b8b76"/>
+      <stop offset="1" stop-color="#1d4269"/>
+    </linearGradient>
+    <filter id="navmesh-soft-shadow" x="-18%" y="-18%" width="136%" height="142%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#17445a" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path
+      d="M100 20 168 59.5v81L100 180l-68-39.5v-81z"
+      fill="url(#navmesh-panel)"
+      stroke="url(#navmesh-ring)"
+      stroke-width="8"
+      filter="url(#navmesh-soft-shadow)"
+    />
+
+    <path d="M60 78h80M60 122h80M78 56v88M122 56v88" stroke="#b9dcd6" stroke-width="5" opacity="0.66"/>
+    <path d="M60 122 78 78l44 44 18-44" stroke="url(#navmesh-link)" stroke-width="10"/>
+    <path d="M78 78h44M78 122h44" stroke="#36ba8b" stroke-width="8" opacity="0.9"/>
+
+    <circle cx="60" cy="122" r="16" fill="#ffffff" stroke="#0c965f" stroke-width="8"/>
+    <circle cx="78" cy="78" r="15" fill="#ffffff" stroke="#12ad77" stroke-width="8"/>
+    <circle cx="122" cy="122" r="15" fill="#ffffff" stroke="#087f74" stroke-width="8"/>
+    <circle cx="140" cy="78" r="16" fill="#ffffff" stroke="#1d4269" stroke-width="8"/>
+
+    <path d="M100 43V28M100 172v-15M35 100H21M179 100h-14" stroke="url(#navmesh-ring)" stroke-width="7"/>
+    <circle cx="100" cy="28" r="6" fill="#10a36d"/>
+    <circle cx="100" cy="172" r="6" fill="#1d4269"/>
+    <circle cx="21" cy="100" r="6" fill="#0b8b76"/>
+    <circle cx="179" cy="100" r="6" fill="#1d4269"/>
+  </g>
+</svg>

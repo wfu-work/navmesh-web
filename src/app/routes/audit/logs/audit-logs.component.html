@@ -1,0 +1,68 @@
+<section class="audit-page">
+  <div class="audit-header">
+    <title-label title="操作审计" description="查询登录、配置保存、禁用资源和密码修改等管理操作记录。" />
+    <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+      <nz-icon nzType="reload" />
+      刷新
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="audit-toolbar">
+      <h2>审计日志</h2>
+      <div class="toolbar-actions">
+        <input nz-input [(ngModel)]="q.actor" placeholder="操作者" (keydown.enter)="search()" />
+        <nz-select nzAllowClear nzPlaceHolder="动作" [(ngModel)]="q.action" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部动作" />
+          <nz-option nzValue="login" nzLabel="登录" />
+          <nz-option nzValue="login_failed" nzLabel="登录失败" />
+          <nz-option nzValue="save" nzLabel="保存" />
+          <nz-option nzValue="disable" nzLabel="禁用" />
+          <nz-option nzValue="change_password" nzLabel="改密" />
+        </nz-select>
+        <input nz-input [(ngModel)]="q.resource" placeholder="资源" (keydown.enter)="search()" />
+        <input nz-input [(ngModel)]="q.resourceId" placeholder="资源 ID" (keydown.enter)="search()" />
+        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
+        <button nz-button nzShape="round" (click)="reset()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="data"
+      [columns]="columns"
+      (change)="tableChange($event)"
+      bordered="false"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      [expand]="expand"
+      [expandRowByClick]="true"
+      [scroll]="{ x: '1320px' }"
+    >
+      <ng-template st-row="actorRender" let-item>
+        <strong class="audit-actor">{{ item.actor || '-' }}</strong>
+      </ng-template>
+
+      <ng-template st-row="resourceRender" let-item>
+        <code class="audit-code">{{ item.resourceId || '-' }}</code>
+      </ng-template>
+
+      <ng-template st-row="messageRender" let-item>
+        <ellipsis [lines]="1" tooltip>{{ item.message || '-' }}</ellipsis>
+      </ng-template>
+
+      <ng-template #expand let-item>
+        <sv-container col="3">
+          <sv label="操作者">{{ item.actor || '-' }}</sv>
+          <sv label="动作">{{ actionText(item.action) }}</sv>
+          <sv label="资源">{{ item.resource || '-' }}</sv>
+          <sv label="资源 ID">{{ item.resourceId || '-' }}</sv>
+          <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
+          <sv label="时间">{{ item.createTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+          <sv label="说明" col="1">{{ item.message || '-' }}</sv>
+        </sv-container>
+      </ng-template>
+    </st>
+  </nz-card>
+</section>

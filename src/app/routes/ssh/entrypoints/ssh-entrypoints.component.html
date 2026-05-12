@@ -1,0 +1,79 @@
+<section class="ssh-page">
+  <div class="ssh-header">
+    <title-label
+      title="SSH 入口地址"
+      description="管理用于区分设备 SSH 访问的 IPv4/IPv6 入口地址池和绑定状态。"
+    />
+    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+      <nz-icon nzType="plus" />
+      新增入口
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <st
+      [data]="data"
+      [columns]="columns"
+      [loading]="loading"
+      bordered="false"
+      [page]="{ show: false }"
+      [scroll]="{ x: '1100px' }"
+    >
+      <ng-template st-row="ipRender" let-item>
+        <code class="ssh-code">{{ item.ip }}</code>
+      </ng-template>
+
+      <ng-template st-row="deviceRender" let-item>
+        <div class="ssh-device-cell">
+          <strong>{{ deviceName(item.deviceGuid) }}</strong>
+          @if (item.deviceGuid) {
+            <span>{{ item.deviceGuid }}</span>
+          }
+        </div>
+      </ng-template>
+    </st>
+  </nz-card>
+
+  <nz-modal
+    [(nzVisible)]="modalVisible"
+    nzTitle="SSH 入口地址"
+    [nzOkLoading]="saving"
+    (nzOnCancel)="modalVisible = false"
+    (nzOnOk)="save()"
+  >
+    <ng-container *nzModalContent>
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>入口 IP</nz-form-label>
+          <nz-form-control nzErrorTip="请输入入口 IP">
+            <input nz-input formControlName="ip" placeholder="例如 2400:xxxx::1001 或 203.0.113.10" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>绑定设备</nz-form-label>
+          <nz-form-control>
+            <nz-select nzShowSearch nzAllowClear formControlName="deviceGuid" nzPlaceHolder="可先留空，后续由 SSH 别名绑定">
+              @for (device of devices; track device.guid) {
+                <nz-option
+                  [nzValue]="device.guid"
+                  [nzLabel]="device.alias || device.sncode || device.hostname || device.guid"
+                />
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>状态</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="status">
+              <nz-option [nzValue]="1" nzLabel="启用" />
+              <nz-option [nzValue]="0" nzLabel="禁用" />
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+    </ng-container>
+  </nz-modal>
+</section>

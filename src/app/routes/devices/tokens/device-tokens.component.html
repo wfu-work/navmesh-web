@@ -1,0 +1,63 @@
+<section class="device-page">
+  <div class="device-header">
+    <div>
+      <title-label
+        title="设备 Token"
+        description="查看设备接入 Token，并禁用不再允许使用的接入凭证。"
+      />
+    </div>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="d-flex justify-content-between mb-lg token-toolbar">
+      <h2>令牌列表</h2>
+      <div class="d-flex token-actions">
+        <nz-select
+          class="token-device-select"
+          nzShowSearch
+          nzPlaceHolder="请选择设备"
+          [(ngModel)]="selectedDeviceGuid"
+          [nzLoading]="loadingDevices"
+          (ngModelChange)="deviceChange()"
+        >
+          @for (device of devices; track device.guid) {
+            <nz-option
+              [nzValue]="device.guid"
+              [nzLabel]="device.name || device.hostname || device.guid"
+            />
+          }
+        </nz-select>
+      </div>
+    </div>
+
+    <st
+      [data]="tokens"
+      [columns]="columns"
+      [loading]="loadingTokens"
+      bordered="false"
+      [page]="{ show: false }"
+      [scroll]="{ x: '1200px' }"
+    >
+      <ng-template st-row="nameRender" let-item>
+        <div class="device-name-cell">
+          <ellipsis [lines]="1" tooltip>
+            <strong>{{ item.name || '-' }}</strong>
+          </ellipsis>
+          <span>{{ item.guid }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="prefixRender" let-item>
+        <code class="token-prefix">{{ item.tokenPrefix || '-' }}</code>
+      </ng-template>
+
+      <ng-template st-row="lastUsedAtRender" let-item>
+        {{ item.lastUsedAt ? (item.lastUsedAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+      </ng-template>
+
+      <ng-template st-row="expiresAtRender" let-item>
+        {{ item.expiresAt ? (item.expiresAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+      </ng-template>
+    </st>
+  </nz-card>
+</section>

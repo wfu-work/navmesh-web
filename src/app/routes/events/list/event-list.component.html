@@ -1,0 +1,106 @@
+<section class="event-page">
+  <div class="event-header">
+    <title-label
+      title="事件告警"
+      description="筛选、确认和关闭设备离线、SSH 接入、HTTP 映射、隧道连接和认证事件。"
+    />
+  </div>
+
+  <div class="event-summary">
+    <article class="summary-item">
+      <span>未处理</span>
+      <strong class="danger">{{ openCount() }}</strong>
+    </article>
+    <article class="summary-item">
+      <span>已确认</span>
+      <strong class="warning">{{ ackedCount() }}</strong>
+    </article>
+    <article class="summary-item">
+      <span>已关闭</span>
+      <strong>{{ closedCount() }}</strong>
+    </article>
+    <article class="summary-item">
+      <span>严重事件</span>
+      <strong class="danger">{{ severeCount() }}</strong>
+    </article>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="event-toolbar">
+      <h2>事件列表</h2>
+      <div class="toolbar-actions">
+        <nz-select nzShowSearch nzPlaceHolder="设备" [(ngModel)]="q.deviceGuid" (ngModelChange)="load()">
+          <nz-option nzValue="" nzLabel="全部设备" />
+          @for (device of devices; track device.guid) {
+            <nz-option [nzValue]="device.guid" [nzLabel]="device.name || device.hostname || device.guid" />
+          }
+        </nz-select>
+
+        <nz-select nzPlaceHolder="等级" [(ngModel)]="q.level" (ngModelChange)="load()">
+          <nz-option nzValue="" nzLabel="全部等级" />
+          <nz-option nzValue="critical" nzLabel="严重" />
+          <nz-option nzValue="high" nzLabel="高危" />
+          <nz-option nzValue="medium" nzLabel="中危" />
+          <nz-option nzValue="low" nzLabel="低危" />
+          <nz-option nzValue="info" nzLabel="信息" />
+        </nz-select>
+
+        <nz-select nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="load()">
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option nzValue="0" nzLabel="未处理" />
+          <nz-option nzValue="1" nzLabel="已确认" />
+          <nz-option nzValue="2" nzLabel="已关闭" />
+        </nz-select>
+
+        <button nz-button nzShape="round" (click)="reset()">重置</button>
+        <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+          <nz-icon nzType="reload" />
+          刷新
+        </button>
+      </div>
+    </div>
+
+    <st
+      [data]="rows"
+      [columns]="columns"
+      bordered="false"
+      [loading]="loading"
+      [page]="{ show: false }"
+      [expand]="expand"
+      [expandRowByClick]="true"
+      [scroll]="{ x: '1720px' }"
+    >
+      <ng-template st-row="titleRender" let-item>
+        <div class="event-title-cell">
+          <ellipsis [lines]="1" tooltip>
+            <strong>{{ item.title || '-' }}</strong>
+          </ellipsis>
+          <span>{{ item.guid }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="messageRender" let-value>
+        <ellipsis [lines]="1" tooltip>{{ value || '-' }}</ellipsis>
+      </ng-template>
+
+      <ng-template st-row="timeRender" let-value>
+        {{ formatDateTime(value) }}
+      </ng-template>
+
+      <ng-template #expand let-item>
+        <sv-container col="3">
+          <sv label="标题">{{ item.title || '-' }}</sv>
+          <sv label="状态">{{ statusText(item.status) }}</sv>
+          <sv label="设备">{{ item.deviceName || '-' }}</sv>
+          <sv label="来源">{{ item.source || '-' }}</sv>
+          <sv label="等级">{{ item.level || '-' }}</sv>
+          <sv label="发生时间">{{ formatDateTime(item.occurredAt) }}</sv>
+          <sv label="消息" col="1">{{ item.message || '-' }}</sv>
+          <sv label="载荷" col="1">
+            <pre class="payload">{{ formatPayload(item.payload) }}</pre>
+          </sv>
+        </sv-container>
+      </ng-template>
+    </st>
+  </nz-card>
+</section>

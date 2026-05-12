@@ -1,0 +1,170 @@
+.event-detail-page {
+  min-width: 0;
+}
+
+.event-detail-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.detail-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.summary-item {
+  min-width: 0;
+  padding: 18px 20px;
+  border: 1px solid #dde7e3;
+  border-radius: 8px;
+  background: #fff;
+
+  span,
+  strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: #6a7785;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  strong {
+    margin-top: 8px;
+    color: #223047;
+    font-size: 20px;
+    font-weight: 850;
+  }
+}
+
+.status-open {
+  color: #c53a3a !important;
+}
+
+.status-acked {
+  color: #b56a00 !important;
+}
+
+.status-closed {
+  color: #0d8f5d !important;
+}
+
+.status-unknown {
+  color: #7b8794 !important;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(320px, 0.6fr);
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.timeline {
+  display: grid;
+  gap: 18px;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+
+  strong {
+    color: #223047;
+    font-size: 14px;
+    font-weight: 850;
+  }
+
+  p {
+    margin: 4px 0 0;
+    color: #6a7785;
+  }
+}
+
+.dot {
+  width: 10px;
+  height: 10px;
+  margin-top: 6px;
+  border-radius: 999px;
+}
+
+.dot.danger {
+  background: #c53a3a;
+}
+
+.dot.warning {
+  background: #b56a00;
+}
+
+.dot.success {
+  background: #0d8f5d;
+}
+
+.payload {
+  max-height: 420px;
+  padding: 14px;
+  overflow: auto;
+  border-radius: 8px;
+  color: #405165;
+  background: #f6f8fa;
+}
+
+.empty-card {
+  min-height: 220px;
+  display: grid;
+  place-content: center;
+  text-align: center;
+
+  h2 {
+    margin: 0;
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+  }
+
+  p {
+    max-width: 520px;
+    margin: 8px 0 0;
+    color: #6a7785;
+  }
+}
+
+@media (max-width: 1199px) {
+  .detail-grid,
+  .detail-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .event-detail-header {
+    display: grid;
+  }
+
+  .detail-actions {
+    justify-content: flex-start;
+  }
+
+  .detail-grid,
+  .detail-summary {
+    grid-template-columns: 1fr;
+  }
+}

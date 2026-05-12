@@ -1,0 +1,104 @@
+<section class="ssh-page">
+  <div class="ssh-header">
+    <title-label
+      title="SSH 别名"
+      description="维护设备别名、SSH 域名、入口地址和设备之间的路由绑定。"
+    />
+    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+      <nz-icon nzType="plus" />
+      新增别名
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <st
+      [data]="data"
+      [columns]="columns"
+      [loading]="loading"
+      bordered="false"
+      [page]="{ show: false }"
+      [scroll]="{ x: '1300px' }"
+    >
+      <ng-template st-row="domainRender" let-item>
+        <code class="ssh-code">{{ item.domain }}</code>
+      </ng-template>
+
+      <ng-template st-row="entrypointRender" let-item>
+        <code class="ssh-code">{{ item.entrypointIp || '-' }}</code>
+      </ng-template>
+
+      <ng-template st-row="deviceRender" let-item>
+        <div class="ssh-device-cell">
+          <strong>{{ deviceName(item.deviceGuid) }}</strong>
+          <span>{{ item.deviceGuid }}</span>
+        </div>
+      </ng-template>
+    </st>
+  </nz-card>
+
+  <nz-modal
+    [(nzVisible)]="modalVisible"
+    nzTitle="SSH 别名"
+    [nzOkLoading]="saving"
+    (nzOnCancel)="modalVisible = false"
+    (nzOnOk)="save()"
+  >
+    <ng-container *nzModalContent>
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>绑定设备</nz-form-label>
+          <nz-form-control nzErrorTip="请选择设备">
+            <nz-select
+              nzShowSearch
+              formControlName="deviceGuid"
+              nzPlaceHolder="请选择设备"
+              (ngModelChange)="fillAliasFromDevice($event)"
+            >
+              @for (device of devices; track device.guid) {
+                <nz-option
+                  [nzValue]="device.guid"
+                  [nzLabel]="device.alias || device.sncode || device.hostname || device.guid"
+                />
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>设备别名</nz-form-label>
+          <nz-form-control nzErrorTip="请输入设备别名">
+            <input nz-input formControlName="alias" placeholder="例如 test01" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>SSH 域名</nz-form-label>
+          <nz-form-control nzErrorTip="请输入 SSH 域名">
+            <input nz-input formControlName="domain" placeholder="例如 test01.navfirst.com" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>入口 IP</nz-form-label>
+          <nz-form-control nzErrorTip="请选择或输入入口 IP">
+            <nz-select nzShowSearch nzAllowClear formControlName="entrypointIp" nzPlaceHolder="请选择入口 IP">
+              @for (entrypoint of entrypoints; track entrypoint.ip) {
+                <nz-option [nzValue]="entrypoint.ip" [nzLabel]="entrypoint.ip" />
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>状态</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="status">
+              <nz-option [nzValue]="1" nzLabel="启用" />
+              <nz-option [nzValue]="0" nzLabel="禁用" />
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+    </ng-container>
+  </nz-modal>
+</section>

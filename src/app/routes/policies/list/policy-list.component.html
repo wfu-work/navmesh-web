@@ -1,0 +1,141 @@
+<section class="policy-page">
+  <div class="policy-header">
+    <title-label title="访问策略" description="控制全局、设备或 HTTP 映射是否允许 SSH/HTTP 访问。" />
+    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+      <nz-icon nzType="plus" />
+      新增策略
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="policy-toolbar">
+      <h2>策略列表</h2>
+      <div class="toolbar-actions">
+        <nz-select nzAllowClear nzPlaceHolder="范围" [(ngModel)]="q.scope" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部范围" />
+          <nz-option nzValue="global" nzLabel="全局" />
+          <nz-option nzValue="device" nzLabel="设备" />
+          <nz-option nzValue="mapping" nzLabel="映射" />
+        </nz-select>
+        <input nz-input [(ngModel)]="q.targetId" placeholder="目标 ID" (keydown.enter)="search()" />
+        <nz-select nzAllowClear nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option [nzValue]="1" nzLabel="启用" />
+        </nz-select>
+        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
+        <button nz-button nzShape="round" (click)="reset()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="data"
+      [columns]="columns"
+      (change)="tableChange($event)"
+      bordered="false"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      [expand]="expand"
+      [expandRowByClick]="true"
+      [scroll]="{ x: '1350px' }"
+    >
+      <ng-template st-row="nameRender" let-item>
+        <div class="policy-name-cell">
+          <strong>{{ item.name || '-' }}</strong>
+          <span>{{ item.guid }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="targetRender" let-item>
+        <div class="policy-target-cell">
+          <strong>{{ targetName(item) }}</strong>
+          <span>{{ targetMeta(item) }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="sshRender" let-item>
+        <span class="permission-pill" [class.permission-deny]="!item.allowSsh">
+          {{ item.allowSsh ? '允许' : '拒绝' }}
+        </span>
+      </ng-template>
+
+      <ng-template st-row="httpRender" let-item>
+        <span class="permission-pill" [class.permission-deny]="!item.allowHttp">
+          {{ item.allowHttp ? '允许' : '拒绝' }}
+        </span>
+      </ng-template>
+
+      <ng-template #expand let-item>
+        <sv-container col="3">
+          <sv label="策略 GUID">{{ item.guid }}</sv>
+          <sv label="名称">{{ item.name || '-' }}</sv>
+          <sv label="范围">{{ item.scope }}</sv>
+          <sv label="目标">{{ targetName(item) }}</sv>
+          <sv label="目标 ID">{{ targetMeta(item) }}</sv>
+          <sv label="SSH">{{ item.allowSsh ? '允许' : '拒绝' }}</sv>
+          <sv label="HTTP">{{ item.allowHttp ? '允许' : '拒绝' }}</sv>
+          <sv label="状态">{{ item.status === 1 ? '启用' : '禁用' }}</sv>
+          <sv label="创建时间">{{ item.createTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+          <sv label="更新时间">{{ item.updateTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+        </sv-container>
+      </ng-template>
+    </st>
+  </nz-card>
+
+  <nz-modal
+    [(nzVisible)]="modalVisible"
+    nzTitle="访问策略"
+    [nzOkLoading]="saving"
+    (nzOnCancel)="modalVisible = false"
+    (nzOnOk)="save()"
+  >
+    <ng-container *nzModalContent>
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>策略名称</nz-form-label>
+          <nz-form-control nzErrorTip="请输入策略名称">
+            <input nz-input formControlName="name" placeholder="例如 允许生产设备 HTTP" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>范围</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="scope" (ngModelChange)="onScopeChange($event)">
+              <nz-option nzValue="global" nzLabel="全局" />
+              <nz-option nzValue="device" nzLabel="设备" />
+              <nz-option nzValue="mapping" nzLabel="映射" />
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+
+        @if (form.controls.scope.value !== 'global') {
+          <nz-form-item>
+            <nz-form-label nzRequired>目标</nz-form-label>
+            <nz-form-control nzErrorTip="请选择目标">
+              @if (form.controls.scope.value === 'device') {
+                <nz-select nzShowSearch formControlName="targetId" nzPlaceHolder="请选择设备">
+                  @for (device of devices; track device.guid) {
+                    <nz-option [nzValue]="device.guid" [nzLabel]="device.alias || device.sncode || device.hostname || device.name || device.guid" />
+                  }
+                </nz-select>
+              } @else {
+                <nz-select nzShowSearch formControlName="targetId" nzPlaceHolder="请选择映射">
+                  @for (mapping of mappings; track mapping.guid) {
+                    <nz-option [nzValue]="mapping.guid" [nzLabel]="mapping.publicHost || mapping.name || mapping.guid" />
+                  }
+                </nz-select>
+              }
+            </nz-form-control>
+          </nz-form-item>
+        }
+
+        <div class="permission-grid">
+          <label nz-checkbox formControlName="allowSsh">允许 SSH</label>
+          <label nz-checkbox formControlName="allowHttp">允许 HTTP</label>
+        </div>
+      </form>
+    </ng-container>
+  </nz-modal>
+</section>

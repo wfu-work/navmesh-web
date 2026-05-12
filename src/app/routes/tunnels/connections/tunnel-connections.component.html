@@ -1,0 +1,73 @@
+<section class="tunnel-page">
+  <div class="tunnel-header">
+    <title-label
+      title="在线连接"
+      description="查看设备到中心的实时隧道长连接、远端地址和最后活动时间。"
+    />
+    <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+      <nz-icon nzType="reload" />
+      刷新
+    </button>
+  </div>
+
+  <div class="tunnel-summary">
+    <article>
+      <span>在线连接</span>
+      <strong>{{ data.length }}</strong>
+    </article>
+    <article>
+      <span>活跃设备</span>
+      <strong>{{ data.length }}</strong>
+    </article>
+    <article>
+      <span>协议</span>
+      <strong>QUIC</strong>
+    </article>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <st
+      [data]="data"
+      [columns]="columns"
+      bordered="false"
+      [loading]="loading"
+      [page]="{ show: false }"
+      [expand]="expand"
+      [expandRowByClick]="true"
+      [scroll]="{ x: '1200px' }"
+    >
+      <ng-template st-row="deviceRender" let-item>
+        <div class="tunnel-device-cell">
+          <strong>{{ deviceName(item) }}</strong>
+          <span>{{ deviceMeta(item) }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="remoteRender" let-item>
+        <code class="tunnel-code">{{ item.remoteAddr || '-' }}</code>
+      </ng-template>
+
+      <ng-template st-row="protocolRender">
+        <span class="protocol-pill">QUIC</span>
+      </ng-template>
+
+      <ng-template st-row="durationRender" let-item>
+        <span>{{ connectionAge(item) }}</span>
+      </ng-template>
+
+      <ng-template #expand let-item>
+        <sv-container col="3">
+          <sv label="设备">{{ deviceName(item) }}</sv>
+          <sv label="设备 GUID">{{ item.deviceGuid }}</sv>
+          <sv label="序列号">{{ item.sncode || '-' }}</sv>
+          <sv label="远端地址">{{ item.remoteAddr || '-' }}</sv>
+          <sv label="协议">QUIC</sv>
+          <sv label="连接时间">{{ item.connectedTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+          <sv label="最后活动">{{ item.lastActiveTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+          <sv label="在线时长">{{ connectionAge(item) }}</sv>
+          <sv label="活动间隔">{{ activeAge(item) }}</sv>
+        </sv-container>
+      </ng-template>
+    </st>
+  </nz-card>
+</section>

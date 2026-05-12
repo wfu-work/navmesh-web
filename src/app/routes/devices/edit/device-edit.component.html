@@ -1,0 +1,75 @@
+<section class="device-edit-page">
+  <div class="device-edit-header">
+    <title-label
+      title="编辑设备"
+      description="维护设备注册信息、主机基础信息和标签。"
+      [showBack]="true"
+    />
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <nz-spin [nzSpinning]="loading">
+      <form nz-form [formGroup]="form" (ngSubmit)="submit()">
+        <se-container col="2" nzLayout="vertical">
+          <se label="设备名称" required error="请输入设备名称">
+            <input id="name" nz-input formControlName="name" placeholder="例如 prod-device-01" />
+          </se>
+          <se label="主机名" required error="请输入主机名">
+            <input id="hostname" nz-input formControlName="hostname" placeholder="例如 web-01" />
+          </se>
+          <se label="IP">
+            <input id="ip" nz-input formControlName="ip" placeholder="例如 192.168.1.10" />
+          </se>
+          <se label="操作系统">
+            <input id="os" nz-input formControlName="os" placeholder="例如 Linux" />
+          </se>
+          <se label="系统版本">
+            <input
+              id="osVersion"
+              nz-input
+              formControlName="osVersion"
+              placeholder="例如 Ubuntu 24.04"
+            />
+          </se>
+          <se label="内核版本">
+            <input id="kernel" nz-input formControlName="kernel" placeholder="例如 6.8.0" />
+          </se>
+          <se label="架构">
+            <input id="arch" nz-input formControlName="arch" placeholder="例如 amd64" />
+          </se>
+          <se label="客户端版本">
+            <input
+              id="clientVersion"
+              nz-input
+              formControlName="clientVersion"
+              placeholder="例如 v1.0.0"
+            />
+          </se>
+          <se label="状态">
+            <nz-select id="status" formControlName="status">
+              <nz-option [nzValue]="0" nzLabel="已注册" />
+              <nz-option [nzValue]="1" nzLabel="在线" />
+              <nz-option [nzValue]="2" nzLabel="离线" />
+            </nz-select>
+          </se>
+          <se label="标签" col="1">
+            <textarea
+              id="tags"
+              nz-input
+              formControlName="tags"
+              rows="3"
+              placeholder="多个标签用英文逗号分隔，例如 prod, web, linux"
+            ></textarea>
+          </se>
+        </se-container>
+
+        <div class="device-edit-actions">
+          <button nz-button type="button" nzShape="round" (click)="back()">取消</button>
+          <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" htmlType="submit">
+            保存
+          </button>
+        </div>
+      </form>
+    </nz-spin>
+  </nz-card>
+</section>

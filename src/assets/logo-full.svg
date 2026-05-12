@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 200" role="img" aria-label="NavMesh logo" preserveAspectRatio="xMidYMid meet">
+  <g fill="none" fill-rule="evenodd" stroke="#ffffff" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M178 24 262 72v56l-84 48-84-48V72z" stroke-width="8"/>
+    <path d="M126 76h104M126 124h104M151 58v84M205 58v84" stroke-width="4" opacity="0.46"/>
+    <path d="M126 124 151 76l54 48 25-48" stroke-width="10"/>
+    <path d="M151 76h54M151 124h54" stroke-width="7" opacity="0.82"/>
+    <circle cx="126" cy="124" r="12" fill="#ffffff" stroke="none"/>
+    <circle cx="151" cy="76" r="11" fill="#ffffff" stroke="none"/>
+    <circle cx="205" cy="124" r="11" fill="#ffffff" stroke="none"/>
+    <circle cx="230" cy="76" r="12" fill="#ffffff" stroke="none"/>
+    <path d="M178 43v-13M178 170v-13M89 100H74M282 100h-15" stroke-width="6"/>
+    <circle cx="178" cy="30" r="5" fill="#ffffff" stroke="none"/>
+    <circle cx="178" cy="170" r="5" fill="#ffffff" stroke="none"/>
+    <circle cx="74" cy="100" r="5" fill="#ffffff" stroke="none"/>
+    <circle cx="282" cy="100" r="5" fill="#ffffff" stroke="none"/>
+  </g>
+</svg>

@@ -1,0 +1,25 @@
+.account-page {
+  min-width: 0;
+}
+
+.account-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.account-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: 18px;
+}
+
+@media (max-width: 991px) {
+  .account-grid,
+  .account-header {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}

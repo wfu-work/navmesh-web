@@ -1,0 +1,105 @@
+<section class="mapping-page">
+  <div class="mapping-header">
+    <title-label
+      title="访问日志"
+      description="查询 HTTP 映射访问的 Host、路径、状态码、耗时、流量和错误信息。"
+    />
+    <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+      <nz-icon nzType="reload" />
+      刷新
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="mapping-toolbar mapping-toolbar-wrap">
+      <h2>HTTP 访问日志</h2>
+      <div class="toolbar-actions logs-actions">
+        <input nz-input [(ngModel)]="q.host" placeholder="Host" (keydown.enter)="search()" />
+        <nz-select nzShowSearch nzAllowClear nzPlaceHolder="设备" [(ngModel)]="q.deviceGuid" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部设备" />
+          @for (device of devices; track device.guid) {
+            <nz-option [nzValue]="device.guid" [nzLabel]="device.alias || device.sncode || device.hostname || device.name || device.guid" />
+          }
+        </nz-select>
+        <nz-select nzAllowClear nzPlaceHolder="方法" [(ngModel)]="q.method" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部方法" />
+          <nz-option nzValue="GET" nzLabel="GET" />
+          <nz-option nzValue="POST" nzLabel="POST" />
+          <nz-option nzValue="PUT" nzLabel="PUT" />
+          <nz-option nzValue="PATCH" nzLabel="PATCH" />
+          <nz-option nzValue="DELETE" nzLabel="DELETE" />
+        </nz-select>
+        <input nz-input [(ngModel)]="q.path" placeholder="路径包含" (keydown.enter)="search()" />
+        <input nz-input [(ngModel)]="q.statusCode" placeholder="状态码" (keydown.enter)="search()" />
+        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
+        <button nz-button nzShape="round" (click)="reset()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="data"
+      [columns]="columns"
+      (change)="tableChange($event)"
+      bordered="false"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      [expand]="expand"
+      [expandRowByClick]="true"
+      [scroll]="{ x: '1900px' }"
+    >
+      <ng-template st-row="hostRender" let-item>
+        <code class="mapping-code">{{ item.host || '-' }}</code>
+      </ng-template>
+
+      <ng-template st-row="pathRender" let-item>
+        <ellipsis [lines]="1" tooltip>{{ item.path || '-' }}</ellipsis>
+      </ng-template>
+
+      <ng-template st-row="statusRender" let-item>
+        <span class="http-status" [class]="statusClass(item.statusCode)">{{ item.statusCode || '-' }}</span>
+      </ng-template>
+
+      <ng-template st-row="durationRender" let-item>
+        <span>{{ item.durationMs }} ms</span>
+      </ng-template>
+
+      <ng-template st-row="trafficRender" let-item>
+        <div class="traffic-cell">
+          <span>入 {{ formatBytes(item.bytesIn) }}</span>
+          <span>出 {{ formatBytes(item.bytesOut) }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="deviceRender" let-item>
+        <div class="mapping-device-cell">
+          <strong>{{ deviceName(item.deviceGuid) }}</strong>
+          <span>{{ item.deviceGuid || '-' }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="errorRender" let-item>
+        <ellipsis [lines]="1" tooltip>{{ item.errorMessage || '-' }}</ellipsis>
+      </ng-template>
+
+      <ng-template #expand let-item>
+        <sv-container col="3">
+          <sv label="Host">{{ item.host || '-' }}</sv>
+          <sv label="方法">{{ item.method || '-' }}</sv>
+          <sv label="状态码">{{ item.statusCode || '-' }}</sv>
+          <sv label="路径" col="1">{{ item.path || '-' }}</sv>
+          <sv label="映射 GUID">{{ item.mappingGuid || '-' }}</sv>
+          <sv label="绑定设备">{{ deviceName(item.deviceGuid) }}</sv>
+          <sv label="设备 GUID">{{ item.deviceGuid || '-' }}</sv>
+          <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
+          <sv label="耗时">{{ item.durationMs }} ms</sv>
+          <sv label="入站流量">{{ formatBytes(item.bytesIn) }}</sv>
+          <sv label="出站流量">{{ formatBytes(item.bytesOut) }}</sv>
+          <sv label="访问时间">{{ item.createTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+          <sv label="错误信息" col="1">{{ item.errorMessage || '-' }}</sv>
+        </sv-container>
+      </ng-template>
+    </st>
+  </nz-card>
+</section>

@@ -1,0 +1,106 @@
+<section class="session-page">
+  <div class="session-header">
+    <title-label
+      title="会话记录"
+      description="查询用户 SSH/HTTP 访问设备产生的会话、来源 IP、流量和断开原因。"
+    />
+    <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+      <nz-icon nzType="reload" />
+      刷新
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="session-toolbar">
+      <h2>访问会话</h2>
+      <div class="toolbar-actions">
+        <nz-select nzShowSearch nzAllowClear nzPlaceHolder="设备" [(ngModel)]="q.deviceGuid" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部设备" />
+          @for (device of devices; track device.guid) {
+            <nz-option [nzValue]="device.guid" [nzLabel]="device.alias || device.sncode || device.hostname || device.name || device.guid" />
+          }
+        </nz-select>
+        <nz-select nzAllowClear nzPlaceHolder="类型" [(ngModel)]="q.sessionType" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部类型" />
+          <nz-option nzValue="ssh" nzLabel="SSH" />
+          <nz-option nzValue="http" nzLabel="HTTP" />
+          <nz-option nzValue="https" nzLabel="HTTPS" />
+        </nz-select>
+        <input nz-input [(ngModel)]="q.publicHost" placeholder="访问入口 Host" (keydown.enter)="search()" />
+        <nz-select nzAllowClear nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option [nzValue]="1" nzLabel="进行中" />
+        </nz-select>
+        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
+        <button nz-button nzShape="round" (click)="reset()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="data"
+      [columns]="columns"
+      (change)="tableChange($event)"
+      bordered="false"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      [expand]="expand"
+      [expandRowByClick]="true"
+      [scroll]="{ x: '2100px' }"
+    >
+      <ng-template st-row="sessionRender" let-item>
+        <div class="session-title-cell">
+          <strong>{{ sessionTitle(item) }}</strong>
+          <span>{{ item.guid }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="deviceRender" let-item>
+        <div class="session-device-cell">
+          <strong>{{ deviceName(item.deviceGuid) }}</strong>
+          <span>{{ item.deviceGuid }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="hostRender" let-item>
+        <code class="session-code">{{ item.publicHost || '-' }}</code>
+      </ng-template>
+
+      <ng-template st-row="targetRender" let-item>
+        <code class="session-code">{{ item.targetHost || '-' }}:{{ item.targetPort || '-' }}</code>
+      </ng-template>
+
+      <ng-template st-row="trafficRender" let-item>
+        <div class="traffic-cell">
+          <span>入 {{ formatBytes(item.bytesIn) }}</span>
+          <span>出 {{ formatBytes(item.bytesOut) }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="reasonRender" let-item>
+        <ellipsis [lines]="1" tooltip>{{ item.disconnectReason || '-' }}</ellipsis>
+      </ng-template>
+
+      <ng-template #expand let-item>
+        <sv-container col="3">
+          <sv label="会话 GUID">{{ item.guid }}</sv>
+          <sv label="类型">{{ item.sessionType || '-' }}</sv>
+          <sv label="状态">{{ statusText(item.status) }}</sv>
+          <sv label="绑定设备">{{ deviceName(item.deviceGuid) }}</sv>
+          <sv label="设备 GUID">{{ item.deviceGuid }}</sv>
+          <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
+          <sv label="用户名">{{ item.username || '-' }}</sv>
+          <sv label="访问入口">{{ item.publicHost || '-' }}</sv>
+          <sv label="目标服务">{{ item.targetHost || '-' }}:{{ item.targetPort || '-' }}</sv>
+          <sv label="入站流量">{{ formatBytes(item.bytesIn) }}</sv>
+          <sv label="出站流量">{{ formatBytes(item.bytesOut) }}</sv>
+          <sv label="持续时长">{{ duration(item) }}</sv>
+          <sv label="开始时间">{{ item.startTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+          <sv label="结束时间">{{ item.endTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
+          <sv label="断开原因" col="1">{{ item.disconnectReason || '-' }}</sv>
+        </sv-container>
+      </ng-template>
+    </st>
+  </nz-card>
+</section>
