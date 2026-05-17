@@ -16,6 +16,7 @@ import { filter } from 'rxjs';
 
 import { AvatarComponent } from './avatar';
 import { HeaderMessage } from './message';
+import { ThemeColorComponent } from './theme-color';
 
 @Component({
   selector: 'basic-header',
@@ -35,6 +36,7 @@ import { HeaderMessage } from './message';
         <span class="font-weight-bold text-xl title">{{ pageTitle }}</span>
       </div>
       <div class="header-actions">
+        <theme-color />
         <header-message class="mr-md" />
         <header-avatar />
       </div>
@@ -94,11 +96,11 @@ import { HeaderMessage } from './message';
         flex: 0 0 auto;
         width: 42px;
         height: 42px;
-        border: 1px solid rgb(12 142 116 / 10%);
+        border: 1px solid rgb(var(--nm-primary-rgb) / 10%);
         border-radius: 14px;
-        color: #0c8e74;
+        color: var(--nm-primary);
         font-size: 18px;
-        background: rgb(236 247 246 / 82%);
+        background: rgb(var(--nm-primary-rgb) / 8%);
         cursor: pointer;
         transition:
           color 0.2s ease,
@@ -108,12 +110,12 @@ import { HeaderMessage } from './message';
 
       .trigger:hover {
         transform: translateY(-1px);
-        color: #08745f;
-        background: rgb(210 241 235 / 92%);
+        color: var(--nm-primary-active);
+        background: rgb(var(--nm-primary-rgb) / 14%);
       }
 
       .title {
-        color: #0b8c5e;
+        color: var(--nm-primary);
       }
 
       .header-actions {
@@ -157,7 +159,7 @@ import { HeaderMessage } from './message';
     `,
   ],
   standalone: true,
-  imports: [AvatarComponent, HeaderMessage, LayoutDefaultModule, NzIconModule],
+  imports: [AvatarComponent, HeaderMessage, LayoutDefaultModule, NzIconModule, ThemeColorComponent],
 })
 export class BasicHeaderComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);

@@ -117,8 +117,8 @@ textarea.ant-input {
 
   &:hover {
     transform: translateY(-2px);
-    border-color: @primary-color;
-    box-shadow: 0 8px 20px rgb(44 208 205 / 15%);
+    border-color: var(--nm-primary);
+    box-shadow: 0 8px 20px rgb(var(--nm-primary-rgb) / 15%);
   }
 }
 
@@ -208,17 +208,17 @@ textarea.ant-input {
 }
 
 .ant-select-multiple.ant-select .ant-select-selection-item {
-  background: @brand-emerald-hover;
+  background: var(--nm-primary-hover);
 }
 
 .ant-select {
-  background: #f3f7f4;
   border-radius: 32px;
+  background: #f3f7f4;
 }
 
 .ant-select:not(.ant-select-customize-input) .ant-select-selector {
-  background: #f3f7f4;
   border-radius: 32px;
+  background: #f3f7f4;
 }
 
 .ant-select-dropdown {
@@ -233,7 +233,7 @@ textarea.ant-input {
 }
 
 .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
-  background: #e6f3ef;
+  background: var(--nm-primary-soft);
 }
 
 .item-heading {
@@ -269,7 +269,7 @@ textarea.ant-input {
 .ant-message-notice-content {
   border-radius: 20px;
   color: white;
-  background: fade(@brand-emerald-hover, 90%);
+  background: rgb(var(--nm-primary-rgb) / 90%);
 }
 
 .ant-segmented {

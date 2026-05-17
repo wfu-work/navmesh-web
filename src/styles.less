@@ -5,3 +5,36 @@
 @import '@delon/theme/layout-blank/style/index.less';
 @import './styles/index.less';
 @import './styles/theme.less';
+
+:root {
+  --nm-primary: #0b8c5e;
+  --nm-primary-hover: #0aa36d;
+  --nm-primary-active: #08714c;
+  --nm-primary-soft: #eef8f3;
+  --nm-primary-tint: #f4fbf7;
+  --nm-primary-rgb: 11 140 94;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous) {
+  border-color: var(--nm-primary) !important;
+  background: var(--nm-primary) !important;
+  box-shadow: 0 8px 18px rgb(var(--nm-primary-rgb) / 16%) !important;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous):hover,
+.ant-btn-primary:not(.ant-btn-dangerous):focus {
+  border-color: var(--nm-primary-hover) !important;
+  background: var(--nm-primary-hover) !important;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous):active {
+  border-color: var(--nm-primary-active) !important;
+  background: var(--nm-primary-active) !important;
+}
+
+.ant-btn-primary:not(.ant-btn-dangerous)[disabled],
+.ant-btn-primary:not(.ant-btn-dangerous).ant-btn-disabled {
+  border-color: #d9d9d9 !important;
+  background: #f5f5f5 !important;
+  box-shadow: none !important;
+}

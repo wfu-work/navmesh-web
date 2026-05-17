@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { GlobalFooterModule } from '@delon/abc/global-footer';
 import { DA_SERVICE_TOKEN } from '@delon/auth';
+import { LogoComponent } from '@shared';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 
 @Component({
@@ -11,7 +12,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
       <div class="wrap">
         <div class="top">
           <div class="head">
-            <img class="logo" src="./assets/logo-color.svg" />
+            <logo class="logo" />
             <span class="title">NavMesh</span>
           </div>
           <div class="desc">边缘设备远程接入控制台</div>
@@ -26,7 +27,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
     </div>
   `,
   styleUrls: ['./passport.less'],
-  imports: [RouterOutlet, GlobalFooterModule, NzIconModule],
+  imports: [RouterOutlet, GlobalFooterModule, LogoComponent, NzIconModule],
 })
 export class LayoutPassport {
   private tokenSrv = inject(DA_SERVICE_TOKEN);

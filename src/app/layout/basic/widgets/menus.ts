@@ -1,6 +1,7 @@
 import { NgClass } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { LogoComponent } from '@shared';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMenuModule } from 'ng-zorro-antd/menu';
 
@@ -16,7 +17,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
           (mouseenter)="loadResourcesChange.emit(true)"
           (mouseleave)="loadResourcesChange.emit(false)"
         >
-          <img src="./assets/logo.svg" class="logo" />
+          <logo class="logo" />
           @if (!isCollapsed) {
             <span>NavMesh</span>
           }
@@ -216,7 +217,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
         gap: 8px;
         margin-top: 12px;
         padding-top: 14px;
-        border-top: 1px solid rgb(15 63 47 / 6%);
+        border-top: 1px solid rgb(var(--nm-primary-rgb) / 6%);
         background: transparent;
       }
 
@@ -237,7 +238,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 
       .sidebar-bottom-item:hover {
         color: #203049;
-        background: rgb(15 63 47 / 4%);
+        background: rgb(var(--nm-primary-rgb) / 4%);
       }
 
       .sidebar-bottom-item-button {
@@ -354,7 +355,11 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
         .ant-menu-item-selected,
         .ant-menu-inline .ant-menu-item-selected {
           color: #fff !important;
-          background: linear-gradient(90deg, #09945f 0%, #1fc485 100%) !important;
+          background: linear-gradient(
+            90deg,
+            var(--nm-primary) 0%,
+            var(--nm-primary-hover) 100%
+          ) !important;
         }
 
         .ant-menu-item-selected .anticon,
@@ -373,14 +378,18 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
         }
 
         .ant-menu-inline .ant-menu-submenu-selected > .ant-menu-submenu-title {
-          background: linear-gradient(90deg, #09945f 0%, #1fc485 100%) !important;
-          box-shadow: 0 10px 24px rgb(11 140 94 / 20%);
+          background: linear-gradient(
+            90deg,
+            var(--nm-primary) 0%,
+            var(--nm-primary-hover) 100%
+          ) !important;
+          box-shadow: 0 10px 24px rgb(var(--nm-primary-rgb) / 20%);
         }
 
         .ant-menu-inline .ant-menu-item:hover,
         .ant-menu-inline .ant-menu-submenu-title:hover {
           color: #203049;
-          background: rgb(15 63 47 / 4%);
+          background: rgb(var(--nm-primary-rgb) / 4%);
         }
 
         .ant-menu-inline .ant-menu-submenu-open > .ant-menu-submenu-title,
@@ -411,14 +420,14 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
         }
 
         .ant-menu-sub.ant-menu-inline .ant-menu-item-selected {
-          color: #0c8e5d !important;
-          background: rgb(11 140 94 / 10%) !important;
+          color: var(--nm-primary) !important;
+          background: rgb(var(--nm-primary-rgb) / 10%) !important;
           box-shadow: none;
         }
 
         .ant-menu-sub.ant-menu-inline .ant-menu-item-selected .anticon,
         .ant-menu-sub.ant-menu-inline .ant-menu-item-selected a {
-          color: #0c8e5d !important;
+          color: var(--nm-primary) !important;
         }
       }
 
@@ -450,8 +459,27 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
           opacity: 1 !important;
         }
 
-        .menu-list.ant-menu-inline-collapsed .ant-menu-title-content,
+        .menu-list.ant-menu-inline-collapsed
+          > .ant-menu-submenu
+          > .ant-menu-submenu-title
+          .ant-menu-title-content,
         .menu-list.ant-menu-inline-collapsed .ant-menu-submenu-arrow {
+          display: none !important;
+        }
+
+        .menu-list.ant-menu-inline-collapsed > .ant-menu-item > .ant-menu-title-content {
+          display: inline-flex !important;
+          align-items: center;
+          justify-content: center;
+          width: 100%;
+          overflow: visible;
+          opacity: 1 !important;
+        }
+
+        .menu-list.ant-menu-inline-collapsed
+          > .ant-menu-item
+          > .ant-menu-title-content
+          > span:not(.anticon) {
           display: none !important;
         }
 
@@ -482,7 +510,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
 
         .ant-menu-inline .ant-menu-item-selected,
         .ant-menu-inline .ant-menu-submenu-selected > .ant-menu-submenu-title {
-          box-shadow: 0 10px 22px rgb(11 140 94 / 18%);
+          box-shadow: 0 10px 22px rgb(var(--nm-primary-rgb) / 18%);
         }
 
         .ant-menu-sub.ant-menu-inline {
@@ -491,7 +519,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
       }
     `,
   ],
-  imports: [NgClass, RouterLink, NzIconModule, NzMenuModule],
+  imports: [NgClass, RouterLink, LogoComponent, NzIconModule, NzMenuModule],
 })
 export class BasicMenusComponent {
   @Input() isCollapsed = false;

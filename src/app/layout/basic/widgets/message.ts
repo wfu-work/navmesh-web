@@ -141,9 +141,9 @@ export interface HeaderMessageItem {
       width: 360px;
       overflow: hidden;
       background: rgb(255 255 255 / 96%);
-      border: 1px solid rgb(15 63 47 / 8%);
+      border: 1px solid rgb(var(--nm-primary-rgb) / 8%);
       border-radius: 22px;
-      box-shadow: 0 22px 44px rgb(15 63 47 / 14%);
+      box-shadow: 0 22px 44px rgb(var(--nm-primary-rgb) / 14%);
       backdrop-filter: blur(16px);
     }
 
@@ -153,7 +153,7 @@ export interface HeaderMessageItem {
       justify-content: space-between;
       gap: 12px;
       padding: 18px 18px 14px;
-      border-bottom: 1px solid rgb(15 63 47 / 7%);
+      border-bottom: 1px solid rgb(var(--nm-primary-rgb) / 7%);
       background: linear-gradient(180deg, #fbfdfc 0%, #f5faf7 100%);
     }
 
@@ -175,7 +175,7 @@ export interface HeaderMessageItem {
     .header-message-panel__action.ant-btn-link {
       height: auto;
       padding: 2px 0;
-      color: #0d8f5d;
+      color: var(--nm-primary);
       font-weight: 700;
     }
 
@@ -190,7 +190,7 @@ export interface HeaderMessageItem {
     }
 
     .header-message-panel__list::-webkit-scrollbar-thumb {
-      background: rgb(15 63 47 / 14%);
+      background: rgb(var(--nm-primary-rgb) / 14%);
       border-radius: 999px;
     }
 
@@ -208,7 +208,7 @@ export interface HeaderMessageItem {
     }
 
     .header-message-item:hover {
-      background: rgb(15 63 47 / 4%);
+      background: rgb(var(--nm-primary-rgb) / 4%);
     }
 
     .header-message-item.is-read {
@@ -221,8 +221,8 @@ export interface HeaderMessageItem {
       margin-top: 6px;
       border-radius: 50%;
       flex: 0 0 auto;
-      background: #0b8c5e;
-      box-shadow: 0 0 0 4px rgb(11 140 94 / 8%);
+      background: var(--nm-primary);
+      box-shadow: 0 0 0 4px rgb(var(--nm-primary-rgb) / 8%);
     }
 
     .header-message-item.is-warning .header-message-item__dot {
