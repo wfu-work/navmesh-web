@@ -4,6 +4,7 @@ import { authSimpleCanActivate, authSimpleCanActivateChild } from '@delon/auth';
 
 import { LayoutBasic } from '../layout';
 import { DashboardComponent } from './dashboard/dashboard.component';
+import { HelpComponent } from './help/help.component';
 
 export const routes: Routes = [
   {
@@ -24,6 +25,7 @@ export const routes: Routes = [
       { path: 'policies', loadChildren: () => import('./policies/routes').then((m) => m.routes) },
       { path: 'audit', loadChildren: () => import('./audit/routes').then((m) => m.routes) },
       { path: 'settings', loadChildren: () => import('./settings/routes').then((m) => m.routes) },
+      { path: 'help', component: HelpComponent, data: { title: '帮助' } },
     ],
   },
   { path: '', loadChildren: () => import('./passport/routes').then((m) => m.routes) },

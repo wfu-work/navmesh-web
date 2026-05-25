@@ -3,7 +3,7 @@
     <div>
       <title-label
         title="设备接入凭证"
-        description="按设备查看接入凭证，并禁用不再允许使用的凭证。"
+        description="按设备查看接入凭证，创建、轮换或禁用不再允许使用的凭证。"
       />
     </div>
   </div>
@@ -27,6 +27,10 @@
             />
           }
         </nz-select>
+        <button nz-button nzType="primary" nzShape="round" (click)="openCreate()">
+          <nz-icon nzType="plus" />
+          新建凭证
+        </button>
       </div>
     </div>
 
@@ -60,4 +64,49 @@
       </ng-template>
     </st>
   </nz-card>
+
+  <nz-modal
+    [(nzVisible)]="modalVisible"
+    nzTitle="设备接入凭证"
+    [nzFooter]="tokenFooter"
+    (nzOnCancel)="modalVisible = false"
+  >
+    <ng-container *nzModalContent>
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>凭证名称</nz-form-label>
+          <nz-form-control nzErrorTip="请输入凭证名称">
+            <input nz-input formControlName="name" placeholder="例如 production-client" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>有效天数</nz-form-label>
+          <nz-form-control nzErrorTip="有效天数不能小于 0">
+            <nz-input-number class="w-100" formControlName="expireDays" [nzMin]="0" [nzStep]="1" />
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+
+      @if (latestToken) {
+        <nz-alert
+          nzType="warning"
+          nzShowIcon
+          nzMessage="完整 Token 只会展示一次"
+          [nzDescription]="tokenDescription"
+        />
+        <ng-template #tokenDescription>
+          <code class="token-secret">{{ latestToken }}</code>
+        </ng-template>
+      }
+    </ng-container>
+
+    <ng-template #tokenFooter>
+      <button nz-button nzShape="round" (click)="modalVisible = false">关闭</button>
+      <button nz-button nzType="primary" nzShape="round" [nzLoading]="creating" (click)="createToken()">
+        <nz-icon nzType="plus" />
+        创建
+      </button>
+    </ng-template>
+  </nz-modal>
 </section>

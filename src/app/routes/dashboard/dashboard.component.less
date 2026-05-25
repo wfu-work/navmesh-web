@@ -13,6 +13,12 @@
     margin-top: 26px;
   }
 
+  .dashboard-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -38px;
+  }
+
   .dashboard-widgets {
     display: grid;
     grid-template-columns: minmax(0, 2fr) minmax(320px, 0.98fr);
@@ -34,6 +40,13 @@
 }
 
 @media (max-width: 767px) {
+  :host ::ng-deep {
+    .dashboard-actions {
+      justify-content: flex-start;
+      margin-top: 16px;
+    }
+  }
+
   .dashboard-panels {
     grid-template-columns: 1fr;
     gap: 16px;

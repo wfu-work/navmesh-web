@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { DeviceDetailComponent } from './detail/device-detail.component';
 import { DeviceEditComponent } from './edit/device-edit.component';
+import { DeviceGroupsComponent } from './groups/device-groups.component';
 import { DeviceListComponent } from './list/device-list.component';
 import { DeviceTokensComponent } from './tokens/device-tokens.component';
 import { DeviceTypeDefaultsComponent } from './type-defaults/device-type-defaults.component';
@@ -22,6 +23,11 @@ export const routes: Routes = [
     path: 'type-defaults',
     component: DeviceTypeDefaultsComponent,
     data: { title: '设备类型' },
+  },
+  {
+    path: 'groups',
+    component: DeviceGroupsComponent,
+    data: { title: '设备分组' },
   },
   {
     path: 'edit/:guid',

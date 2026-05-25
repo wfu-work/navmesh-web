@@ -55,6 +55,10 @@ export class SessionsService {
     });
   }
 
+  close(guid: string): Observable<boolean> {
+    return this.http.post<boolean>(`/tunnel-sessions/${guid}/close`, {});
+  }
+
   private cleanParams(params?: object): Record<string, string | number | boolean> {
     const result: Record<string, string | number | boolean> = {};
     Object.entries(params ?? {}).forEach(([key, value]) => {

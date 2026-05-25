@@ -1,21 +1,50 @@
 <section class="dashboard-page">
   <title-label title="工作台" description="实时掌握设备在线、隧道连接、HTTP 映射、访问会话与运行事件。" />
 
+  <div class="dashboard-actions">
+    <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+      <nz-icon nzType="reload" />
+      刷新
+    </button>
+  </div>
+
   <div class="dashboard-panels">
-    <app-panel icon="desktop" title="在线设备" value="--" trend="待接入" trendType="neutral" />
-    <app-panel icon="partition" title="活跃隧道" value="--" trend="实时" trendType="neutral" />
-    <app-panel icon="api" title="HTTP 映射" value="--" trend="启用中" trendType="neutral" />
+    <app-panel
+      icon="desktop"
+      title="在线设备"
+      [value]="onlineDeviceCount() + ' / ' + devices.length"
+      trend="在线/总数"
+      trendType="neutral"
+    />
+    <app-panel
+      icon="partition"
+      title="活跃隧道"
+      [value]="connections.length + ''"
+      [trend]="activeSessionCount() + ' 个会话中'"
+      trendType="neutral"
+    />
+    <app-panel
+      icon="api"
+      title="HTTP 映射"
+      [value]="enabledMappingCount() + ' / ' + mappings.length"
+      [trend]="recentFailureCount() + ' 个近期失败'"
+      [trendType]="recentFailureCount() ? 'down' : 'neutral'"
+    />
     <app-panel
       icon="alert"
       title="未处理事件"
-      value="--"
-      trend="待处理"
-      trendType="down"
+      [value]="openEventCount() + ''"
+      [trend]="events.length + ' 条最近事件'"
+      [trendType]="openEventCount() ? 'down' : 'neutral'"
     />
   </div>
 
   <div class="dashboard-widgets">
-    <dashboard-traffic-trend />
-    <dashboard-active-rules />
+    <dashboard-traffic-trend [values]="eventTrend()" />
+    <dashboard-active-rules
+      [offlineDevices]="devices.length - onlineDeviceCount()"
+      [httpFailures]="recentFailureCount()"
+      [openEvents]="openEventCount()"
+    />
   </div>
 </section>

@@ -13,7 +13,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { Device, DevicesService } from '../../devices/devices.service';
-import { EventItem, EventStatus, EventsService } from '../events.service';
+import { EventItem, EventStatus, EventsService, isClosedEventStatus, isOpenEventStatus } from '../events.service';
 
 interface EventRow extends EventItem {
   deviceName: string;
@@ -46,8 +46,8 @@ export class EventListComponent implements OnInit {
   };
 
   protected readonly statusTag: STColumnTag = {
-    0: { text: '未处理', color: 'red' },
-    1: { text: '已确认', color: 'gold' },
+    0: { text: '已关闭', color: 'green' },
+    1: { text: '未处理', color: 'red' },
     2: { text: '已关闭', color: 'green' },
   };
 
@@ -88,13 +88,13 @@ export class EventListComponent implements OnInit {
         },
         {
           icon: 'check',
-          iif: (item) => String(item.status) === '0',
+          iif: (item) => isOpenEventStatus(item.status),
           click: (item) => this.ack(item.guid),
         },
         {
           icon: 'close',
           className: 'text-error',
-          iif: (item) => String(item.status) !== '2',
+          iif: (item) => !isClosedEventStatus(item.status),
           click: (item) => this.close(item.guid),
           pop: {
             title: '确认关闭该事件？',
@@ -115,7 +115,8 @@ export class EventListComponent implements OnInit {
     forkJoin({
       devices: this.devicesService.list({ page: 1, size: 200 }),
       events: this.eventsService.list({
-        limit: this.q.limit,
+        page: 1,
+        size: this.q.limit,
         deviceGuid: this.q.deviceGuid || undefined,
         level: this.q.level || undefined,
         status: this.q.status || undefined,
@@ -149,7 +150,7 @@ export class EventListComponent implements OnInit {
   protected ack(guid: string): void {
     this.eventsService.ack(guid).subscribe({
       next: () => {
-        this.message.success('事件已确认');
+        this.message.success('事件已处理');
         this.load();
       },
       error: () => this.message.error('事件确认失败'),
@@ -167,15 +168,15 @@ export class EventListComponent implements OnInit {
   }
 
   protected openCount(): number {
-    return this.rows.filter((item) => String(item.status) === '0').length;
+    return this.rows.filter((item) => isOpenEventStatus(item.status)).length;
   }
 
   protected ackedCount(): number {
-    return this.rows.filter((item) => String(item.status) === '1').length;
+    return this.rows.filter((item) => isClosedEventStatus(item.status)).length;
   }
 
   protected closedCount(): number {
-    return this.rows.filter((item) => String(item.status) === '2').length;
+    return this.rows.filter((item) => isClosedEventStatus(item.status)).length;
   }
 
   protected severeCount(): number {
@@ -184,8 +185,8 @@ export class EventListComponent implements OnInit {
 
   protected statusText(status: EventStatus): string {
     const map: Record<string, string> = {
-      0: '未处理',
-      1: '已确认',
+      0: '已关闭',
+      1: '未处理',
       2: '已关闭',
     };
     return map[String(status)] ?? '未知';

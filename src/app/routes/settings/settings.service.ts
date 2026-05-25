@@ -5,9 +5,13 @@ import { Observable } from 'rxjs';
 export interface NavMeshProfile {
   id: number;
   username: string;
+  name?: string;
+  avatar?: string;
   status: number;
   createTime: number;
+  create_time?: number;
   updateTime: number;
+  update_time?: number;
 }
 
 export interface ChangePasswordPayload {
@@ -15,20 +19,41 @@ export interface ChangePasswordPayload {
   newPassword: string;
 }
 
+export interface NavMeshSetting {
+  key: string;
+  value: string;
+  createTime: number;
+  create_time?: number;
+  updateTime: number;
+  update_time?: number;
+}
+
+export interface RetentionCleanupResult {
+  auditLogs: number;
+  httpAccessLogs: number;
+  tunnelSessions: number;
+  deviceHeartbeats: number;
+  deviceConnections: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class NavMeshSettingsService {
   private readonly http = inject(HttpClient);
 
-  list(): Observable<unknown> {
-    return this.http.get('/settings/list');
+  list(): Observable<NavMeshSetting[]> {
+    return this.http.get<NavMeshSetting[]>('/settings/list');
   }
 
-  save(key: string, value: unknown): Observable<unknown> {
-    return this.http.put(`/settings/${key}`, { value });
+  save(key: string, value: string): Observable<NavMeshSetting> {
+    return this.http.put<NavMeshSetting>(`/settings/${key}`, { value });
+  }
+
+  cleanupRetention(): Observable<RetentionCleanupResult> {
+    return this.http.post<RetentionCleanupResult>('/maintenance/retention-cleanup', {});
   }
 
   profile(): Observable<NavMeshProfile> {
-    return this.http.get<NavMeshProfile>('/navmesh-auth/profile');
+    return this.http.get<NavMeshProfile>('/user');
   }
 
   changePassword(payload: ChangePasswordPayload): Observable<boolean> {

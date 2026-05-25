@@ -1,0 +1,105 @@
+<section class="settings-page">
+  <div class="settings-header">
+    <title-label title="数据保留" description="配置审计、访问日志、会话和设备心跳历史的保留周期。" />
+    <div class="header-actions">
+      <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+        <nz-icon nzType="reload" />
+        刷新
+      </button>
+      <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="save()">
+        <nz-icon nzType="save" />
+        保存
+      </button>
+    </div>
+  </div>
+
+  <div class="settings-grid">
+    <nz-card class="card-border" [nzBordered]="false" nzTitle="自动清理">
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label>启用清理任务</nz-form-label>
+          <nz-form-control>
+            <label nz-checkbox formControlName="retention_cleanup_enabled">按固定周期自动清理过期数据</label>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>清理间隔</nz-form-label>
+          <nz-form-control nzErrorTip="请输入 Go duration，例如 24h">
+            <input nz-input formControlName="retention_cleanup_interval" placeholder="24h" />
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+    </nz-card>
+
+    <nz-card class="card-border" [nzBordered]="false" nzTitle="手动清理">
+      <div class="cleanup-panel">
+        <p>立即按当前保留天数删除过期数据，并写入审计日志。</p>
+        <button
+          nz-button
+          nzDanger
+          nzShape="round"
+          [nzLoading]="cleaning"
+          nz-popconfirm
+          nzPopconfirmTitle="确认立即执行过期数据清理？"
+          (nzOnConfirm)="cleanup()"
+        >
+          <nz-icon nzType="delete" />
+          立即清理
+        </button>
+      </div>
+
+      @if (cleanupResult) {
+        <div class="cleanup-result">
+          <strong>本次清理 {{ deletedTotal() }} 条</strong>
+          <span>审计 {{ cleanupResult.auditLogs }}</span>
+          <span>HTTP 访问 {{ cleanupResult.httpAccessLogs }}</span>
+          <span>会话 {{ cleanupResult.tunnelSessions }}</span>
+          <span>心跳 {{ cleanupResult.deviceHeartbeats }}</span>
+          <span>连接 {{ cleanupResult.deviceConnections }}</span>
+        </div>
+      }
+    </nz-card>
+
+    <nz-card class="card-border settings-wide" [nzBordered]="false" nzTitle="保留周期">
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <div class="form-grid form-grid-five">
+          <nz-form-item>
+            <nz-form-label nzRequired>审计日志</nz-form-label>
+            <nz-form-control nzErrorTip="请输入不小于 0 的天数">
+              <nz-input-number class="w-100" formControlName="audit_retention_days" [nzMin]="0" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>HTTP 访问日志</nz-form-label>
+            <nz-form-control nzErrorTip="请输入不小于 0 的天数">
+              <nz-input-number class="w-100" formControlName="http_access_retention_days" [nzMin]="0" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>隧道会话</nz-form-label>
+            <nz-form-control nzErrorTip="请输入不小于 0 的天数">
+              <nz-input-number class="w-100" formControlName="session_retention_days" [nzMin]="0" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>设备心跳</nz-form-label>
+            <nz-form-control nzErrorTip="请输入不小于 0 的天数">
+              <nz-input-number class="w-100" formControlName="heartbeat_retention_days" [nzMin]="0" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>设备连接历史</nz-form-label>
+            <nz-form-control nzErrorTip="请输入不小于 0 的天数">
+              <nz-input-number class="w-100" formControlName="device_connection_retention_days" [nzMin]="0" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+      </form>
+    </nz-card>
+  </div>
+</section>

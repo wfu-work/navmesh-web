@@ -1,0 +1,68 @@
+.group-toolbar {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 22px;
+
+  h2 {
+    margin: 0;
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+}
+
+.toolbar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+
+  input[nz-input] {
+    width: 240px;
+  }
+
+  nz-select {
+    width: 140px;
+  }
+}
+
+.group-name-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: #223047;
+  }
+
+  span {
+    color: #7b8794;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 767px) {
+  .group-toolbar {
+    display: grid;
+  }
+
+  .toolbar-actions {
+    justify-content: flex-start;
+
+    input[nz-input],
+    nz-select {
+      width: 100%;
+    }
+  }
+}

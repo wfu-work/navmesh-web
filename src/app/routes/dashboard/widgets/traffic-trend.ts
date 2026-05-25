@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 
 interface TrafficBar {
   time: string;
@@ -148,14 +148,15 @@ interface TrafficBar {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class DashboardTrafficTrendComponent {
-  protected readonly bars: TrafficBar[] = [
-    { time: '10:00', value: 24 },
-    { time: '10:10', value: 38 },
-    { time: '10:20', value: 18 },
-    { time: '10:25', value: 58, active: true },
-    { time: '10:35', value: 31 },
-    { time: '10:45', value: 45 },
-    { time: '10:50', value: 62 },
-    { time: '11:00', value: 28 },
-  ];
+  @Input() values: number[] = [];
+
+  protected get bars(): TrafficBar[] {
+    const values = this.values.length ? this.values : Array.from({ length: 8 }, () => 0);
+    const max = Math.max(...values, 1);
+    return values.map((value, index) => ({
+      time: String(index),
+      value: value > 0 ? Math.max(12, Math.round((value / max) * 100)) : 8,
+      active: value === max && max > 0,
+    }));
+  }
 }

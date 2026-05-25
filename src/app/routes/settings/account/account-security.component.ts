@@ -46,7 +46,12 @@ export class AccountSecurityComponent implements OnInit {
       )
       .subscribe({
         next: (profile) => {
-          this.profile = profile;
+          this.profile = {
+            ...profile,
+            username: profile.username || profile.name || '-',
+            createTime: this.timestamp(profile.createTime || profile.create_time),
+            updateTime: this.timestamp(profile.updateTime || profile.update_time),
+          };
         },
         error: () => this.message.error('账号资料加载失败'),
       });
@@ -83,7 +88,7 @@ export class AccountSecurityComponent implements OnInit {
           this.form.reset();
           this.load();
         },
-        error: () => this.message.error('密码更新失败'),
+        error: () => this.message.error('密码更新接口暂未开放或当前账号无权限'),
       });
   }
 

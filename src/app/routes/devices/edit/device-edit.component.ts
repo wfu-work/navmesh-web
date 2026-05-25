@@ -12,7 +12,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { DevicePayload, DevicesService } from '../devices.service';
+import { DeviceStatus, DevicesService } from '../devices.service';
 
 @Component({
   selector: 'app-device-edit',
@@ -31,7 +31,6 @@ export class DeviceEditComponent implements OnInit {
 
   protected readonly guid = this.route.snapshot.paramMap.get('guid') ?? 'new';
   protected loading = false;
-  protected saving = false;
 
   protected form = this.fb.group({
     sncode: ['', [Validators.required]],
@@ -83,64 +82,29 @@ export class DeviceEditComponent implements OnInit {
             webDomain: device.webDomain || device.web_domain || '',
             status: this.normalizeStatus(device.status),
           });
+          this.form.disable({ emitEvent: false });
         },
         error: () => this.message.error('设备信息加载失败'),
       });
   }
 
   protected submit(): void {
-    if (this.form.invalid) {
-      Object.values(this.form.controls).forEach((control) => {
-        control.markAsDirty();
-        control.updateValueAndValidity();
-      });
-      return;
-    }
-
-    const payload = this.toPayload();
-    this.saving = true;
-    this.devicesService
-      .update(this.guid, payload)
-      .pipe(
-        finalize(() => {
-          this.saving = false;
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: () => {
-          this.message.success('设备已保存');
-          this.back();
-        },
-        error: () => this.message.error('设备保存失败'),
-      });
+    this.message.info('设备基础信息由客户端注册和心跳上报维护');
   }
 
   protected back(): void {
     this.router.navigate(['/devices/list']);
   }
 
-  private toPayload(): DevicePayload {
-    const value = this.form.getRawValue();
-    return {
-      name: value.alias.trim(),
-      sncode: value.sncode.trim(),
-      alias: value.alias.trim(),
-      deviceId: value.deviceId.trim(),
-      deviceType: value.deviceType.trim(),
-      type: value.deviceType.trim(),
-      remark: value.remark.trim(),
-      hostname: value.hostname.trim(),
-      hostIp: value.hostIp.trim(),
-      clientVersion: value.clientVersion.trim(),
-      sshPort: value.sshPort,
-      webPort: value.webPort,
-      webDomain: value.webDomain.trim(),
-      status: this.normalizeStatus(value.status),
-    };
+  protected manageGroup(): void {
+    this.router.navigate(['/devices/list']);
   }
 
-  private normalizeStatus(status: DevicePayload['status'] | number): 1 | 2 | 3 | 4 {
+  protected manageTokens(): void {
+    this.router.navigate(['/devices/tokens']);
+  }
+
+  private normalizeStatus(status: DeviceStatus | number): 1 | 2 | 3 | 4 {
     const map: Record<string, 1 | 2 | 3 | 4> = {
       registered: 1,
       online: 2,

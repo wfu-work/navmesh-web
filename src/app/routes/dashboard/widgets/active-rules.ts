@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 interface RuleSnapshot {
@@ -173,9 +173,30 @@ interface RuleSnapshot {
   imports: [RouterLink],
 })
 export class DashboardActiveRulesComponent {
-  protected readonly rules: RuleSnapshot[] = [
-    { name: '设备心跳超时', flow: '关联设备待确认', status: '--', tone: 'warning' },
-    { name: 'HTTP 映射失败', flow: '查看访问日志', status: '--', tone: 'warning' },
-    { name: '访问策略待配置', flow: 'SSH/HTTP 权限范围', status: '--', tone: 'idle' },
-  ];
+  @Input() offlineDevices = 0;
+  @Input() httpFailures = 0;
+  @Input() openEvents = 0;
+
+  protected get rules(): RuleSnapshot[] {
+    return [
+      {
+        name: '离线设备',
+        flow: '检查设备心跳和隧道连接',
+        status: `${this.offlineDevices} 个`,
+        tone: this.offlineDevices > 0 ? 'warning' : 'success',
+      },
+      {
+        name: 'HTTP 映射失败',
+        flow: '查看访问日志中的 5xx 或上游错误',
+        status: `${this.httpFailures} 条`,
+        tone: this.httpFailures > 0 ? 'warning' : 'success',
+      },
+      {
+        name: '未处理事件',
+        flow: '进入事件中心确认或关闭',
+        status: `${this.openEvents} 条`,
+        tone: this.openEvents > 0 ? 'warning' : 'idle',
+      },
+    ];
+  }
 }

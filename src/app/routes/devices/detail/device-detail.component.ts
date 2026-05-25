@@ -258,7 +258,7 @@ export class DeviceDetailComponent implements OnInit {
   private normalizeToken(token: DeviceToken): DeviceToken {
     return {
       ...token,
-      tokenPrefix: this.firstText(token.tokenPrefix, token.token_prefix),
+      tokenPrefix: this.firstText(token.tokenPrefix, token.token_prefix, this.guidPrefix(token.guid)),
       lastUsedAt: this.firstNumber(token.lastUsedAt, token.last_used_at),
       expiresAt: this.firstNumber(token.expiresAt, token.expireTime, token.expire_time),
       createTime: this.firstNumber(token.createTime, token.create_time),
@@ -272,5 +272,9 @@ export class DeviceDetailComponent implements OnInit {
 
   private firstNumber(...values: Array<number | undefined>): number {
     return values.find((value) => value !== undefined && value !== null) ?? 0;
+  }
+
+  private guidPrefix(guid: string | undefined): string {
+    return guid ? `${guid.slice(0, 8)}...` : '';
   }
 }

@@ -5,6 +5,7 @@ import {
   OnInit,
   inject,
 } from '@angular/core';
+import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { STColumn, STColumnTag } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -22,6 +23,7 @@ import { Device, DeviceToken, DevicesService } from '../devices.service';
 })
 export class DeviceTokensComponent implements OnInit {
   private readonly devicesService = inject(DevicesService);
+  private readonly fb = inject(NonNullableFormBuilder);
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -30,6 +32,14 @@ export class DeviceTokensComponent implements OnInit {
   protected selectedDeviceGuid = '';
   protected loadingDevices = false;
   protected loadingTokens = false;
+  protected creating = false;
+  protected modalVisible = false;
+  protected latestToken = '';
+
+  protected readonly form = this.fb.group({
+    name: ['manual', [Validators.required]],
+    expireDays: [0, [Validators.min(0)]],
+  });
 
   protected tokenStatusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -62,8 +72,17 @@ export class DeviceTokensComponent implements OnInit {
     {
       title: '操作',
       fixed: 'right',
-      width: 100,
+      width: 140,
       buttons: [
+        {
+          icon: 'sync',
+          click: (item) => this.rotateToken(item),
+          pop: {
+            title: '轮换后旧凭证会立即禁用，请确认已准备更新客户端 Token。',
+            okType: 'primary',
+            icon: 'sync',
+          },
+        },
         {
           icon: 'check-circle',
           iif: (item) => item.status === 0,
@@ -116,6 +135,7 @@ export class DeviceTokensComponent implements OnInit {
   }
 
   protected deviceChange(): void {
+    this.latestToken = '';
     this.loadTokens();
   }
 
@@ -163,10 +183,68 @@ export class DeviceTokensComponent implements OnInit {
     });
   }
 
+  protected openCreate(): void {
+    if (!this.selectedDeviceGuid) {
+      this.message.warning('请先选择设备');
+      return;
+    }
+    this.latestToken = '';
+    this.form.reset({ name: 'manual', expireDays: 0 });
+    this.modalVisible = true;
+  }
+
+  protected createToken(): void {
+    if (!this.selectedDeviceGuid) {
+      this.message.warning('请先选择设备');
+      return;
+    }
+    if (this.form.invalid) {
+      Object.values(this.form.controls).forEach((control) => {
+        control.markAsDirty();
+        control.updateValueAndValidity();
+      });
+      return;
+    }
+    const value = this.form.getRawValue();
+    this.creating = true;
+    this.devicesService
+      .createToken(this.selectedDeviceGuid, {
+        name: value.name.trim(),
+        expireTime: this.expireTime(value.expireDays),
+      })
+      .pipe(
+        finalize(() => {
+          this.creating = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+          this.latestToken = res.token || '';
+          this.message.success('凭证已创建，请及时复制完整 Token');
+          this.loadTokens();
+        },
+        error: () => this.message.error('凭证创建失败'),
+      });
+  }
+
+  protected rotateToken(token: DeviceToken): void {
+    const deviceGuid = token.deviceGuid || this.selectedDeviceGuid;
+    this.devicesService.rotateToken(deviceGuid, token.guid).subscribe({
+      next: (res) => {
+        this.latestToken = res.token || '';
+        this.modalVisible = true;
+        this.message.success('凭证已轮换，请及时复制新 Token');
+        this.loadTokens();
+      },
+      error: () => this.message.error('凭证轮换失败'),
+    });
+  }
+
   private normalizeToken(token: DeviceToken): DeviceToken {
     return {
       ...token,
-      tokenPrefix: this.firstText(token.tokenPrefix, token.token_prefix),
+      tokenPrefix: this.firstText(token.tokenPrefix, token.token_prefix, this.guidPrefix(token.guid)),
       lastUsedAt: this.firstNumber(token.lastUsedAt, token.last_used_at),
       expiresAt: this.firstNumber(token.expiresAt, token.expireTime, token.expire_time),
       createTime: this.firstNumber(token.createTime, token.create_time),
@@ -180,5 +258,14 @@ export class DeviceTokensComponent implements OnInit {
 
   private firstNumber(...values: Array<number | undefined>): number {
     return values.find((value) => value !== undefined && value !== null) ?? 0;
+  }
+
+  private expireTime(days: number): number {
+    if (!days || days <= 0) return 0;
+    return Date.now() + days * 24 * 60 * 60 * 1000;
+  }
+
+  private guidPrefix(guid: string | undefined): string {
+    return guid ? `${guid.slice(0, 8)}...` : '';
   }
 }

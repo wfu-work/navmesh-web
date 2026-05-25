@@ -12,7 +12,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { Device, DevicesService } from '../../devices/devices.service';
-import { EventItem, EventStatus, EventsService } from '../events.service';
+import { EventItem, EventStatus, EventsService, isClosedEventStatus, isOpenEventStatus } from '../events.service';
 
 @Component({
   selector: 'app-event-detail',
@@ -46,7 +46,7 @@ export class EventDetailComponent implements OnInit {
 
     this.loading = true;
     this.eventsService
-      .list({ limit: 500 })
+      .list({ page: 1, size: 500 })
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -73,7 +73,7 @@ export class EventDetailComponent implements OnInit {
     if (!this.guid) return;
     this.eventsService.ack(this.guid).subscribe({
       next: () => {
-        this.message.success('事件已确认');
+        this.message.success('事件已处理');
         this.load();
       },
       error: () => this.message.error('事件确认失败'),
@@ -101,8 +101,8 @@ export class EventDetailComponent implements OnInit {
 
   protected statusText(status: EventStatus | undefined): string {
     const map: Record<string, string> = {
-      0: '未处理',
-      1: '已确认',
+      0: '已关闭',
+      1: '未处理',
       2: '已关闭',
     };
     return map[String(status)] ?? '未知';
@@ -110,8 +110,8 @@ export class EventDetailComponent implements OnInit {
 
   protected statusClass(status: EventStatus | undefined): string {
     const map: Record<string, string> = {
-      0: 'status-open',
-      1: 'status-acked',
+      0: 'status-closed',
+      1: 'status-open',
       2: 'status-closed',
     };
     return map[String(status)] ?? 'status-unknown';
@@ -155,6 +155,14 @@ export class EventDetailComponent implements OnInit {
     } catch {
       return value;
     }
+  }
+
+  protected isOpen(status: EventStatus | undefined): boolean {
+    return isOpenEventStatus(status);
+  }
+
+  protected isClosed(status: EventStatus | undefined): boolean {
+    return isClosedEventStatus(status);
   }
 
   private loadDevice(deviceGuid: string): void {

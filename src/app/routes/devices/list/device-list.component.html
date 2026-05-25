@@ -12,6 +12,18 @@
     <div class="d-flex justify-content-between mb-lg">
       <h2>设备列表</h2>
       <div class="d-flex">
+        <nz-select
+          class="device-group-filter"
+          nzAllowClear
+          nzPlaceHolder="设备分组"
+          [(ngModel)]="q.groupGuid"
+          (ngModelChange)="q.page = 1; getData()"
+        >
+          <nz-option nzValue="" nzLabel="全部分组" />
+          @for (group of groups; track group.guid) {
+            <nz-option [nzValue]="group.guid" [nzLabel]="group.name" />
+          }
+        </nz-select>
         <nz-input-wrapper>
           <nz-icon nzInputPrefix nzType="search" />
           <input
@@ -24,7 +36,7 @@
         <button nz-button nzType="primary" nzShape="round" class="ml-lg" (click)="q.page = 1; getData()">
           查询
         </button>
-        <button nz-button nzShape="round" (click)="q.page = 1; q.content = ''; getData()">
+        <button nz-button nzShape="round" (click)="q.page = 1; q.content = ''; q.groupGuid = ''; getData()">
           重置
         </button>
       </div>
@@ -81,6 +93,10 @@
         </ellipsis>
       </ng-template>
 
+      <ng-template st-row="groupRender" let-item>
+        <span class="device-group-pill">{{ groupName(item.groupGuid) }}</span>
+      </ng-template>
+
       <ng-template st-row="tagsRender" let-item>
         <div class="tag-list">
           @for (tag of formatTags(item.tags); track tag) {
@@ -106,6 +122,7 @@
           <sv label="本机 SSH 端口">{{ item.sshPort || '-' }}</sv>
           <sv label="本机 Web 端口">{{ item.webPort || '-' }}</sv>
           <sv label="Web 映射域名">{{ item.webDomain || '-' }}</sv>
+          <sv label="设备分组">{{ groupName(item.groupGuid) }}</sv>
           <sv label="客户端版本">{{ item.clientVersion || '-' }}</sv>
           <sv label="状态">{{ statusText(item.status) }}</sv>
           <sv label="最后在线">{{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
@@ -114,4 +131,29 @@
       </ng-template>
     </st>
   </nz-card>
+
+  <nz-modal
+    [(nzVisible)]="assignModalVisible"
+    nzTitle="分配设备分组"
+    [nzFooter]="assignFooter"
+    (nzOnCancel)="assignModalVisible = false"
+  >
+    <ng-container *nzModalContent>
+      <p class="assign-device-name">{{ assignDevice?.name || assignDevice?.sncode || assignDevice?.guid }}</p>
+      <nz-select class="w-100" nzAllowClear nzPlaceHolder="选择分组" [(ngModel)]="selectedGroupGuid">
+        <nz-option nzValue="" nzLabel="未分组" />
+        @for (group of groups; track group.guid) {
+          <nz-option [nzValue]="group.guid" [nzLabel]="group.name" />
+        }
+      </nz-select>
+    </ng-container>
+
+    <ng-template #assignFooter>
+      <button nz-button nzShape="round" (click)="assignModalVisible = false">取消</button>
+      <button nz-button nzType="primary" nzShape="round" [nzLoading]="assigning" (click)="assignGroup()">
+        <nz-icon nzType="save" />
+        保存
+      </button>
+    </ng-template>
+  </nz-modal>
 </section>

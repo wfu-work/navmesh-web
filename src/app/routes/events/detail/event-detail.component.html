@@ -8,13 +8,13 @@
 
     <div class="detail-actions">
       <button nz-button nzShape="round" (click)="back()">返回列表</button>
-      @if (event && event.status !== 1 && event.status !== '1' && event.status !== 2 && event.status !== '2') {
+      @if (event && isOpen(event.status)) {
         <button nz-button nzShape="round" (click)="ack()">
           <nz-icon nzType="check" />
-          确认
+          标记已处理
         </button>
       }
-      @if (event && event.status !== 2 && event.status !== '2') {
+      @if (event && !isClosed(event.status)) {
         <button nz-button nzType="primary" nzDanger nzShape="round" (click)="close()">
           <nz-icon nzType="close" />
           关闭
@@ -52,7 +52,7 @@
             <sv label="来源">{{ sourceText(item.source) }}</sv>
             <sv label="等级">{{ levelText(item.level) }}</sv>
             <sv label="状态">{{ statusText(item.status) }}</sv>
-            <sv label="关闭时间">{{ formatDateTime(item.closedAt) }}</sv>
+            <sv label="处理时间">{{ isClosed(item.status) ? formatDateTime(item.updateTime) : '-' }}</sv>
             <sv label="标题" col="1">{{ item.title || '-' }}</sv>
             <sv label="消息" col="1">{{ item.message || '-' }}</sv>
           </sv-container>
@@ -67,16 +67,16 @@
                 <p>{{ formatDateTime(item.occurredAt || item.createTime) }}</p>
               </div>
             </div>
-            @if (item.status === 1 || item.status === '1' || item.status === 2 || item.status === '2') {
+            @if (isClosed(item.status)) {
               <div class="timeline-item">
-                <span class="dot warning"></span>
+                <span class="dot success"></span>
                 <div>
-                  <strong>事件确认</strong>
+                  <strong>事件处理</strong>
                   <p>{{ formatDateTime(item.updateTime) }}</p>
                 </div>
               </div>
             }
-            @if (item.closedAt) {
+            @if (item.closedAt && item.closedAt !== item.updateTime) {
               <div class="timeline-item">
                 <span class="dot success"></span>
                 <div>

@@ -76,8 +76,19 @@ export class SessionListComponent implements OnInit {
     {
       title: '操作',
       fixed: 'right',
-      width: 90,
+      width: 130,
       buttons: [
+        {
+          icon: 'close-circle',
+          className: 'text-error',
+          iif: (item) => item.status === 1,
+          click: (item) => this.closeSession(item),
+          pop: {
+            title: '确认关闭该进行中的会话？',
+            okType: 'danger',
+            icon: 'close-circle',
+          },
+        },
         {
           icon: 'desktop',
           click: (item) => this.openDevice(item.deviceGuid),
@@ -143,6 +154,16 @@ export class SessionListComponent implements OnInit {
 
   protected openDevice(deviceGuid: string): void {
     this.router.navigate(['/devices/detail', deviceGuid]);
+  }
+
+  protected closeSession(item: TunnelSession): void {
+    this.sessionsService.close(item.guid).subscribe({
+      next: () => {
+        this.message.success('会话已关闭');
+        this.load();
+      },
+      error: () => this.message.error('会话关闭失败'),
+    });
   }
 
   protected deviceName(guid: string | undefined): string {

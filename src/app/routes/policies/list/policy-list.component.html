@@ -15,6 +15,7 @@
           <nz-option nzValue="" nzLabel="全部范围" />
           <nz-option nzValue="global" nzLabel="全局" />
           <nz-option nzValue="device" nzLabel="设备" />
+          <nz-option nzValue="group" nzLabel="分组" />
           <nz-option nzValue="mapping" nzLabel="映射" />
         </nz-select>
         <input nz-input [(ngModel)]="q.targetId" placeholder="目标 ID" (keydown.enter)="search()" />
@@ -105,6 +106,7 @@
             <nz-select formControlName="scope" (ngModelChange)="onScopeChange($event)">
               <nz-option nzValue="global" nzLabel="全局" />
               <nz-option nzValue="device" nzLabel="设备" />
+              <nz-option nzValue="group" nzLabel="分组" />
               <nz-option nzValue="mapping" nzLabel="映射" />
             </nz-select>
           </nz-form-control>
@@ -118,6 +120,12 @@
                 <nz-select nzShowSearch formControlName="targetId" nzPlaceHolder="请选择设备">
                   @for (device of devices; track device.guid) {
                     <nz-option [nzValue]="device.guid" [nzLabel]="device.alias || device.sncode || device.hostname || device.name || device.guid" />
+                  }
+                </nz-select>
+              } @else if (form.controls.scope.value === 'group') {
+                <nz-select nzShowSearch formControlName="targetId" nzPlaceHolder="请选择设备分组">
+                  @for (group of groups; track group.guid) {
+                    <nz-option [nzValue]="group.guid" [nzLabel]="group.name || group.guid" />
                   }
                 </nz-select>
               } @else {

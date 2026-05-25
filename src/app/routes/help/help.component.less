@@ -1,0 +1,70 @@
+.help-page {
+  min-width: 0;
+}
+
+.help-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.help-wide {
+  grid-column: 1 / -1;
+}
+
+.help-copy {
+  margin: 0 0 12px;
+  color: #667586;
+  font-weight: 650;
+  line-height: 1.7;
+}
+
+.help-command {
+  display: block;
+  overflow-x: auto;
+  padding: 14px 16px;
+  border-radius: 8px;
+  color: #213047;
+  white-space: nowrap;
+  background: #f1f5f4;
+}
+
+.help-links {
+  display: grid;
+  gap: 10px;
+
+  a {
+    display: grid;
+    gap: 4px;
+    padding: 12px 14px;
+    border: 1px solid #dde7e3;
+    border-radius: 8px;
+    text-decoration: none;
+    background: #fff;
+  }
+
+  strong {
+    color: #223047;
+    font-weight: 850;
+  }
+
+  span {
+    color: #667586;
+    line-height: 1.6;
+  }
+}
+
+.help-steps {
+  margin: 0;
+  padding-left: 20px;
+  color: #4e5f72;
+  font-weight: 650;
+  line-height: 1.9;
+}
+
+@media (max-width: 767px) {
+  .help-grid {
+    grid-template-columns: 1fr;
+  }
+}

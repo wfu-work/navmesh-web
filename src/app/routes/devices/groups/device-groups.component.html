@@ -1,0 +1,81 @@
+<section class="device-page">
+  <div class="device-header">
+    <title-label title="设备分组" description="维护设备分组，用于批量筛选和后续访问策略归类。" />
+    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+      <nz-icon nzType="plus" />
+      新建分组
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="group-toolbar">
+      <h2>分组列表</h2>
+      <div class="toolbar-actions">
+        <input nz-input [(ngModel)]="q.keyword" placeholder="搜索分组名称或说明" (keydown.enter)="search()" />
+        <nz-select nzAllowClear nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option [nzValue]="1" nzLabel="启用" />
+          <nz-option [nzValue]="0" nzLabel="禁用" />
+        </nz-select>
+        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
+        <button nz-button nzShape="round" (click)="reset()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="data"
+      [columns]="columns"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      (change)="tableChange($event)"
+      bordered="false"
+      [scroll]="{ x: '1100px' }"
+    >
+      <ng-template st-row="nameRender" let-item>
+        <div class="group-name-cell">
+          <strong>{{ item.name }}</strong>
+          <span>{{ item.guid }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="descriptionRender" let-item>
+        <ellipsis [lines]="1" tooltip>{{ item.description || '-' }}</ellipsis>
+      </ng-template>
+    </st>
+  </nz-card>
+
+  <nz-modal
+    [(nzVisible)]="modalVisible"
+    nzTitle="设备分组"
+    [nzFooter]="groupFooter"
+    (nzOnCancel)="modalVisible = false"
+  >
+    <ng-container *nzModalContent>
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>分组名称</nz-form-label>
+          <nz-form-control nzErrorTip="请输入分组名称">
+            <input nz-input formControlName="name" placeholder="例如 生产网关" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>说明</nz-form-label>
+          <nz-form-control>
+            <textarea nz-input rows="3" formControlName="description" placeholder="补充用途、区域或负责人"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+    </ng-container>
+
+    <ng-template #groupFooter>
+      <button nz-button nzShape="round" (click)="modalVisible = false">取消</button>
+      <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="save()">
+        <nz-icon nzType="save" />
+        保存
+      </button>
+    </ng-template>
+  </nz-modal>
+</section>

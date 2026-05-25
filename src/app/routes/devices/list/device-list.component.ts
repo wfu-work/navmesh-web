@@ -12,7 +12,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { Device, DeviceStatus, DevicesService } from '../devices.service';
+import { Device, DeviceGroup, DeviceStatus, DevicesService } from '../devices.service';
 
 @Component({
   selector: 'app-device-list',
@@ -34,11 +34,17 @@ export class DeviceListComponent implements OnInit {
     status: '',
     content: '',
     type: '',
+    groupGuid: '',
   };
 
   protected data: Device[] = [];
+  protected groups: DeviceGroup[] = [];
   protected totalCount = 0;
   protected loading = false;
+  protected assigning = false;
+  protected assignModalVisible = false;
+  protected assignDevice?: Device;
+  protected selectedGroupGuid = '';
 
   protected statusTag: STColumnTag = {
     1: { text: '已注册', color: 'gold' },
@@ -59,6 +65,7 @@ export class DeviceListComponent implements OnInit {
     { title: '来源 IP', index: 'sourceIp', width: 150, default: '-' },
     { title: '接入端口', index: 'sshPort', render: 'accessRender', width: 160 },
     { title: 'Web 映射域名', index: 'webDomain', render: 'webDomainRender', width: 200 },
+    { title: '分组', index: 'groupGuid', render: 'groupRender', width: 150 },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 120 },
     {
       title: '最后在线',
@@ -77,8 +84,12 @@ export class DeviceListComponent implements OnInit {
     {
       title: '操作',
       fixed: 'right',
-      width: 180,
+      width: 210,
       buttons: [
+        {
+          icon: 'team',
+          click: (item) => this.openAssignGroup(item),
+        },
         {
           icon: 'edit',
           click: (item) => this.edit(item.guid),
@@ -106,7 +117,18 @@ export class DeviceListComponent implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.loadGroups();
     this.getData();
+  }
+
+  protected loadGroups(): void {
+    this.devicesService.groups({ page: 1, size: 500, status: 1 }).subscribe({
+      next: (res) => {
+        this.groups = (res.data ?? []).map((item) => this.normalizeGroup(item));
+        this.cdr.markForCheck();
+      },
+      error: () => this.message.error('设备分组加载失败'),
+    });
   }
 
   protected getData(): void {
@@ -152,6 +174,39 @@ export class DeviceListComponent implements OnInit {
       },
       error: () => this.message.error('设备禁用失败'),
     });
+  }
+
+  protected openAssignGroup(item: Device): void {
+    this.assignDevice = item;
+    this.selectedGroupGuid = item.groupGuid || item.group_guid || '';
+    this.assignModalVisible = true;
+  }
+
+  protected assignGroup(): void {
+    if (!this.assignDevice) return;
+    this.assigning = true;
+    this.devicesService
+      .assignGroup(this.assignDevice.guid, this.selectedGroupGuid)
+      .pipe(
+        finalize(() => {
+          this.assigning = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.message.success('设备分组已更新');
+          this.assignModalVisible = false;
+          this.getData();
+        },
+        error: () => this.message.error('设备分组更新失败'),
+      });
+  }
+
+  protected groupName(guid: string | undefined): string {
+    if (!guid) return '未分组';
+    const group = this.groups.find((item) => item.guid === guid);
+    return group?.name || guid;
   }
 
   protected statusText(status: DeviceStatus | undefined): string {
@@ -255,6 +310,15 @@ export class DeviceListComponent implements OnInit {
       clientVersion: this.firstText(item.clientVersion, item.client_version, item.clientVersion, item.client_version),
       lastHeartbeatAt: this.firstNumber(item.lastHeartbeatAt, item.last_heartbeat_at, item.lastSeenTime, item.last_seen_time),
       lastMetricAt: this.firstNumber(item.lastMetricAt, item.last_metric_at),
+      groupGuid: this.firstText(item.groupGuid, item.group_guid),
+      createTime: this.firstNumber(item.createTime, item.create_time),
+      updateTime: this.firstNumber(item.updateTime, item.update_time),
+    };
+  }
+
+  private normalizeGroup(item: DeviceGroup): DeviceGroup {
+    return {
+      ...item,
       createTime: this.firstNumber(item.createTime, item.create_time),
       updateTime: this.firstNumber(item.updateTime, item.update_time),
     };

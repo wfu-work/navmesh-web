@@ -1,0 +1,95 @@
+<section class="mapping-page">
+  <div class="mapping-header">
+    <title-label title="自定义域名" description="管理 HTTP 映射绑定的自定义域名和验证状态。" />
+    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+      <nz-icon nzType="plus" />
+      新建域名
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="mapping-toolbar mapping-toolbar-wrap">
+      <h2>域名列表</h2>
+      <div class="toolbar-actions logs-actions">
+        <input nz-input [(ngModel)]="q.domain" placeholder="搜索域名" (keydown.enter)="search()" />
+        <nz-select nzShowSearch nzAllowClear nzPlaceHolder="映射" [(ngModel)]="q.mappingGuid" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部映射" />
+          @for (mapping of mappings; track mapping.guid) {
+            <nz-option [nzValue]="mapping.guid" [nzLabel]="mapping.publicHost || mapping.name || mapping.guid" />
+          }
+        </nz-select>
+        <nz-select nzAllowClear nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option [nzValue]="1" nzLabel="启用" />
+          <nz-option [nzValue]="0" nzLabel="禁用" />
+        </nz-select>
+        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
+        <button nz-button nzShape="round" (click)="reset()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="data"
+      [columns]="columns"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      (change)="tableChange($event)"
+      bordered="false"
+      [scroll]="{ x: '1500px' }"
+    >
+      <ng-template st-row="domainRender" let-item>
+        <code class="mapping-code">{{ item.domain }}</code>
+      </ng-template>
+
+      <ng-template st-row="mappingRender" let-item>
+        <div class="mapping-device-cell">
+          <strong>{{ mappingName(item.mappingGuid) }}</strong>
+          <span>{{ item.mappingGuid }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="tokenRender" let-item>
+        <code class="domain-token">{{ item.verifyToken || '-' }}</code>
+      </ng-template>
+    </st>
+  </nz-card>
+
+  <nz-modal
+    [(nzVisible)]="modalVisible"
+    nzTitle="自定义域名"
+    [nzFooter]="domainFooter"
+    (nzOnCancel)="modalVisible = false"
+  >
+    <ng-container *nzModalContent>
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <nz-form-item>
+          <nz-form-label nzRequired>域名</nz-form-label>
+          <nz-form-control nzErrorTip="请输入域名">
+            <input nz-input formControlName="domain" placeholder="例如 app.example.com" />
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label nzRequired>绑定映射</nz-form-label>
+          <nz-form-control nzErrorTip="请选择映射">
+            <nz-select class="w-100" nzShowSearch nzPlaceHolder="选择 HTTP 映射" formControlName="mappingGuid">
+              @for (mapping of mappings; track mapping.guid) {
+                <nz-option [nzValue]="mapping.guid" [nzLabel]="mapping.publicHost || mapping.name || mapping.guid" />
+              }
+            </nz-select>
+          </nz-form-control>
+        </nz-form-item>
+      </form>
+    </ng-container>
+
+    <ng-template #domainFooter>
+      <button nz-button nzShape="round" (click)="modalVisible = false">取消</button>
+      <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="save()">
+        <nz-icon nzType="save" />
+        保存
+      </button>
+    </ng-template>
+  </nz-modal>
+</section>

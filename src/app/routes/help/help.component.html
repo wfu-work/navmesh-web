@@ -1,0 +1,31 @@
+<section class="help-page">
+  <title-label title="帮助" description="快速找到 NavMesh 常用接入步骤、配置入口和排查路径。" />
+
+  <div class="help-grid">
+    <nz-card class="card-border help-wide" [nzBordered]="false" nzTitle="设备接入命令">
+      <p class="help-copy">客户端启动后会注册设备、维持心跳，并建立 QUIC 隧道。</p>
+      <code class="help-command">{{ command }}</code>
+    </nz-card>
+
+    <nz-card class="card-border" [nzBordered]="false" nzTitle="常用入口">
+      <div class="help-links">
+        @for (item of links; track item.link) {
+          <a [routerLink]="item.link">
+            <strong>{{ item.title }}</strong>
+            <span>{{ item.description }}</span>
+          </a>
+        }
+      </div>
+    </nz-card>
+
+    <nz-card class="card-border" [nzBordered]="false" nzTitle="排查顺序">
+      <ol class="help-steps">
+        <li>先确认设备列表中状态为在线。</li>
+        <li>再检查在线连接是否存在该设备隧道。</li>
+        <li>SSH 问题查看入口地址和别名绑定。</li>
+        <li>HTTP 问题查看映射列表、访问日志和自定义域名验证状态。</li>
+        <li>权限问题查看访问策略是否限制了设备、分组或映射。</li>
+      </ol>
+    </nz-card>
+  </div>
+</section>

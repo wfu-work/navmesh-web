@@ -6,7 +6,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { Device, DevicesService } from '../../devices/devices.service';
+import { Device, DeviceGroup, DevicesService } from '../../devices/devices.service';
 import { MappingsService, PortMapping } from '../../mappings/mappings.service';
 import { AccessPolicy, PoliciesService } from '../policies.service';
 
@@ -35,6 +35,7 @@ export class PolicyListComponent implements OnInit {
 
   protected data: AccessPolicy[] = [];
   protected devices: Device[] = [];
+  protected groups: DeviceGroup[] = [];
   protected mappings: PortMapping[] = [];
   protected totalCount = 0;
   protected loading = false;
@@ -49,6 +50,7 @@ export class PolicyListComponent implements OnInit {
   protected readonly scopeTag: STColumnTag = {
     global: { text: '全局', color: 'geekblue' },
     device: { text: '设备', color: 'green' },
+    group: { text: '分组', color: 'cyan' },
     mapping: { text: '映射', color: 'blue' },
   };
 
@@ -105,6 +107,7 @@ export class PolicyListComponent implements OnInit {
     forkJoin({
       policies: this.policiesService.list(this.q),
       devices: this.devicesService.list({ page: 1, size: 500 }),
+      groups: this.devicesService.groups({ page: 1, size: 500, status: 1 }),
       mappings: this.mappingsService.list({ page: 1, size: 500 }),
     })
       .pipe(
@@ -114,10 +117,11 @@ export class PolicyListComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ policies, devices, mappings }) => {
+        next: ({ policies, devices, groups, mappings }) => {
           this.data = (policies.data ?? []).map((item) => this.normalizePolicy(item));
           this.totalCount = policies.total ?? 0;
           this.devices = devices.data ?? [];
+          this.groups = (groups.data ?? []).map((item) => this.normalizeGroup(item));
           this.mappings = (mappings.data ?? []).map((item) => this.normalizeMapping(item));
         },
         error: () => this.message.error('访问策略加载失败'),
@@ -231,6 +235,10 @@ export class PolicyListComponent implements OnInit {
       const device = this.devices.find((row) => row.guid === item.targetId);
       return device?.alias || device?.sncode || device?.hostname || device?.name || item.targetId || '-';
     }
+    if (item.scope === 'group') {
+      const group = this.groups.find((row) => row.guid === item.targetId);
+      return group?.name || item.targetId || '-';
+    }
     if (item.scope === 'mapping') {
       const mapping = this.mappings.find((row) => row.guid === item.targetId);
       return mapping?.publicHost || mapping?.name || item.targetId || '-';
@@ -260,6 +268,14 @@ export class PolicyListComponent implements OnInit {
       publicHost: this.firstText(item.publicHost, item.public_host),
       targetHost: this.firstText(item.targetHost, item.target_host),
       targetPort: this.firstNumber(item.targetPort, item.target_port),
+    };
+  }
+
+  private normalizeGroup(item: DeviceGroup): DeviceGroup {
+    return {
+      ...item,
+      createTime: this.firstNumber(item.createTime, item.create_time),
+      updateTime: this.firstNumber(item.updateTime, item.update_time),
     };
   }
 
