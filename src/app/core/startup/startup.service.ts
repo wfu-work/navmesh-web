@@ -8,6 +8,7 @@ import {
 } from '@angular/core';
 import { ACLService } from '@delon/acl';
 import { MenuService, SettingsService, TitleService } from '@delon/theme';
+import { ThemeColorService } from '@shared';
 import type { NzSafeAny } from 'ng-zorro-antd/core/types';
 import { Observable, catchError, map, of } from 'rxjs';
 
@@ -35,6 +36,7 @@ export class StartupService {
   private aclService = inject(ACLService);
   private titleService = inject(TitleService);
   private httpClient = inject(HttpClient);
+  private themeColorService = inject(ThemeColorService);
 
   private appData$ = this.httpClient.get('/user').pipe(
     catchError((res: NzSafeAny) => {
@@ -76,6 +78,7 @@ export class StartupService {
   }
 
   load(): Observable<void> {
+    this.themeColorService.restore();
     return this.viaHttp();
   }
 }

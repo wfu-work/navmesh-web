@@ -56,6 +56,14 @@ interface TrafficBar {
           inset 0 1px 0 rgb(255 255 255 / 90%);
       }
 
+      :host-context([data-theme='dark']) .trend-card {
+        border-color: rgb(255 255 255 / 6%);
+        background: linear-gradient(180deg, rgb(18 26 41 / 96%) 0%, rgb(14 20 31 / 96%) 100%);
+        box-shadow:
+          0 18px 44px rgb(0 0 0 / 24%),
+          inset 0 1px 0 rgb(255 255 255 / 6%);
+      }
+
       .trend-card-header {
         display: flex;
         align-items: center;
@@ -71,6 +79,10 @@ interface TrafficBar {
         line-height: 1.35;
       }
 
+      :host-context([data-theme='dark']) .trend-card-header h2 {
+        color: rgba(255, 255, 255, 0.92);
+      }
+
       .trend-card-header span {
         flex: 0 0 auto;
         padding: 7px 14px;
@@ -80,6 +92,11 @@ interface TrafficBar {
         font-weight: 800;
         line-height: 1;
         background: rgb(221 250 244 / 72%);
+      }
+
+      :host-context([data-theme='dark']) .trend-card-header span {
+        color: #67d5c4;
+        background: rgb(103 213 196 / 14%);
       }
 
       .trend-chart {
@@ -103,6 +120,10 @@ interface TrafficBar {
         content: '';
       }
 
+      :host-context([data-theme='dark']) .trend-chart::after {
+        background: rgb(255 255 255 / 10%);
+      }
+
       .trend-bar-wrap {
         display: flex;
         align-items: end;
@@ -118,6 +139,10 @@ interface TrafficBar {
         background: rgb(226 234 231 / 84%);
       }
 
+      :host-context([data-theme='dark']) .trend-bar {
+        background: rgb(255 255 255 / 10%);
+      }
+
       .trend-bar-active {
         background: linear-gradient(180deg, #69cebf 0%, #78cdbc 100%);
       }
@@ -130,6 +155,10 @@ interface TrafficBar {
         color: #b0beb9;
         font-size: 14px;
         font-weight: 700;
+      }
+
+      :host-context([data-theme='dark']) .trend-axis {
+        color: rgba(255, 255, 255, 0.42);
       }
 
       @media (max-width: 767px) {

@@ -2,6 +2,10 @@
   min-width: 0;
 }
 
+:host-context([data-theme='dark']) .device-detail-page {
+  color: rgba(255, 255, 255, 0.84);
+}
+
 .detail-actions {
   display: flex;
   flex-wrap: wrap;
@@ -47,14 +51,37 @@
   }
 }
 
+:host-context([data-theme='dark']) .summary-item {
+  border-color: rgb(255 255 255 / 6%);
+  background: rgb(17 24 39 / 94%);
+}
+
+:host-context([data-theme='dark']) .summary-item span {
+  color: rgba(255, 255, 255, 0.54);
+}
+
+:host-context([data-theme='dark']) .summary-item strong {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .summary-item.device-online {
   border-color: #bfe8d7;
   background: #f4fbf8;
 }
 
+:host-context([data-theme='dark']) .summary-item.device-online {
+  border-color: rgb(13 143 93 / 28%);
+  background: rgb(13 143 93 / 12%);
+}
+
 .summary-item.device-offline {
   border-color: #f1c6c6;
   background: #fff7f7;
+}
+
+:host-context([data-theme='dark']) .summary-item.device-offline {
+  border-color: rgb(197 58 58 / 28%);
+  background: rgb(197 58 58 / 12%);
 }
 
 .summary-item.device-registered,
@@ -63,17 +90,36 @@
   background: #fffbf2;
 }
 
+:host-context([data-theme='dark']) .summary-item.device-registered,
+:host-context([data-theme='dark']) .summary-item.device-unknown {
+  border-color: rgb(181 106 0 / 28%);
+  background: rgb(181 106 0 / 12%);
+}
+
 .status-online {
   color: #0d8f5d !important;
+}
+
+:host-context([data-theme='dark']) .status-online {
+  color: #67d5c4 !important;
 }
 
 .status-offline {
   color: #c53a3a !important;
 }
 
+:host-context([data-theme='dark']) .status-offline {
+  color: #ff8e8e !important;
+}
+
 .status-registered,
 .status-unknown {
   color: #b56a00 !important;
+}
+
+:host-context([data-theme='dark']) .status-registered,
+:host-context([data-theme='dark']) .status-unknown {
+  color: #f4c26b !important;
 }
 
 .detail-grid {
@@ -118,6 +164,19 @@
   }
 }
 
+:host-context([data-theme='dark']) .detail-device-title {
+  border-bottom-color: rgb(255 255 255 / 8%);
+}
+
+:host-context([data-theme='dark']) .detail-device-title strong {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:host-context([data-theme='dark']) .detail-device-title > div > span,
+:host-context([data-theme='dark']) .detail-device-meta > span:first-child {
+  color: rgba(255, 255, 255, 0.54);
+}
+
 .detail-device-meta {
   display: flex;
   gap: 8px;
@@ -155,11 +214,20 @@
   }
 }
 
+:host-context([data-theme='dark']) .detail-card-title h2 {
+  color: rgba(255, 255, 255, 0.92);
+}
+
 .token-prefix {
   padding: 2px 8px;
   border-radius: 6px;
   color: #405165;
   background: #f1f5f4;
+}
+
+:host-context([data-theme='dark']) .token-prefix {
+  color: rgba(255, 255, 255, 0.72);
+  background: rgb(255 255 255 / 8%);
 }
 
 .detail-empty {

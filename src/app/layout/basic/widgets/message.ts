@@ -147,6 +147,12 @@ export interface HeaderMessageItem {
       backdrop-filter: blur(16px);
     }
 
+    :host-context([data-theme='dark']) .header-message-panel {
+      background: rgb(17 24 39 / 96%);
+      border-color: rgb(255 255 255 / 8%);
+      box-shadow: 0 22px 44px rgb(0 0 0 / 34%);
+    }
+
     .header-message-panel__header {
       display: flex;
       align-items: flex-start;
@@ -157,11 +163,27 @@ export interface HeaderMessageItem {
       background: linear-gradient(180deg, #fbfdfc 0%, #f5faf7 100%);
     }
 
+    :host-context([data-theme='dark']) .header-message-panel__header {
+      border-bottom-color: rgb(255 255 255 / 6%);
+      background: linear-gradient(180deg, #121a2a 0%, #0f1724 100%);
+    }
+
     .header-message-panel__title {
       color: #203049;
       font-size: 16px;
       font-weight: 800;
       line-height: 1.3;
+    }
+
+    :host-context([data-theme='dark']) .header-message-panel__title,
+    :host-context([data-theme='dark']) .header-message-item__title {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    :host-context([data-theme='dark']) .header-message-panel__subtitle,
+    :host-context([data-theme='dark']) .header-message-item__content,
+    :host-context([data-theme='dark']) .header-message-item__time {
+      color: rgba(255, 255, 255, 0.62);
     }
 
     .header-message-panel__subtitle {

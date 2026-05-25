@@ -34,6 +34,11 @@
         box-shadow 0.2s ease;
     }
 
+    :host-context([data-theme='dark']) .upload-list__control .ant-upload.ant-upload-select-picture-card {
+      border-color: rgb(255 255 255 / 12%);
+      background: linear-gradient(180deg, #121a2a 0%, #0f1724 100%);
+    }
+
     .upload-list__control .ant-upload.ant-upload-select-picture-card:hover {
       border-color: #b8c9df;
       box-shadow: 0 10px 24px rgb(15 23 42 / 6%);
@@ -47,6 +52,11 @@
       border: 1px solid rgb(15 23 42 / 8%);
       border-radius: 22px;
       background: #f7f9fc;
+    }
+
+    :host-context([data-theme='dark']) .upload-list__card {
+      border-color: rgb(255 255 255 / 8%);
+      background: #0f1724;
     }
 
     .upload-list__card img {
@@ -96,11 +106,20 @@
       font-size: 24px;
     }
 
+    :host-context([data-theme='dark']) .upload-list__trigger-icon {
+      color: rgba(255, 255, 255, 0.58);
+      background: rgb(255 255 255 / 8%);
+    }
+
     .upload-list__trigger-title {
       color: #1f2a3d;
       font-size: 15px;
       font-weight: 700;
       line-height: 1.5;
+    }
+
+    :host-context([data-theme='dark']) .upload-list__trigger-title {
+      color: rgba(255, 255, 255, 0.88);
     }
 
     .upload-list__trigger-hint {
@@ -109,6 +128,10 @@
       font-size: 12px;
       font-weight: 600;
       line-height: 1.5;
+    }
+
+    :host-context([data-theme='dark']) .upload-list__trigger-hint {
+      color: rgba(255, 255, 255, 0.46);
     }
 
     @media (max-width: 768px) {

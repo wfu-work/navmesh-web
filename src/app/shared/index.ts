@@ -20,3 +20,4 @@ export * from './cell-widget/index';
 
 // Common
 export * from './common/constant.module';
+export * from './services/theme-color.service';

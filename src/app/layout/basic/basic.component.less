@@ -75,6 +75,39 @@
     padding: 0 25px;
   }
 
+  [data-theme='dark'] & {
+    background:
+      radial-gradient(circle at 24% 38%, rgb(32 196 181 / 14%), transparent 30%),
+      radial-gradient(circle at 84% 18%, rgb(74 115 255 / 18%), transparent 34%),
+      linear-gradient(180deg, #0b1220 0%, #101826 100%);
+
+    nz-sider {
+      border-color: rgb(255 255 255 / 6%);
+      background:
+        radial-gradient(circle at 50% 100%, rgb(var(--nm-primary-rgb) / 12%), transparent 30%),
+        linear-gradient(180deg, #121b2a 0%, #0f1724 100%);
+      box-shadow:
+        0 18px 46px rgb(0 0 0 / 30%),
+        inset 0 1px 0 rgb(255 255 255 / 6%);
+    }
+
+    nz-header {
+      background:
+        radial-gradient(circle at 50% 100%, rgb(var(--nm-primary-rgb) / 10%), transparent 30%),
+        linear-gradient(180deg, #121b2a 0%, #0f1724 100%);
+    }
+
+    nz-footer {
+      color: rgba(255, 255, 255, 0.72);
+      background: #0f1724;
+    }
+
+    .inner-content,
+    .inner-content-no {
+      color: rgba(255, 255, 255, 0.88);
+    }
+  }
+
   .inner-content-no {
     min-height: 92vh;
     margin-bottom: 38px;

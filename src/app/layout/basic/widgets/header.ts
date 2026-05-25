@@ -77,6 +77,14 @@ import { ThemeColorComponent } from './theme-color';
         backdrop-filter: blur(18px);
       }
 
+      :host-context([data-theme='dark']) .header-container-scrolled {
+        border-color: rgb(255 255 255 / 8%);
+        background: rgb(15 23 36 / 78%);
+        box-shadow:
+          0 12px 32px rgb(0 0 0 / 24%),
+          inset 0 1px 0 rgb(255 255 255 / 6%);
+      }
+
       .header-container-collapsed {
         left: calc(var(--basic-sider-collapsed-width, 80px) + var(--basic-layout-gap, 14px) * 2);
       }
@@ -108,14 +116,29 @@ import { ThemeColorComponent } from './theme-color';
           transform 0.2s ease;
       }
 
+      :host-context([data-theme='dark']) .trigger {
+        border-color: rgb(255 255 255 / 10%);
+        color: rgba(255, 255, 255, 0.84);
+        background: rgb(255 255 255 / 6%);
+      }
+
       .trigger:hover {
         transform: translateY(-1px);
         color: var(--nm-primary-active);
         background: rgb(var(--nm-primary-rgb) / 14%);
       }
 
+      :host-context([data-theme='dark']) .trigger:hover {
+        color: #fff;
+        background: rgb(255 255 255 / 10%);
+      }
+
       .title {
         color: var(--nm-primary);
+      }
+
+      :host-context([data-theme='dark']) .title {
+        color: rgba(255, 255, 255, 0.92);
       }
 
       .header-actions {
@@ -125,6 +148,10 @@ import { ThemeColorComponent } from './theme-color';
         gap: 10px;
         min-width: 0;
         color: #56657d;
+      }
+
+      :host-context([data-theme='dark']) .header-actions {
+        color: rgba(255, 255, 255, 0.72);
       }
 
       .header-actions > * {

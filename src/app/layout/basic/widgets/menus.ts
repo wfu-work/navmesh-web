@@ -142,6 +142,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
         display: flex;
         flex: 1;
         min-height: 0;
+        color: #203049;
       }
 
       .sider-inner {
@@ -166,6 +167,18 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
         font-weight: 680;
         color: rgb(0 0 0 / 90%);
         animation: move 5s infinite;
+      }
+
+      :host-context([data-theme='dark']) {
+        color: rgba(255, 255, 255, 0.84);
+      }
+
+      :host-context([data-theme='dark']) .logo-a {
+        color: rgba(255, 255, 255, 0.92);
+      }
+
+      :host-context([data-theme='dark']) .sider-inner {
+        backdrop-filter: blur(22px);
       }
 
       .logo {
@@ -317,6 +330,31 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
           background: transparent;
         }
 
+        :host-context([data-theme='dark']) .ant-menu {
+          color: rgba(255, 255, 255, 0.82);
+        }
+
+        :host-context([data-theme='dark']) .ant-menu-light,
+        :host-context([data-theme='dark']) .ant-menu-light .ant-menu-sub {
+          background: transparent;
+        }
+
+        :host-context([data-theme='dark'])
+          :is(.ant-menu-inline .ant-menu-item, .ant-menu-inline .ant-menu-submenu-title, .sidebar-bottom-item) {
+          color: rgba(255, 255, 255, 0.76);
+        }
+
+        :host-context([data-theme='dark'])
+          :is(.ant-menu-inline .ant-menu-item, .ant-menu-inline .ant-menu-submenu-title, .sidebar-bottom-item)
+          .anticon {
+          color: rgba(255, 255, 255, 0.72);
+        }
+
+        :host-context([data-theme='dark']) .sidebar-bottom-item:hover {
+          color: #fff;
+          background: rgb(255 255 255 / 6%);
+        }
+
         .ant-menu-inline {
           border-inline-end: 0;
         }
@@ -398,9 +436,32 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
           background: rgb(var(--nm-primary-rgb) / 4%);
         }
 
+        :host-context([data-theme='dark'])
+          :is(.ant-menu-inline .ant-menu-item, .ant-menu-inline .ant-menu-submenu-title):hover {
+          color: #fff;
+          background: rgb(255 255 255 / 6%);
+        }
+
         .ant-menu-inline .ant-menu-submenu-open > .ant-menu-submenu-title,
         .ant-menu-inline .ant-menu-submenu-selected > .ant-menu-submenu-title {
           color: #203049;
+        }
+
+        :host-context([data-theme='dark'])
+          .ant-menu-inline
+          :is(.ant-menu-submenu-open, .ant-menu-submenu-selected)
+          > .ant-menu-submenu-title {
+          color: rgba(255, 255, 255, 0.96);
+          background: rgb(255 255 255 / 6%);
+          box-shadow: inset 0 0 0 1px rgb(255 255 255 / 10%);
+        }
+
+        :host-context([data-theme='dark'])
+          .ant-menu-inline
+          :is(.ant-menu-submenu-open, .ant-menu-submenu-selected)
+          > .ant-menu-submenu-title
+          :is(.anticon, .ant-menu-title-content) {
+          color: rgba(255, 255, 255, 0.96) !important;
         }
 
         .ant-menu-sub.ant-menu-inline {
@@ -421,19 +482,61 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
           background: transparent;
         }
 
+        :host-context([data-theme='dark']) .ant-menu-sub.ant-menu-inline .ant-menu-item {
+          color: rgba(255, 255, 255, 0.72);
+        }
+
+        :host-context([data-theme='dark']) .ant-menu-sub.ant-menu-inline .ant-menu-item:hover {
+          color: #fff;
+          background: rgb(255 255 255 / 5%);
+        }
+
         .ant-menu-submenu-open {
           border: 12px;
         }
 
         .ant-menu-sub.ant-menu-inline .ant-menu-item-selected {
-          color: var(--nm-primary) !important;
-          background: rgb(var(--nm-primary-rgb) / 10%) !important;
-          box-shadow: none;
+          color: var(--nm-menu-sub-selected-color, var(--nm-primary)) !important;
+          border: var(--nm-menu-sub-selected-border-width, 0) solid
+            var(--nm-menu-sub-selected-border-color, transparent);
+          background: var(
+            --nm-menu-sub-selected-bg,
+            rgb(var(--nm-primary-rgb) / 10%)
+          ) !important;
+          box-shadow: var(--nm-menu-sub-selected-shadow, none);
         }
 
         .ant-menu-sub.ant-menu-inline .ant-menu-item-selected .anticon,
-        .ant-menu-sub.ant-menu-inline .ant-menu-item-selected a {
-          color: var(--nm-primary) !important;
+        .ant-menu-sub.ant-menu-inline .ant-menu-item-selected a,
+        .ant-menu-sub.ant-menu-inline .ant-menu-item-selected span {
+          color: var(--nm-menu-sub-selected-color, var(--nm-primary)) !important;
+        }
+
+        :host-context([data-theme='dark']) .ant-menu-sub.ant-menu-inline .ant-menu-item-selected {
+          position: relative;
+          color: rgba(255, 255, 255, 0.98) !important;
+          border: 1px solid rgb(255 255 255 / 12%);
+          background: rgb(255 255 255 / 8%) !important;
+          box-shadow:
+            inset 0 0 0 1px rgb(255 255 255 / 6%),
+            0 6px 16px rgb(0 0 0 / 18%);
+        }
+
+        :host-context([data-theme='dark']) .ant-menu-sub.ant-menu-inline .ant-menu-item-selected::before {
+          position: absolute;
+          inset: 8px auto 8px 0;
+          left: 0;
+          width: 3px;
+          border-radius: 999px;
+          background: var(--nm-primary-hover);
+          content: '';
+        }
+
+        :host-context([data-theme='dark'])
+          .ant-menu-sub.ant-menu-inline
+          .ant-menu-item-selected
+          :is(.anticon, a, span, .ant-menu-title-content) {
+          color: rgba(255, 255, 255, 0.98) !important;
         }
       }
 

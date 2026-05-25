@@ -66,6 +66,17 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
         background: rgb(213 241 235 / 88%);
       }
 
+      :host-context([data-theme='dark']) .title-label-back {
+        border-color: rgb(255 255 255 / 10%);
+        color: rgba(255, 255, 255, 0.76);
+        background: rgb(255 255 255 / 6%);
+      }
+
+      :host-context([data-theme='dark']) .title-label-back:hover {
+        color: #fff;
+        background: rgb(255 255 255 / 10%);
+      }
+
       .title-label-content {
         min-width: 0;
       }
@@ -79,6 +90,10 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
         letter-spacing: 0;
       }
 
+      :host-context([data-theme='dark']) .title-label-title {
+        color: rgba(255, 255, 255, 0.92);
+      }
+
       .title-label-description {
         margin: 8px 0 0;
         color: #65727f;
@@ -86,6 +101,10 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
         font-weight: 600;
         line-height: 1.6;
         letter-spacing: 0;
+      }
+
+      :host-context([data-theme='dark']) .title-label-description {
+        color: rgba(255, 255, 255, 0.58);
       }
 
       @media (max-width: 767px) {

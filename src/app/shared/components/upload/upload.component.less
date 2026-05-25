@@ -44,6 +44,11 @@
         box-shadow 0.2s ease;
     }
 
+    :host-context([data-theme='dark']) .upload-card__placeholder {
+      border-color: rgb(255 255 255 / 12%);
+      background: linear-gradient(180deg, #121a2a 0%, #0f1724 100%);
+    }
+
     .upload-card .ant-upload:hover .upload-card__placeholder {
       border-color: #b8c9df;
       box-shadow: 0 10px 24px rgb(15 23 42 / 6%);
@@ -60,9 +65,17 @@
       background: linear-gradient(180deg, #eef2f8 0%, #e8edf6 100%);
     }
 
+    :host-context([data-theme='dark']) .upload-card__icon-wrap {
+      background: rgb(255 255 255 / 8%);
+    }
+
     .upload-card__icon {
       color: #8fa0b7;
       font-size: 34px;
+    }
+
+    :host-context([data-theme='dark']) .upload-card__icon {
+      color: rgba(255, 255, 255, 0.58);
     }
 
     .upload-card__title {
@@ -72,12 +85,20 @@
       line-height: 1.5;
     }
 
+    :host-context([data-theme='dark']) .upload-card__title {
+      color: rgba(255, 255, 255, 0.88);
+    }
+
     .upload-card__hint {
       margin-top: 8px;
       color: #a1aec0;
       font-size: 12px;
       font-weight: 500;
       line-height: 1.5;
+    }
+
+    :host-context([data-theme='dark']) .upload-card__hint {
+      color: rgba(255, 255, 255, 0.46);
     }
 
     .upload-card__preview {
@@ -89,6 +110,11 @@
       border-radius: 24px;
       background: #f6f8fb;
       cursor: pointer;
+    }
+
+    :host-context([data-theme='dark']) .upload-card__preview {
+      border-color: rgb(255 255 255 / 8%);
+      background: #0f1724;
     }
 
     .upload-card__preview img {

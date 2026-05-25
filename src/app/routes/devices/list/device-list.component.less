@@ -2,12 +2,61 @@
   min-width: 0;
 }
 
+:host-context([data-theme='dark']) .device-page {
+  color: rgba(255, 255, 255, 0.84);
+}
+
 .device-header {
   display: flex;
   gap: 24px;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 22px;
+}
+
+:host-context([data-theme='dark']) h2 {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:host-context([data-theme='dark']) .device-header title-label,
+:host-context([data-theme='dark']) .device-header .title-label-title {
+  color: rgba(255, 255, 255, 0.94);
+}
+
+:host-context([data-theme='dark']) .device-header .title-label-description {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+:host-context([data-theme='dark']) .ant-card {
+  border-color: rgb(255 255 255 / 6%);
+  background: linear-gradient(180deg, rgb(18 26 41 / 96%) 0%, rgb(14 20 31 / 96%) 100%);
+  box-shadow:
+    0 18px 46px rgb(0 0 0 / 24%),
+    inset 0 1px 0 rgb(255 255 255 / 6%);
+}
+
+:host-context([data-theme='dark']) .ant-btn:not(.ant-btn-primary) {
+  border-color: rgb(255 255 255 / 18%);
+  color: rgba(255, 255, 255, 0.78);
+  background: transparent;
+}
+
+:host-context([data-theme='dark']) .ant-btn:not(.ant-btn-primary):hover {
+  border-color: rgb(255 255 255 / 32%);
+  color: #fff;
+  background: rgb(255 255 255 / 6%);
+}
+
+:host-context([data-theme='dark']) .ant-btn-primary {
+  border-color: rgb(255 255 255 / 24%) !important;
+  color: #fff !important;
+  background: rgb(255 255 255 / 8%) !important;
+  box-shadow: none !important;
+}
+
+:host-context([data-theme='dark']) .ant-btn-primary:hover {
+  border-color: rgb(255 255 255 / 40%) !important;
+  background: rgb(255 255 255 / 12%) !important;
 }
 
 .device-name-wrap {

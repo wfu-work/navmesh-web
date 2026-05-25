@@ -13,6 +13,7 @@ export interface ThemeColorPreset {
 }
 
 const STORAGE_KEY = 'navmesh_theme_color';
+const DARK_THEME_LINK_ID = 'navmesh-dark-theme-styles';
 
 export const THEME_COLOR_PRESETS: ThemeColorPreset[] = [
   {
@@ -24,6 +25,16 @@ export const THEME_COLOR_PRESETS: ThemeColorPreset[] = [
     soft: '#eef8f3',
     tint: '#f4fbf7',
     rgb: '11 140 94',
+  },
+  {
+    key: 'dark',
+    label: '暗黑',
+    primary: '#111827',
+    hover: '#374151',
+    active: '#030712',
+    soft: '#f3f4f6',
+    tint: '#f8fafc',
+    rgb: '17 24 39',
   },
   {
     key: 'blue',
@@ -86,6 +97,7 @@ export class ThemeColorService {
     const preset = this.findPreset(key);
     this.key.set(preset.key);
     this.writeVariables(preset);
+    this.writeThemeMode(preset.key === 'dark');
 
     if (this.isBrowser) {
       localStorage.setItem(STORAGE_KEY, preset.key);
@@ -97,6 +109,7 @@ export class ThemeColorService {
     const preset = this.findPreset(storedKey || THEME_COLOR_PRESETS[0].key);
     this.key.set(preset.key);
     this.writeVariables(preset);
+    this.writeThemeMode(preset.key === 'dark');
   }
 
   private findPreset(key: string): ThemeColorPreset {
@@ -112,5 +125,26 @@ export class ThemeColorService {
     root.style.setProperty('--nm-primary-soft', preset.soft);
     root.style.setProperty('--nm-primary-tint', preset.tint);
     root.style.setProperty('--nm-primary-rgb', preset.rgb);
+  }
+
+  private writeThemeMode(isDark: boolean): void {
+    const root = this.document.documentElement;
+    const themeLink = this.document.getElementById(DARK_THEME_LINK_ID) as HTMLLinkElement | null;
+
+    root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    root.style.colorScheme = isDark ? 'dark' : 'light';
+
+    if (isDark) {
+      if (!themeLink) {
+        const link = this.document.createElement('link');
+        link.id = DARK_THEME_LINK_ID;
+        link.rel = 'stylesheet';
+        link.href = 'assets/style.dark.css';
+        this.document.head.appendChild(link);
+      }
+      return;
+    }
+
+    themeLink?.remove();
   }
 }

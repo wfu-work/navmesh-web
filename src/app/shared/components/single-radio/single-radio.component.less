@@ -18,6 +18,10 @@
   line-height: 1.5;
 }
 
+:host-context([data-theme='dark']) .single-radio__label {
+  color: rgba(255, 255, 255, 0.58);
+}
+
 .single-radio__group {
   display: grid;
   gap: 18px;
@@ -65,6 +69,20 @@
   }
 }
 
+:host-context([data-theme='dark']) .single-radio__item {
+  border-color: rgb(255 255 255 / 8%);
+  background: linear-gradient(180deg, #121a2a 0%, #0f1724 100%);
+  color: rgba(255, 255, 255, 0.76);
+
+  &.is-active {
+    border-color: rgb(var(--nm-primary-rgb) / 36%);
+    background:
+      radial-gradient(circle at top, rgb(var(--nm-primary-rgb) / 18%), transparent 55%),
+      linear-gradient(180deg, #121a2a 0%, #0f1724 100%);
+    color: rgba(255, 255, 255, 0.9);
+  }
+}
+
 .single-radio__icon {
   display: inline-flex;
   align-items: center;
@@ -96,6 +114,10 @@
   color: #8b98ad;
   font-size: 12px;
   line-height: 1.4;
+}
+
+:host-context([data-theme='dark']) .single-radio__desc {
+  color: rgba(255, 255, 255, 0.46);
 }
 
 @media (max-width: 767px) {

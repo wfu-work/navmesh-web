@@ -59,6 +59,14 @@ interface RuleSnapshot {
           inset 0 1px 0 rgb(255 255 255 / 90%);
       }
 
+      :host-context([data-theme='dark']) .rules-card {
+        border-color: rgb(255 255 255 / 6%);
+        background: linear-gradient(180deg, rgb(18 26 41 / 96%) 0%, rgb(14 20 31 / 96%) 100%);
+        box-shadow:
+          0 18px 44px rgb(0 0 0 / 24%),
+          inset 0 1px 0 rgb(255 255 255 / 6%);
+      }
+
       .rules-card-header {
         display: flex;
         align-items: center;
@@ -74,12 +82,21 @@ interface RuleSnapshot {
         line-height: 1.35;
       }
 
+      :host-context([data-theme='dark']) .rules-card-header h2,
+      :host-context([data-theme='dark']) .rule-copy strong {
+        color: rgba(255, 255, 255, 0.92);
+      }
+
       .rules-more {
         color: #4cc7b7;
         font-size: 22px;
         font-weight: 900;
         line-height: 1;
         letter-spacing: 2px;
+      }
+
+      :host-context([data-theme='dark']) .rules-more {
+        color: #67d5c4;
       }
 
       .rules-list {
@@ -102,6 +119,10 @@ interface RuleSnapshot {
         border-radius: 50%;
         background: #49cdbd;
         box-shadow: 0 0 0 5px rgb(73 205 189 / 12%);
+      }
+
+      :host-context([data-theme='dark']) .rule-dot {
+        box-shadow: 0 0 0 5px rgb(73 205 189 / 8%);
       }
 
       .rule-dot-idle {
@@ -141,6 +162,11 @@ interface RuleSnapshot {
         line-height: 1.45;
       }
 
+      :host-context([data-theme='dark']) .rule-copy span,
+      :host-context([data-theme='dark']) .rule-status {
+        color: rgba(255, 255, 255, 0.54);
+      }
+
       .rule-status {
         color: #7f8c99;
         font-size: 14px;
@@ -155,6 +181,10 @@ interface RuleSnapshot {
         color: #40bfac;
         font-size: 14px;
         font-weight: 800;
+      }
+
+      :host-context([data-theme='dark']) .rules-link {
+        color: #67d5c4;
       }
 
       @media (max-width: 767px) {
