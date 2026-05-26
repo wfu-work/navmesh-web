@@ -135,24 +135,59 @@
   }
 }
 
-[data-theme='dark'] {
-  :host ::ng-deep {
+:host-context([data-theme='dark']) ::ng-deep {
+  .container {
+    background:
+      radial-gradient(circle at 24% 38%, rgb(45 212 191 / 12%), transparent 30%),
+      radial-gradient(circle at 80% 16%, rgb(96 165 250 / 10%), transparent 34%),
+      linear-gradient(116deg, #05070d 0%, #0b1220 48%, #05070d 100%);
+
+    &::before {
+      background:
+        linear-gradient(118deg, transparent 0 24%, rgb(255 255 255 / 5%) 32%, transparent 42%),
+        linear-gradient(124deg, transparent 0 48%, rgb(45 212 191 / 6%) 56%, transparent 66%),
+        linear-gradient(130deg, transparent 0 68%, rgb(255 255 255 / 4%) 76%, transparent 84%);
+    }
+
+    &::after {
+      background: radial-gradient(ellipse at center, rgb(45 212 191 / 10%), transparent 68%);
+    }
+  }
+
+  .wrap {
+    border-color: rgb(255 255 255 / 10%);
+    background: rgb(17 24 39 / 82%);
+    box-shadow:
+      0 28px 90px rgb(0 0 0 / 38%),
+      inset 0 1px 0 rgb(255 255 255 / 10%);
+  }
+
+  .title {
+    color: rgb(255 255 255 / 92%);
+  }
+
+  .desc {
+    color: rgb(255 255 255 / 58%);
+  }
+
+  .global-footer,
+  .global-footer__copyright,
+  .global-footer__links,
+  .global-footer__links a {
+    color: rgb(255 255 255 / 48%);
+  }
+
+  .global-footer__links a:hover,
+  .global-footer__copyright a {
+    color: #67d5c4;
+  }
+
+  @media (min-width: @screen-md-min) {
     .container {
-      background: #141414;
-    }
-
-    .title {
-      color: fade(@white, 85%);
-    }
-
-    .desc {
-      color: fade(@white, 45%);
-    }
-
-    @media (min-width: @screen-md-min) {
-      .container {
-        background-image: none;
-      }
+      background-image:
+        radial-gradient(circle at 24% 38%, rgb(45 212 191 / 12%), transparent 30%),
+        radial-gradient(circle at 80% 16%, rgb(96 165 250 / 10%), transparent 34%),
+        linear-gradient(116deg, #05070d 0%, #0b1220 48%, #05070d 100%);
     }
   }
 }
