@@ -12,16 +12,20 @@ import { CUSTOM_ERROR, IGNORE_BASE_URL, RAW_BODY } from '@delon/theme';
 import { environment } from '@env/environment';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
-import { Observable, mergeMap, of, throwError } from 'rxjs';
+import { Observable, catchError, mergeMap, of, throwError } from 'rxjs';
 
 import { ReThrowHttpError, getAdditionalHeaders, goTo, toLogin } from './helper';
 import { tryRefreshToken } from './refresh-token';
 
 type ApiResponseBody = Partial<{
-  code: number;
+  code: number | string;
   msg: string;
   data: unknown;
 }>;
+
+function isUnauthorizedCode(code: ApiResponseBody['code']): boolean {
+  return Number(code) === 401;
+}
 
 function handleData(
   injector: Injector,
@@ -40,6 +44,10 @@ function handleData(
           return of(ev);
         }
         if (body && body.code !== 200) {
+          if (isUnauthorizedCode(body.code)) {
+            toLogin(injector);
+            return throwError(() => ({ ...body, _throw: true }) as ReThrowHttpError);
+          }
           const customError = req.context.get(CUSTOM_ERROR);
           if (!customError) injector.get(NzMessageService).error(body.msg ?? '请求失败');
           return !customError
@@ -97,7 +105,6 @@ function handleData(
 }
 
 export const defaultInterceptor: HttpInterceptorFn = (req, next) => {
-  // 统一加上服务端前缀
   let url = req.url;
   if (
     !req.context.get(IGNORE_BASE_URL) &&
@@ -112,13 +119,11 @@ export const defaultInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(newReq).pipe(
     mergeMap((ev) => {
-      // 允许统一对请求错误处理
       if (ev instanceof HttpResponseBase) {
         return handleData(injector, ev, newReq, next);
       }
-      // 若一切都正常，则后续操作
       return of(ev);
     }),
-    // catchError((err: HttpErrorResponse) => handleData(injector, err, newReq, next))
+    catchError((err: HttpErrorResponse) => handleData(injector, err, newReq, next))
   );
 };

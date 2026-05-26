@@ -38,7 +38,7 @@ export class StartupService {
   private httpClient = inject(HttpClient);
   private themeColorService = inject(ThemeColorService);
 
-  private appData$ = this.httpClient.get('/user').pipe(
+  private appData$ = this.httpClient.get('/user/token').pipe(
     catchError((res: NzSafeAny) => {
       console.warn(`StartupService.load: Network request failed`, res);
       return of({});

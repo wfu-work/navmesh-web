@@ -10,6 +10,8 @@ export interface ReThrowHttpError {
   _throw: true;
 }
 
+let redirectingToLogin = false;
+
 export const CODEMESSAGE: Record<number, string> = {
   200: '服务器成功返回请求的数据。',
   201: '新建或修改数据成功。',
@@ -33,8 +35,18 @@ export function goTo(injector: Injector, url: string): void {
 }
 
 export function toLogin(injector: Injector): void {
-  injector.get(NzNotificationService).error(`未登录或登录已过期，请重新登录。`, ``);
-  goTo(injector, injector.get(DA_SERVICE_TOKEN).login_url!);
+  const tokenService = injector.get(DA_SERVICE_TOKEN);
+  tokenService.clear();
+
+  if (!redirectingToLogin) {
+    redirectingToLogin = true;
+    injector.get(NzNotificationService).error(`未登录或登录已过期，请重新登录。`, ``);
+  }
+
+  goTo(injector, tokenService.login_url!);
+  setTimeout(() => {
+    redirectingToLogin = false;
+  }, 1000);
 }
 
 export function getAdditionalHeaders(headers?: HttpHeaders): Record<string, string> {

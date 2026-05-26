@@ -11,7 +11,7 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
     <div class="container">
       <div class="wrap">
         <div class="top">
-          <div class="head">
+          <div class="header">
             <logo class="logo" />
             <span class="title">NavMesh</span>
           </div>
