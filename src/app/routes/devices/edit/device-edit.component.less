@@ -8,8 +8,8 @@
 
 .device-edit-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 18px;
+  grid-template-columns: minmax(260px, 1fr) minmax(320px, 480px) auto;
+  gap: 24px;
   align-items: center;
   margin-bottom: 18px;
   padding: 22px 24px;
@@ -70,27 +70,34 @@
 }
 
 .device-edit-status {
-  display: grid;
-  grid-template-columns: auto minmax(180px, 240px);
-  gap: 10px;
-  align-items: stretch;
-  min-width: 360px;
-}
-
-.status-card,
-.device-edit-identifier {
-  display: grid;
-  gap: 7px;
-  justify-content: end;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   min-width: 0;
-  padding: 10px 12px;
-  border: 1px solid #dfe8ee;
+  padding: 4px 0;
+  border: 0;
   border-radius: 8px;
-  background: rgb(255 255 255 / 68%);
+  background: transparent;
+  box-shadow: none;
 }
 
-.status-card {
-  justify-items: end;
+.device-edit-status-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 0;
+}
+
+.device-edit-status-item:first-child {
+  align-items: flex-start;
+  padding-right: 14px;
+  border-right: 1px solid rgb(223 232 238 / 70%);
+}
+
+.device-edit-status-guid {
+  flex: 1 1 auto;
+  padding-left: 14px;
 }
 
 .status-label,
@@ -101,11 +108,11 @@
   line-height: 1;
 }
 
-.device-edit-identifier {
+.device-edit-status-guid {
   strong {
     overflow: hidden;
     color: #334155;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 850;
     line-height: 1.35;
     text-overflow: ellipsis;
@@ -167,8 +174,7 @@
 }
 
 .device-edit-status.is-offline {
-  .status-card,
-  .device-edit-identifier {
+  .status-pill {
     border-color: #f4d1ca;
     background: rgb(255 247 245 / 76%);
   }
@@ -268,7 +274,7 @@
   }
 
   .device-edit-status {
-    justify-items: start;
+    max-width: 520px;
   }
 
   .device-edit-actions {
@@ -285,5 +291,22 @@
     button {
       flex: 1;
     }
+  }
+
+  .device-edit-status {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .device-edit-status-item:first-child {
+    padding-right: 0;
+    border-right: 0;
+    border-bottom: 1px solid #e2ebe8;
+    padding-bottom: 12px;
+  }
+
+  .device-edit-status-guid {
+    padding-left: 0;
+    padding-top: 12px;
   }
 }

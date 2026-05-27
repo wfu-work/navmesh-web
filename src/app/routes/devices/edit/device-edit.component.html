@@ -20,21 +20,20 @@
       </div>
 
       <div class="device-edit-status {{ statusClass(form.controls.status.value) }}">
-        <div class="status-card">
+        <div class="device-edit-status-item">
           <span class="status-label">当前状态</span>
           <span class="status-pill {{ statusClass(form.controls.status.value) }}">
             <i></i>
             {{ statusText(form.controls.status.value) }}
           </span>
         </div>
-        <div class="device-edit-identifier">
+        <div class="device-edit-status-item device-edit-status-guid">
           <span>设备标识</span>
           <strong>{{ guid }}</strong>
         </div>
       </div>
 
       <div class="device-edit-actions">
-        <button nz-button type="button" (click)="back()">返回列表</button>
         <button nz-button type="button" (click)="manageTokens()">
           <nz-icon nzType="setting" />
           接入配置

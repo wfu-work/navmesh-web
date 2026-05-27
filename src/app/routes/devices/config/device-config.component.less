@@ -1,0 +1,122 @@
+.access-section-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.access-card {
+  min-width: 0;
+}
+
+.detail-card-title > div {
+  min-width: 0;
+}
+
+.detail-card-title p {
+  margin: 4px 0 0;
+  color: #6a7785;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+:host-context([data-theme='dark']) .detail-card-title p {
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.access-actions,
+.access-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.access-list {
+  display: grid;
+  gap: 10px;
+}
+
+.access-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #e1ebe8;
+  border-radius: 8px;
+  background: #fbfdfc;
+
+  > div:first-child {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: #223047;
+    font-size: 15px;
+    font-weight: 850;
+  }
+
+  span {
+    color: #6a7785;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+:host-context([data-theme='dark']) .access-list-item {
+  border-color: rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 4%);
+}
+
+:host-context([data-theme='dark']) .access-list-item strong {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:host-context([data-theme='dark']) .access-list-item span {
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.token-secret-inline {
+  display: inline-block;
+  max-width: min(100%, 220px);
+  overflow: hidden;
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: #405165;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  white-space: nowrap;
+  background: #f1f5f4;
+}
+
+:host-context([data-theme='dark']) .token-secret-inline {
+  color: rgba(255, 255, 255, 0.72);
+  background: rgb(255 255 255 / 8%);
+}
+
+@media (max-width: 767px) {
+  .access-list-item,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .access-item-actions {
+    justify-content: flex-start;
+  }
+}

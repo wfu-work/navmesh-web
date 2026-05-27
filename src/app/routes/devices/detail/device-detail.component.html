@@ -5,18 +5,6 @@
       description="查看设备基础档案、在线状态、连接与流量统计。"
       [showBack]="true"
     />
-
-    <div class="detail-actions">
-      <button nz-button (click)="back()">返回列表</button>
-      <button nz-button (click)="openAccessConfig()">
-        <nz-icon nzType="setting" />
-        接入配置
-      </button>
-      <button nz-button (click)="metrics()">
-        <nz-icon nzType="history" />
-        会话
-      </button>
-    </div>
   </div>
 
   <nz-spin [nzSpinning]="loading">
@@ -40,6 +28,7 @@
           <span>类型 {{ item.deviceType || '-' }}</span>
           <span>来源 {{ item.sourceIp || '-' }}</span>
           <span>版本 {{ item.clientVersion || '-' }}</span>
+          <span>系统 {{ item.os || '-' }}</span>
         </div>
       </section>
 
@@ -63,18 +52,20 @@
       </div>
 
       <div class="detail-grid">
-        <nz-card class="card-border" [nzBordered]="false" nzTitle="设备档案">
+        <nz-card class="card-border" [nzBordered]="false" nzTitle="设备信息">
           <sv-container col="2">
             <sv label="设备名称">{{ item.name || '-' }}</sv>
             <sv label="设备别名">{{ item.alias || '-' }}</sv>
-            <sv label="sncode">{{ item.sncode || '-' }}</sv>
+            <sv label="设备号">{{ item.sncode || '-' }}</sv>
             <sv label="设备类型">{{ item.deviceType || '-' }}</sv>
             <sv label="主机名">{{ item.hostname || '-' }}</sv>
             <sv label="本机 IP">{{ item.hostIp || '-' }}</sv>
             <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
             <sv label="客户端版本">{{ item.clientVersion || '-' }}</sv>
             <sv label="系统">{{ item.os || '-' }}</sv>
+            <sv label="系统版本">{{ item.osVersion || '-' }}</sv>
             <sv label="内核">{{ item.kernel || '-' }}</sv>
+            <sv label="架构">{{ item.arch || '-' }}</sv>
             <sv label="备注">{{ item.remark || '-' }}</sv>
           </sv-container>
         </nz-card>
@@ -89,6 +80,10 @@
             <sv label="本机 Web 端口">{{ item.webPort || '-' }}</sv>
             <sv label="Web 映射域名">{{ item.webDomain || '-' }}</sv>
             <sv label="在线连接">{{ activeConnectionCount() }}</sv>
+            <sv label="内存">{{ formatUsage(item.memoryUsed, item.memoryTotal) }}</sv>
+            <sv label="可用内存">{{ item.memoryFree ? formatBytes(item.memoryFree) : '-' }}</sv>
+            <sv label="磁盘">{{ formatUsage(item.diskUsed, item.diskTotal) }}</sv>
+            <sv label="可用磁盘">{{ item.diskFree ? formatBytes(item.diskFree) : '-' }}</sv>
             <sv label="创建时间">{{ item.createTime ? (item.createTime | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
             <sv label="更新时间">{{ item.updateTime ? (item.updateTime | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
           </sv-container>
