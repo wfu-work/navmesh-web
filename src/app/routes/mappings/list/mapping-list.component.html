@@ -4,7 +4,7 @@
       title="映射列表"
       description="维护外部 HTTP Host 到设备本地服务的转发规则。"
     />
-    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+    <button nz-button nzType="primary" (click)="openModal()">
       <nz-icon nzType="plus" />
       新增映射
     </button>
@@ -27,8 +27,8 @@
           <nz-option nzValue="" nzLabel="全部状态" />
           <nz-option [nzValue]="1" nzLabel="启用" />
         </nz-select>
-        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
-        <button nz-button nzShape="round" (click)="reset()">重置</button>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
       </div>
     </div>
 

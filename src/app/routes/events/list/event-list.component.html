@@ -51,8 +51,8 @@
           <nz-option nzValue="0" nzLabel="已处理" />
         </nz-select>
 
-        <button nz-button nzShape="round" (click)="reset()">重置</button>
-        <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+        <button nz-button (click)="reset()">重置</button>
+        <button nz-button [nzLoading]="loading" (click)="load()">
           <nz-icon nzType="reload" />
           刷新
         </button>

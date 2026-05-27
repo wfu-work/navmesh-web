@@ -1,24 +1,27 @@
 <section class="device-page">
-  <div class="device-header">
-    <title-label title="设备分组" description="维护设备分组，用于批量筛选和后续访问策略归类。" />
-    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+  <div class="device-header type-header">
+    <title-label title="设备类型" description="设备类型即设备分组，用于注册默认值、列表筛选和访问策略归类。" />
+    <button nz-button nzType="primary" (click)="openModal()">
       <nz-icon nzType="plus" />
-      新建分组
+      新建设备类型
     </button>
   </div>
 
   <nz-card class="card-border" [nzBordered]="false">
     <div class="group-toolbar">
-      <h2>分组列表</h2>
+      <h2>类型列表</h2>
       <div class="toolbar-actions">
-        <input nz-input [(ngModel)]="q.keyword" placeholder="搜索分组名称或说明" (keydown.enter)="search()" />
+        <nz-input-wrapper>
+          <nz-icon nzInputPrefix nzType="search" />
+          <input nz-input [(ngModel)]="q.keyword" placeholder="搜索类型、域名或说明" (keydown.enter)="search()" />
+        </nz-input-wrapper>
         <nz-select nzAllowClear nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="search()">
           <nz-option nzValue="" nzLabel="全部状态" />
           <nz-option [nzValue]="1" nzLabel="启用" />
           <nz-option [nzValue]="0" nzLabel="禁用" />
         </nz-select>
-        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
-        <button nz-button nzShape="round" (click)="reset()">重置</button>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
       </div>
     </div>
 
@@ -31,48 +34,102 @@
       [total]="totalCount"
       (change)="tableChange($event)"
       bordered="false"
-      [scroll]="{ x: '1100px' }"
+      [scroll]="{ x: '1180px' }"
     >
       <ng-template st-row="nameRender" let-item>
         <div class="group-name-cell">
-          <strong>{{ item.name }}</strong>
+          <strong>{{ item.name || item.guid }}</strong>
           <span>{{ item.guid }}</span>
         </div>
       </ng-template>
 
-      <ng-template st-row="descriptionRender" let-item>
-        <ellipsis [lines]="1" tooltip>{{ item.description || '-' }}</ellipsis>
+      <ng-template st-row="portRender" let-item>
+        @if (item.defaultWebPort) {
+          <code class="type-code">{{ item.defaultWebPort }}</code>
+        } @else {
+          <span class="text-grey">无默认 Web 端口</span>
+        }
+      </ng-template>
+
+      <ng-template st-row="domainRender" let-item>
+        @if (item.defaultDomain) {
+          <code class="type-code">{{ item.defaultDomain }}</code>
+        } @else {
+          <span class="text-grey">仅 SSH 接入</span>
+        }
       </ng-template>
     </st>
   </nz-card>
 
   <nz-modal
     [(nzVisible)]="modalVisible"
-    nzTitle="设备分组"
+    [nzTitle]="editingGuid ? '编辑设备类型' : '新建设备类型'"
     [nzFooter]="groupFooter"
     (nzOnCancel)="modalVisible = false"
   >
     <ng-container *nzModalContent>
       <form nz-form [formGroup]="form" nzLayout="vertical">
+        <div class="form-grid">
+          <nz-form-item>
+            <nz-form-label nzRequired>类型标识</nz-form-label>
+            <nz-form-control nzErrorTip="请输入类型标识">
+              <input nz-input formControlName="guid" placeholder="例如 rain" [readonly]="!!editingGuid" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>类型名称</nz-form-label>
+            <nz-form-control nzErrorTip="请输入类型名称">
+              <input nz-input formControlName="name" placeholder="例如 rain" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+
+        <div class="form-grid">
+          <nz-form-item>
+            <nz-form-label>默认 Web 端口</nz-form-label>
+            <nz-form-control>
+              <nz-input-number class="w-100" formControlName="defaultWebPort" [nzMin]="0" [nzMax]="65535" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>排序</nz-form-label>
+            <nz-form-control>
+              <nz-input-number class="w-100" formControlName="sort" [nzMin]="0" [nzMax]="9999" />
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+
         <nz-form-item>
-          <nz-form-label nzRequired>分组名称</nz-form-label>
-          <nz-form-control nzErrorTip="请输入分组名称">
-            <input nz-input formControlName="name" placeholder="例如 生产网关" />
+          <nz-form-label>默认映射域名</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="defaultDomain" placeholder="例如 vpn-rain.navfirst.com" />
           </nz-form-control>
         </nz-form-item>
 
         <nz-form-item>
           <nz-form-label>说明</nz-form-label>
           <nz-form-control>
-            <textarea nz-input rows="3" formControlName="description" placeholder="补充用途、区域或负责人"></textarea>
+            <textarea nz-input rows="3" formControlName="remark" placeholder="用于描述这类设备的接入默认值"></textarea>
+          </nz-form-control>
+        </nz-form-item>
+
+        <nz-form-item>
+          <nz-form-label>状态</nz-form-label>
+          <nz-form-control>
+            <nz-select formControlName="status">
+              <nz-option [nzValue]="1" nzLabel="启用" />
+              <nz-option [nzValue]="0" nzLabel="禁用" />
+            </nz-select>
           </nz-form-control>
         </nz-form-item>
       </form>
     </ng-container>
 
     <ng-template #groupFooter>
-      <button nz-button nzShape="round" (click)="modalVisible = false">取消</button>
-      <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="save()">
+      <button nz-button (click)="modalVisible = false">取消</button>
+      <button nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
         <nz-icon nzType="save" />
         保存
       </button>

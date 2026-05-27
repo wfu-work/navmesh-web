@@ -70,6 +70,10 @@ export class AccessLogsComponent implements OnInit {
     if (host) {
       this.q.host = host;
     }
+    const deviceGuid = this.route.snapshot.queryParamMap.get('deviceGuid');
+    if (deviceGuid) {
+      this.q.deviceGuid = deviceGuid;
+    }
     this.load();
   }
 

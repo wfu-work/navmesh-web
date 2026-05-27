@@ -23,7 +23,6 @@ export interface DevicePayload {
   guid?: string;
   name?: string;
   sncode?: string;
-  deviceId?: string;
   hostname: string;
   alias?: string;
   remark?: string;
@@ -68,8 +67,6 @@ export interface Device {
   name: string;
   hostname: string;
   sncode?: string;
-  deviceId?: string;
-  device_id?: string;
   alias?: string;
   remark?: string;
   deviceType?: string;
@@ -145,15 +142,28 @@ export interface DeviceTokenResult {
 }
 
 export interface DeviceTypeDefault {
-  type: string;
-  webPort: number;
-  webDomain: string;
+  guid?: string;
+  type?: string;
+  name?: string;
+  defaultWebPort?: number;
+  default_web_port?: number;
+  webPort?: number;
+  defaultDomain?: string;
+  default_domain?: string;
+  webDomain?: string;
+  sort?: number;
   remark: string;
+  status?: number;
+  createTime?: number;
+  create_time?: number;
+  updateTime?: number;
+  update_time?: number;
 }
 
 export interface DeviceGroupQuery {
   keyword?: string;
   status?: string | number;
+  all?: boolean | string;
   page?: number;
   size?: number;
 }
@@ -162,7 +172,13 @@ export interface DeviceGroup {
   id: number;
   guid: string;
   name: string;
-  description: string;
+  description?: string;
+  defaultWebPort?: number;
+  default_web_port?: number;
+  defaultDomain?: string;
+  default_domain?: string;
+  sort?: number;
+  remark?: string;
   status: number;
   createTime: number;
   create_time?: number;
@@ -174,6 +190,10 @@ export interface SaveDeviceGroupPayload {
   guid?: string;
   name: string;
   description?: string;
+  defaultWebPort?: number;
+  defaultDomain?: string;
+  sort?: number;
+  remark?: string;
   status: number;
 }
 

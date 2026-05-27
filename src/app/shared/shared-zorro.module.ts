@@ -14,11 +14,13 @@ import { NzInputNumberModule } from 'ng-zorro-antd/input-number';
 import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzPopoverModule } from 'ng-zorro-antd/popover';
+import { NzPaginationModule } from 'ng-zorro-antd/pagination';
 import { NzProgressModule } from 'ng-zorro-antd/progress';
 import { NzSelectModule } from 'ng-zorro-antd/select';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzTabsModule } from 'ng-zorro-antd/tabs';
+import { NzTagModule } from 'ng-zorro-antd/tag';
 import { NzTooltipModule } from 'ng-zorro-antd/tooltip';
 import { NzBadgeModule } from 'ng-zorro-antd/badge';
 
@@ -36,12 +38,14 @@ export const SHARED_ZORRO_MODULES = [
   NzCardModule,
   NzDropdownModule,
   NzPopconfirmModule,
+  NzPaginationModule,
   NzTableModule,
   NzPopoverModule,
   NzDrawerModule,
   NzDividerModule,
   NzModalModule,
   NzTabsModule,
+  NzTagModule,
   NzTooltipModule,
   NzIconModule,
   NzCheckboxModule,

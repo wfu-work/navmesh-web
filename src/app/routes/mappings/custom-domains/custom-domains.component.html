@@ -1,7 +1,7 @@
 <section class="mapping-page">
   <div class="mapping-header">
     <title-label title="自定义域名" description="管理 HTTP 映射绑定的自定义域名和验证状态。" />
-    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+    <button nz-button nzType="primary" (click)="openModal()">
       <nz-icon nzType="plus" />
       新建域名
     </button>
@@ -23,8 +23,8 @@
           <nz-option [nzValue]="1" nzLabel="启用" />
           <nz-option [nzValue]="0" nzLabel="禁用" />
         </nz-select>
-        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
-        <button nz-button nzShape="round" (click)="reset()">重置</button>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
       </div>
     </div>
 
@@ -85,8 +85,8 @@
     </ng-container>
 
     <ng-template #domainFooter>
-      <button nz-button nzShape="round" (click)="modalVisible = false">取消</button>
-      <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="save()">
+      <button nz-button (click)="modalVisible = false">取消</button>
+      <button nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
         <nz-icon nzType="save" />
         保存
       </button>

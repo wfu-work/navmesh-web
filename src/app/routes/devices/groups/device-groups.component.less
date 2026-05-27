@@ -1,9 +1,14 @@
+.type-header,
 .group-toolbar {
   display: flex;
   gap: 18px;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 22px;
+}
+
+.group-toolbar {
+  align-items: center;
 
   h2 {
     margin: 0;
@@ -21,6 +26,7 @@
   align-items: center;
   justify-content: flex-end;
 
+  nz-input-wrapper,
   input[nz-input] {
     width: 240px;
   }
@@ -52,7 +58,21 @@
   }
 }
 
+.type-code {
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: #405165;
+  background: #f1f5f4;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 @media (max-width: 767px) {
+  .type-header,
   .group-toolbar {
     display: grid;
   }
@@ -60,9 +80,14 @@
   .toolbar-actions {
     justify-content: flex-start;
 
+    nz-input-wrapper,
     input[nz-input],
     nz-select {
       width: 100%;
     }
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
   }
 }

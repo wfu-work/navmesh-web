@@ -2,13 +2,24 @@
   <div class="device-header">
     <title-label
       [title]="title()"
-      description="查看设备注册身份、接入配置、最后在线时间和接入凭证。"
+      [description]="accessMode ? '管理当前设备的激活凭证、SSH 接入和 HTTP 映射。' : '查看设备基础档案、在线状态、连接与流量统计。'"
       [showBack]="true"
     />
 
     <div class="detail-actions">
-      <button nz-button nzShape="round" (click)="back()">返回列表</button>
-      <button nz-button nzShape="round" (click)="metrics()">
+      <button nz-button (click)="back()">返回列表</button>
+      @if (accessMode) {
+        <button nz-button (click)="openDetail()">
+          <nz-icon nzType="profile" />
+          详情
+        </button>
+      } @else {
+        <button nz-button (click)="openAccessConfig()">
+          <nz-icon nzType="setting" />
+          接入配置
+        </button>
+      }
+      <button nz-button (click)="metrics()">
         <nz-icon nzType="history" />
         会话
       </button>
@@ -17,107 +28,446 @@
 
   <nz-spin [nzSpinning]="loading">
     @if (device; as item) {
-      <div class="detail-summary">
-        <article class="summary-item {{ deviceStateClass(item.status) }}">
-          <span>状态</span>
-          <strong [class]="statusClass(item.status)">{{ statusText(item.status) }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>最后在线</span>
-          <strong>{{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>设备类型</span>
-          <strong>{{ item.deviceType || '-' }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>启用凭证</span>
-          <strong>{{ enabledTokenCount() }} / {{ tokens.length }}</strong>
-        </article>
-      </div>
-
-      <div class="detail-grid">
-        <nz-card class="card-border" [nzBordered]="false" nzTitle="基础信息">
-          <div class="detail-device-title {{ deviceStateClass(item.status) }}">
+      @if (!accessMode) {
+        <section class="device-profile {{ deviceStateClass(item.status) }}">
+          <div class="detail-device-title">
             <span class="device-os-icon {{ osClass(item.os) }}">
               <nz-icon [nzType]="osIcon(item.os)" />
             </span>
             <div>
               <strong>{{ item.name || item.hostname || item.guid }}</strong>
               <p class="detail-device-meta">
-                <span>{{ item.remark || item.sncode || item.deviceId || '未填写备注' }}</span>
+                <span>{{ item.remark || item.sncode || item.hostname || '未填写备注' }}</span>
                 <span class="device-state-pill">{{ statusText(item.status) }}</span>
               </p>
             </div>
           </div>
-          <sv-container col="2">
-            <sv label="设备名称">{{ item.name || '-' }}</sv>
-            <sv label="设备别名">{{ item.alias || '-' }}</sv>
-            <sv label="GUID">{{ item.guid }}</sv>
-            <sv label="序列号">{{ item.sncode || '-' }}</sv>
-            <sv label="业务设备 ID">{{ item.deviceId || '-' }}</sv>
-            <sv label="设备类型">{{ item.deviceType || '-' }}</sv>
-            <sv label="备注">{{ item.remark || '-' }}</sv>
-            <sv label="主机名">{{ item.hostname || '-' }}</sv>
-          </sv-container>
-        </nz-card>
 
-        <nz-card class="card-border" [nzBordered]="false" nzTitle="接入信息">
-          <sv-container col="2">
-            <sv label="本机 IP">{{ item.hostIp || '-' }}</sv>
-            <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
-            <sv label="本机 SSH 端口">{{ item.sshPort || '-' }}</sv>
-            <sv label="本机 Web 端口">{{ item.webPort || '-' }}</sv>
-            <sv label="Web 映射域名">{{ item.webDomain || '-' }}</sv>
-            <sv label="客户端版本">{{ item.clientVersion || '-' }}</sv>
-            <sv label="状态">{{ statusText(item.status) }}</sv>
-            <sv label="最后在线">
-              {{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
-            </sv>
-            <sv label="创建时间">{{ item.createTime ? (item.createTime | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
-            <sv label="更新时间">{{ item.updateTime ? (item.updateTime | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
-          </sv-container>
-        </nz-card>
-      </div>
+          <div class="profile-meta-grid">
+            <span>GUID {{ item.guid }}</span>
+            <span>类型 {{ item.deviceType || '-' }}</span>
+            <span>来源 {{ item.sourceIp || '-' }}</span>
+            <span>版本 {{ item.clientVersion || '-' }}</span>
+          </div>
+        </section>
 
-      <nz-card class="card-border" [nzBordered]="false">
-        <div class="detail-card-title">
-          <h2>接入凭证</h2>
-          <button nz-button nzShape="round" (click)="tokenManage()">
-            <nz-icon nzType="key" />
-            管理凭证
-          </button>
+        <div class="detail-summary detail-summary-metrics">
+          <article class="summary-item {{ deviceStateClass(item.status) }}">
+            <span>在线状态</span>
+            <strong [class]="statusClass(item.status)">{{ statusText(item.status) }}</strong>
+          </article>
+          <article class="summary-item">
+            <span>当前连接</span>
+            <strong>{{ activeConnectionCount() }}</strong>
+          </article>
+          <article class="summary-item">
+            <span>进行中会话</span>
+            <strong>{{ activeSessionCount() }}</strong>
+          </article>
+          <article class="summary-item">
+            <span>累计流量</span>
+            <strong>{{ formatBytes(totalTraffic()) }}</strong>
+          </article>
         </div>
 
-        <st
-          [data]="tokens"
-          [columns]="tokenColumns"
-          bordered="false"
-          [page]="{ show: false }"
-          [scroll]="{ x: '1040px' }"
-        >
-          <ng-template st-row="tokenNameRender" let-token>
-            <div class="device-name-cell">
-              <ellipsis [lines]="1" tooltip>
-                <strong>{{ token.name || '-' }}</strong>
-              </ellipsis>
-              <span>{{ token.guid }}</span>
+        <div class="detail-grid">
+          <nz-card class="card-border" [nzBordered]="false" nzTitle="设备档案">
+            <sv-container col="2">
+              <sv label="设备名称">{{ item.name || '-' }}</sv>
+              <sv label="设备别名">{{ item.alias || '-' }}</sv>
+              <sv label="序列号">{{ item.sncode || '-' }}</sv>
+              <sv label="设备类型">{{ item.deviceType || '-' }}</sv>
+              <sv label="主机名">{{ item.hostname || '-' }}</sv>
+              <sv label="本机 IP">{{ item.hostIp || '-' }}</sv>
+              <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
+              <sv label="客户端版本">{{ item.clientVersion || '-' }}</sv>
+              <sv label="系统">{{ item.os || '-' }}</sv>
+              <sv label="内核">{{ item.kernel || '-' }}</sv>
+              <sv label="备注">{{ item.remark || '-' }}</sv>
+            </sv-container>
+          </nz-card>
+
+          <nz-card class="card-border" [nzBordered]="false" nzTitle="运行状态">
+            <sv-container col="2">
+              <sv label="激活说明">{{ activationText(item.status) }}</sv>
+              <sv label="最后在线">
+                {{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+              </sv>
+              <sv label="本机 SSH 端口">{{ item.sshPort || '-' }}</sv>
+              <sv label="本机 Web 端口">{{ item.webPort || '-' }}</sv>
+              <sv label="Web 映射域名">{{ item.webDomain || '-' }}</sv>
+              <sv label="在线连接">{{ activeConnectionCount() }}</sv>
+              <sv label="创建时间">{{ item.createTime ? (item.createTime | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
+              <sv label="更新时间">{{ item.updateTime ? (item.updateTime | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
+            </sv-container>
+          </nz-card>
+        </div>
+
+        <div class="traffic-grid">
+          <nz-card class="card-border traffic-card" [nzBordered]="false">
+            <div class="detail-card-title">
+              <div>
+                <h2>流量统计</h2>
+                <p>基于最近会话记录汇总输入、输出和错误访问。</p>
+              </div>
             </div>
-          </ng-template>
+            <div class="traffic-stats">
+              <article>
+                <span>入站</span>
+                <strong>{{ formatBytes(inboundTraffic()) }}</strong>
+              </article>
+              <article>
+                <span>出站</span>
+                <strong>{{ formatBytes(outboundTraffic()) }}</strong>
+              </article>
+              <article>
+                <span>HTTP 错误</span>
+                <strong>{{ errorLogCount() }}</strong>
+              </article>
+            </div>
+            <div class="traffic-bars">
+              @for (bar of trafficBars(); track bar.label) {
+                <div class="traffic-bar-wrap">
+                  <div class="traffic-bar" [style.height.%]="bar.height"></div>
+                  <span>{{ bar.label }}</span>
+                </div>
+              }
+            </div>
+          </nz-card>
 
-          <ng-template st-row="tokenPrefixRender" let-token>
-            <code class="token-prefix">{{ token.tokenPrefix || '-' }}</code>
-          </ng-template>
+          <nz-card class="card-border traffic-card" [nzBordered]="false">
+            <div class="detail-card-title">
+              <div>
+                <h2>最近会话</h2>
+                <p>显示最近 6 条 SSH/HTTP 隧道会话。</p>
+              </div>
+              <button nz-button (click)="metrics()">
+                <nz-icon nzType="history" />
+                全部
+              </button>
+            </div>
+            <div class="session-list">
+              @for (session of recentSessions(); track session.guid) {
+                <article class="session-item">
+                  <div>
+                    <strong>{{ session.publicHost || session.targetHost || session.guid }}</strong>
+                    <span>{{ session.sessionType || '-' }} · {{ session.sourceIp || '-' }}</span>
+                  </div>
+                  <div>
+                    <strong>{{ formatBytes(session.bytesIn + session.bytesOut) }}</strong>
+                    <span>{{ session.startTime ? (session.startTime | _date: 'MM-dd HH:mm') : '-' }}</span>
+                  </div>
+                </article>
+              } @empty {
+                <nz-empty nzNotFoundContent="暂无会话记录" />
+              }
+            </div>
+          </nz-card>
+        </div>
+      } @else {
+        <div class="detail-summary">
+          <article class="summary-item {{ deviceStateClass(item.status) }}">
+            <span>激活状态</span>
+            <strong [class]="statusClass(item.status)">{{ statusText(item.status) }}</strong>
+          </article>
+          <article class="summary-item">
+            <span>启用凭证</span>
+            <strong>{{ enabledTokenCount() }} / {{ tokens.length }}</strong>
+          </article>
+          <article class="summary-item">
+            <span>SSH 接入</span>
+            <strong>{{ enabledSshCount() }} / {{ sshAliases.length }}</strong>
+          </article>
+          <article class="summary-item">
+            <span>HTTP 映射</span>
+            <strong>{{ enabledMappingCount() }} / {{ mappings.length }}</strong>
+          </article>
+        </div>
 
-          <ng-template st-row="lastUsedAtRender" let-token>
-            {{ token.lastUsedAt ? (token.lastUsedAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
-          </ng-template>
+        <div class="access-section-grid">
+          <nz-card class="card-border access-card" [nzBordered]="false">
+            <div class="detail-card-title">
+              <div>
+                <h2>激活凭证</h2>
+                <p>设备注册后需要使用独立 Token 心跳或建连才算激活。</p>
+              </div>
+              <button nz-button nzType="primary" (click)="openCreateToken()">
+                <nz-icon nzType="plus" />
+                新建凭证
+              </button>
+            </div>
 
-          <ng-template st-row="expiresAtRender" let-token>
-            {{ token.expiresAt ? (token.expiresAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
-          </ng-template>
-        </st>
-      </nz-card>
+            <st
+              [data]="tokens"
+              [columns]="tokenColumns"
+              bordered="false"
+              [page]="{ show: false }"
+              [scroll]="{ x: '1220px' }"
+            >
+              <ng-template st-row="tokenNameRender" let-token>
+                <div class="device-name-cell">
+                  <ellipsis [lines]="1" tooltip>
+                    <strong>{{ token.name || '-' }}</strong>
+                  </ellipsis>
+                  <span>{{ token.guid }}</span>
+                </div>
+              </ng-template>
+
+              <ng-template st-row="tokenPrefixRender" let-token>
+                <code class="token-prefix">{{ token.tokenPrefix || '-' }}</code>
+              </ng-template>
+
+              <ng-template st-row="lastUsedAtRender" let-token>
+                {{ token.lastUsedAt ? (token.lastUsedAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+              </ng-template>
+
+              <ng-template st-row="expiresAtRender" let-token>
+                {{ token.expiresAt ? (token.expiresAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+              </ng-template>
+            </st>
+          </nz-card>
+
+          <nz-card class="card-border access-card" [nzBordered]="false">
+            <div class="detail-card-title">
+              <div>
+                <h2>SSH 接入</h2>
+                <p>SSH 别名由设备注册自动创建，可在设备内调整入口 IP 或域名。</p>
+              </div>
+              <button nz-button (click)="openSshModal()">
+                <nz-icon nzType="cluster" />
+                配置 SSH
+              </button>
+            </div>
+
+            <div class="access-list">
+              @for (alias of sshAliases; track alias.guid || alias.id) {
+                <article class="access-list-item">
+                  <div>
+                    <strong>{{ alias.domain || '-' }}</strong>
+                    <span>{{ alias.alias || '-' }} · {{ alias.entrypointIp || '未分配入口 IP' }}</span>
+                  </div>
+                  <div class="access-item-actions">
+                    <nz-tag [nzColor]="alias.status === 0 ? 'default' : 'success'">{{ statusLabel(alias.status) }}</nz-tag>
+                    <button nz-button nzType="link" (click)="openSshModal(alias)">
+                      <nz-icon nzType="edit" />
+                    </button>
+                    @if (alias.status !== 0) {
+                      <button
+                        nz-button
+                        nzType="link"
+                        nzDanger
+                        nz-popconfirm
+                        nzPopconfirmTitle="禁用后该 SSH 域名将不能继续路由到设备，确认继续？"
+                        (nzOnConfirm)="disableSshAlias(alias)"
+                      >
+                        <nz-icon nzType="stop" />
+                      </button>
+                    }
+                  </div>
+                </article>
+              } @empty {
+                <nz-empty nzNotFoundContent="暂无 SSH 别名，保存配置后可创建" />
+              }
+            </div>
+          </nz-card>
+
+          <nz-card class="card-border access-card" [nzBordered]="false">
+            <div class="detail-card-title">
+              <div>
+                <h2>HTTP 映射</h2>
+                <p>将外部 Host 转发到当前设备的本地 HTTP 服务。</p>
+              </div>
+              <div class="access-actions">
+                <button nz-button (click)="openLogs()">
+                  <nz-icon nzType="file-search" />
+                  日志
+                </button>
+                <button nz-button nzType="primary" (click)="openMappingModal()">
+                  <nz-icon nzType="plus" />
+                  新增映射
+                </button>
+              </div>
+            </div>
+
+            <div class="access-list">
+              @for (mapping of mappings; track mapping.guid) {
+                <article class="access-list-item">
+                  <div>
+                    <strong>{{ mapping.publicHost || '-' }}</strong>
+                    <span>{{ mapping.name || '-' }} · {{ mapping.targetHost }}:{{ mapping.targetPort }}</span>
+                  </div>
+                  <div class="access-item-actions">
+                    <nz-tag [nzColor]="mapping.status === 0 ? 'default' : 'success'">{{ statusLabel(mapping.status) }}</nz-tag>
+                    <button nz-button nzType="link" (click)="openLogs(mapping)">
+                      <nz-icon nzType="file-search" />
+                    </button>
+                    <button nz-button nzType="link" (click)="openMappingModal(mapping)">
+                      <nz-icon nzType="edit" />
+                    </button>
+                    @if (mapping.status !== 0) {
+                      <button
+                        nz-button
+                        nzType="link"
+                        nzDanger
+                        nz-popconfirm
+                        nzPopconfirmTitle="禁用后该 Host 将不再转发到设备，确认继续？"
+                        (nzOnConfirm)="disableMapping(mapping)"
+                      >
+                        <nz-icon nzType="stop" />
+                      </button>
+                    }
+                  </div>
+                </article>
+              } @empty {
+                <nz-empty nzNotFoundContent="暂无 HTTP 映射" />
+              }
+            </div>
+          </nz-card>
+        </div>
+      }
+
+      <nz-modal
+        [(nzVisible)]="tokenModalVisible"
+        nzTitle="设备激活凭证"
+        [nzFooter]="tokenFooter"
+        (nzOnCancel)="tokenModalVisible = false"
+      >
+        <ng-container *nzModalContent>
+          <form nz-form [formGroup]="tokenForm" nzLayout="vertical">
+            <nz-form-item>
+              <nz-form-label nzRequired>凭证名称</nz-form-label>
+              <nz-form-control nzErrorTip="请输入凭证名称">
+                <input nz-input formControlName="name" placeholder="例如 production-client" />
+              </nz-form-control>
+            </nz-form-item>
+
+            <nz-form-item>
+              <nz-form-label>有效天数</nz-form-label>
+              <nz-form-control nzErrorTip="有效天数不能小于 0">
+                <nz-input-number class="w-100" formControlName="expireDays" [nzMin]="0" [nzStep]="1" />
+              </nz-form-control>
+            </nz-form-item>
+          </form>
+
+          @if (latestToken) {
+            <nz-alert
+              nzType="warning"
+              nzShowIcon
+              nzMessage="完整 Token 只会展示一次"
+              [nzDescription]="tokenDescription"
+            />
+            <ng-template #tokenDescription>
+              <code class="token-secret">{{ latestToken }}</code>
+            </ng-template>
+          }
+        </ng-container>
+
+        <ng-template #tokenFooter>
+          <button nz-button (click)="tokenModalVisible = false">关闭</button>
+          <button nz-button nzType="primary" [nzLoading]="tokenCreating" (click)="createToken()">
+            <nz-icon nzType="plus" />
+            创建
+          </button>
+        </ng-template>
+      </nz-modal>
+
+      <nz-modal
+        [(nzVisible)]="sshModalVisible"
+        nzTitle="SSH 接入配置"
+        [nzOkLoading]="sshSaving"
+        (nzOnCancel)="sshModalVisible = false"
+        (nzOnOk)="saveSshAlias()"
+      >
+        <ng-container *nzModalContent>
+          <form nz-form [formGroup]="sshForm" nzLayout="vertical">
+            <nz-form-item>
+              <nz-form-label nzRequired>设备别名</nz-form-label>
+              <nz-form-control nzErrorTip="请输入设备别名">
+                <input nz-input formControlName="alias" placeholder="例如 test01" />
+              </nz-form-control>
+            </nz-form-item>
+
+            <nz-form-item>
+              <nz-form-label nzRequired>SSH 域名</nz-form-label>
+              <nz-form-control nzErrorTip="请输入 SSH 域名">
+                <input nz-input formControlName="domain" placeholder="例如 test01.navfirst.com" />
+              </nz-form-control>
+            </nz-form-item>
+
+            <nz-form-item>
+              <nz-form-label nzRequired>入口 IP</nz-form-label>
+              <nz-form-control nzErrorTip="请选择入口 IP">
+                <nz-select nzShowSearch nzAllowClear formControlName="entrypointIp" nzPlaceHolder="请选择入口 IP">
+                  @for (entrypoint of sshEntrypoints; track entrypoint.ip) {
+                    <nz-option [nzValue]="entrypoint.ip" [nzLabel]="entrypoint.ip" />
+                  }
+                </nz-select>
+              </nz-form-control>
+            </nz-form-item>
+          </form>
+        </ng-container>
+      </nz-modal>
+
+      <nz-modal
+        [(nzVisible)]="mappingModalVisible"
+        nzTitle="HTTP 映射"
+        [nzOkLoading]="mappingSaving"
+        (nzOnCancel)="mappingModalVisible = false"
+        (nzOnOk)="saveMapping()"
+      >
+        <ng-container *nzModalContent>
+          <form nz-form [formGroup]="mappingForm" nzLayout="vertical">
+            <nz-form-item>
+              <nz-form-label nzRequired>映射名称</nz-form-label>
+              <nz-form-control nzErrorTip="请输入映射名称">
+                <input nz-input formControlName="name" placeholder="例如 nas-web" />
+              </nz-form-control>
+            </nz-form-item>
+
+            <nz-form-item>
+              <nz-form-label nzRequired>外部 Host</nz-form-label>
+              <nz-form-control nzErrorTip="请输入外部 Host">
+                <input nz-input formControlName="publicHost" placeholder="例如 nas.example.com" />
+              </nz-form-control>
+            </nz-form-item>
+
+            <div class="form-grid">
+              <nz-form-item>
+                <nz-form-label nzRequired>目标主机</nz-form-label>
+                <nz-form-control nzErrorTip="请输入目标主机">
+                  <input nz-input formControlName="targetHost" placeholder="127.0.0.1" />
+                </nz-form-control>
+              </nz-form-item>
+
+              <nz-form-item>
+                <nz-form-label nzRequired>目标端口</nz-form-label>
+                <nz-form-control nzErrorTip="请输入 1-65535 的端口">
+                  <nz-input-number formControlName="targetPort" [nzMin]="1" [nzMax]="65535" class="w-100" />
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+
+            <div class="form-grid">
+              <nz-form-item>
+                <nz-form-label>协议</nz-form-label>
+                <nz-form-control>
+                  <nz-select formControlName="protocol">
+                    <nz-option nzValue="http" nzLabel="HTTP" />
+                    <nz-option nzValue="https" nzLabel="HTTPS" />
+                  </nz-select>
+                </nz-form-control>
+              </nz-form-item>
+
+              <nz-form-item>
+                <nz-form-label>域名类型</nz-form-label>
+                <nz-form-control>
+                  <label nz-checkbox formControlName="isCustomDomain">自定义域名</label>
+                </nz-form-control>
+              </nz-form-item>
+            </div>
+          </form>
+        </ng-container>
+      </nz-modal>
     } @else if (!loading) {
       <nz-card class="card-border detail-empty" [nzBordered]="false">
         <nz-empty nzNotFoundContent="未找到设备详情" />

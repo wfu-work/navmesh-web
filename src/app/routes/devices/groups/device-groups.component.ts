@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { NonNullableFormBuilder, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
 import { STChange, STColumn, STColumnTag } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -17,6 +18,7 @@ import { DeviceGroup, DevicesService } from '../devices.service';
 })
 export class DeviceGroupsComponent implements OnInit {
   private readonly devicesService = inject(DevicesService);
+  private readonly router = inject(Router);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -33,21 +35,29 @@ export class DeviceGroupsComponent implements OnInit {
   protected loading = false;
   protected saving = false;
   protected modalVisible = false;
+  protected editingGuid = '';
+
+  protected readonly form = this.fb.group({
+    guid: ['', [Validators.required]],
+    name: ['', [Validators.required]],
+    defaultWebPort: [0],
+    defaultDomain: [''],
+    sort: [0],
+    remark: [''],
+    status: [1],
+  });
 
   protected readonly statusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
-    0: { text: '禁用', color: 'default' },
+    0: { text: '禁用', color: 'red' },
   };
 
-  protected readonly form = this.fb.group({
-    guid: [''],
-    name: ['', [Validators.required]],
-    description: [''],
-  });
-
   protected readonly columns: STColumn<DeviceGroup>[] = [
-    { title: '分组', index: 'name', render: 'nameRender', fixed: 'left', width: 260 },
-    { title: '说明', index: 'description', render: 'descriptionRender', width: 360 },
+    { title: '设备类型', index: 'name', render: 'nameRender', fixed: 'left', width: 220 },
+    { title: '默认 Web 端口', index: 'defaultWebPort', render: 'portRender', width: 160 },
+    { title: '默认映射域名', index: 'defaultDomain', render: 'domainRender', width: 260 },
+    { title: '排序', index: 'sort', width: 90 },
+    { title: '说明', index: 'remark', default: '-', width: 220 },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 100 },
     {
       title: '更新时间',
@@ -59,16 +69,17 @@ export class DeviceGroupsComponent implements OnInit {
     {
       title: '操作',
       fixed: 'right',
-      width: 130,
+      width: 170,
       buttons: [
         { icon: 'edit', click: (item) => this.openModal(item) },
+        { icon: 'appstore', click: (item) => this.openDevices(item.guid) },
         {
           icon: 'stop',
           className: 'text-error',
           iif: (item) => item.status !== 0,
           click: (item) => this.disable(item),
           pop: {
-            title: '禁用后该分组不再用于新分配，确认继续？',
+            title: '禁用后该类型将不能用于新设备注册，确认继续？',
             okType: 'danger',
             icon: 'stop',
           },
@@ -96,7 +107,7 @@ export class DeviceGroupsComponent implements OnInit {
           this.data = (res.data ?? []).map((item) => this.normalizeGroup(item));
           this.totalCount = res.total ?? 0;
         },
-        error: () => this.message.error('设备分组加载失败'),
+        error: () => this.message.error('设备类型加载失败'),
       });
   }
 
@@ -126,11 +137,22 @@ export class DeviceGroupsComponent implements OnInit {
   }
 
   protected openModal(item?: DeviceGroup): void {
+    const row = item ? this.normalizeGroup(item) : undefined;
+    this.editingGuid = row?.guid ?? '';
     this.form.reset({
-      guid: item?.guid ?? '',
-      name: item?.name ?? '',
-      description: item?.description ?? '',
+      guid: row?.guid ?? '',
+      name: row?.name ?? '',
+      defaultWebPort: row?.defaultWebPort ?? 0,
+      defaultDomain: row?.defaultDomain ?? '',
+      sort: row?.sort ?? 0,
+      remark: row?.remark ?? '',
+      status: row?.status ?? 1,
     });
+    if (row) {
+      this.form.controls.guid.disable({ emitEvent: false });
+    } else {
+      this.form.controls.guid.enable({ emitEvent: false });
+    }
     this.modalVisible = true;
   }
 
@@ -146,10 +168,13 @@ export class DeviceGroupsComponent implements OnInit {
     this.saving = true;
     this.devicesService
       .saveGroup({
-        guid: value.guid || undefined,
+        guid: this.editingGuid || value.guid.trim(),
         name: value.name.trim(),
-        description: value.description.trim(),
-        status: 1,
+        defaultWebPort: Number(value.defaultWebPort || 0),
+        defaultDomain: value.defaultDomain.trim(),
+        sort: Number(value.sort || 0),
+        remark: value.remark.trim(),
+        status: value.status,
       })
       .pipe(
         finalize(() => {
@@ -159,30 +184,42 @@ export class DeviceGroupsComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          this.message.success('设备分组已保存');
+          this.message.success('设备类型已保存');
           this.modalVisible = false;
           this.load();
         },
-        error: () => this.message.error('设备分组保存失败'),
+        error: () => this.message.error('设备类型保存失败'),
       });
   }
 
   protected disable(item: DeviceGroup): void {
     this.devicesService.disableGroup(item.guid).subscribe({
       next: () => {
-        this.message.success('设备分组已禁用');
+        this.message.success('设备类型已禁用');
         this.load();
       },
-      error: () => this.message.error('设备分组禁用失败'),
+      error: () => this.message.error('设备类型禁用失败'),
     });
+  }
+
+  protected openDevices(type: string): void {
+    this.router.navigate(['/devices/list'], { queryParams: { type } });
   }
 
   private normalizeGroup(item: DeviceGroup): DeviceGroup {
     return {
       ...item,
+      defaultWebPort: this.firstNumber(item.defaultWebPort, item.default_web_port),
+      defaultDomain: this.firstText(item.defaultDomain, item.default_domain),
+      sort: this.firstNumber(item.sort),
+      remark: this.firstText(item.remark, item.description),
       createTime: this.firstNumber(item.createTime, item.create_time),
       updateTime: this.firstNumber(item.updateTime, item.update_time),
     };
+  }
+
+  private firstText(...values: Array<string | undefined>): string {
+    return values.find((value) => value !== undefined && value !== '') ?? '';
   }
 
   private firstNumber(...values: Array<number | undefined>): number {

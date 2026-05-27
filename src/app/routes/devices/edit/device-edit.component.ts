@@ -35,7 +35,6 @@ export class DeviceEditComponent implements OnInit {
   protected form = this.fb.group({
     sncode: ['', [Validators.required]],
     alias: ['', [Validators.required]],
-    deviceId: [''],
     deviceType: ['', [Validators.required]],
     remark: [''],
     hostname: ['', [Validators.required]],
@@ -71,7 +70,6 @@ export class DeviceEditComponent implements OnInit {
           this.form.patchValue({
             sncode: device.sncode,
             alias: device.alias || device.sncode,
-            deviceId: device.deviceId || device.device_id || '',
             deviceType: device.deviceType || device.device_type || '',
             remark: device.remark || '',
             hostname: device.hostname,
@@ -97,11 +95,11 @@ export class DeviceEditComponent implements OnInit {
   }
 
   protected manageGroup(): void {
-    this.router.navigate(['/devices/list']);
+    this.router.navigate(['/devices/list'], { queryParams: { type: this.form.controls.deviceType.value } });
   }
 
   protected manageTokens(): void {
-    this.router.navigate(['/devices/tokens']);
+    this.router.navigate(['/devices/detail', this.guid], { queryParams: { tab: 'access' } });
   }
 
   private normalizeStatus(status: DeviceStatus | number): 1 | 2 | 3 | 4 {

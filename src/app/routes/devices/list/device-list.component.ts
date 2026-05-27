@@ -5,14 +5,13 @@ import {
   OnInit,
   inject,
 } from '@angular/core';
-import { Router } from '@angular/router';
-import { STChange, STColumn, STColumnTag } from '@delon/abc/st';
+import { ActivatedRoute, Router } from '@angular/router';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { Device, DeviceGroup, DeviceStatus, DevicesService } from '../devices.service';
+import { Device, DeviceStatus, DeviceTypeDefault, DevicesService } from '../devices.service';
 
 @Component({
   selector: 'app-device-list',
@@ -27,6 +26,7 @@ export class DeviceListComponent implements OnInit {
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   q = {
     page: 1,
@@ -34,100 +34,26 @@ export class DeviceListComponent implements OnInit {
     status: '',
     content: '',
     type: '',
-    groupGuid: '',
   };
 
   protected data: Device[] = [];
-  protected groups: DeviceGroup[] = [];
+  protected types: DeviceTypeDefault[] = [];
   protected totalCount = 0;
   protected loading = false;
-  protected assigning = false;
-  protected assignModalVisible = false;
-  protected assignDevice?: Device;
-  protected selectedGroupGuid = '';
-
-  protected statusTag: STColumnTag = {
-    1: { text: '已注册', color: 'gold' },
-    2: { text: '在线', color: 'green' },
-    3: { text: '离线', color: 'red' },
-    4: { text: '已禁用', color: 'default' },
-    online: { text: '在线', color: 'green' },
-    offline: { text: '离线', color: 'red' },
-    registered: { text: '已注册', color: 'gold' },
-    disabled: { text: '已禁用', color: 'default' },
-  };
-
-  columns: STColumn<Device>[] = [
-    { title: '设备', index: 'alias', render: 'nameRender', fixed: 'left', width: 240 },
-    { title: '设备类型', index: 'deviceType', width: 120, default: '-' },
-    { title: '业务设备 ID', index: 'deviceId', width: 150, default: '-' },
-    { title: '主机 / 本机 IP', index: 'hostIp', render: 'hostRender', width: 220 },
-    { title: '来源 IP', index: 'sourceIp', width: 150, default: '-' },
-    { title: '接入端口', index: 'sshPort', render: 'accessRender', width: 160 },
-    { title: 'Web 映射域名', index: 'webDomain', render: 'webDomainRender', width: 200 },
-    { title: '分组', index: 'groupGuid', render: 'groupRender', width: 150 },
-    { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 120 },
-    {
-      title: '最后在线',
-      index: 'lastHeartbeatAt',
-      type: 'date',
-      dateFormat: 'yyyy-MM-dd HH:mm:ss',
-      width: 180,
-    },
-    {
-      title: '创建时间',
-      index: 'createTime',
-      type: 'date',
-      dateFormat: 'yyyy-MM-dd HH:mm:ss',
-      width: 180,
-    },
-    {
-      title: '操作',
-      fixed: 'right',
-      width: 210,
-      buttons: [
-        {
-          icon: 'team',
-          click: (item) => this.openAssignGroup(item),
-        },
-        {
-          icon: 'edit',
-          click: (item) => this.edit(item.guid),
-        },
-        {
-          icon: 'folder-view',
-          click: (item) => this.detail(item.guid),
-        },
-        {
-          icon: 'line-chart',
-          click: (item) => this.metrics(item.guid),
-        },
-        {
-          icon: 'delete',
-          className: 'text-error',
-          click: (item) => this.delete(item.guid),
-          pop: {
-            title: '禁用后设备将无法继续接入，确认继续？',
-            okType: 'danger',
-            icon: 'delete',
-          },
-        },
-      ],
-    },
-  ];
 
   ngOnInit(): void {
-    this.loadGroups();
+    this.q.type = this.route.snapshot.queryParamMap.get('type') ?? '';
+    this.loadTypes();
     this.getData();
   }
 
-  protected loadGroups(): void {
-    this.devicesService.groups({ page: 1, size: 500, status: 1 }).subscribe({
-      next: (res) => {
-        this.groups = (res.data ?? []).map((item) => this.normalizeGroup(item));
+  protected loadTypes(): void {
+    this.devicesService.typeDefaults().subscribe({
+        next: (res) => {
+        this.types = (res ?? []).map((item) => this.normalizeType(item));
         this.cdr.markForCheck();
       },
-      error: () => this.message.error('设备分组加载失败'),
+      error: () => this.message.error('设备类型加载失败'),
     });
   }
 
@@ -158,6 +84,10 @@ export class DeviceListComponent implements OnInit {
     this.router.navigate(['/devices/detail', guid]);
   }
 
+  protected accessConfig(guid: string): void {
+    this.router.navigate(['/devices/detail', guid], { queryParams: { tab: 'access' } });
+  }
+
   protected metrics(guid: string): void {
     this.router.navigate(['/sessions/list'], { queryParams: { deviceGuid: guid } });
   }
@@ -176,39 +106,6 @@ export class DeviceListComponent implements OnInit {
     });
   }
 
-  protected openAssignGroup(item: Device): void {
-    this.assignDevice = item;
-    this.selectedGroupGuid = item.groupGuid || item.group_guid || '';
-    this.assignModalVisible = true;
-  }
-
-  protected assignGroup(): void {
-    if (!this.assignDevice) return;
-    this.assigning = true;
-    this.devicesService
-      .assignGroup(this.assignDevice.guid, this.selectedGroupGuid)
-      .pipe(
-        finalize(() => {
-          this.assigning = false;
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: () => {
-          this.message.success('设备分组已更新');
-          this.assignModalVisible = false;
-          this.getData();
-        },
-        error: () => this.message.error('设备分组更新失败'),
-      });
-  }
-
-  protected groupName(guid: string | undefined): string {
-    if (!guid) return '未分组';
-    const group = this.groups.find((item) => item.guid === guid);
-    return group?.name || guid;
-  }
-
   protected statusText(status: DeviceStatus | undefined): string {
     const map: Record<string, string> = {
       0: '已注册',
@@ -222,6 +119,39 @@ export class DeviceListComponent implements OnInit {
       disabled: '已禁用',
     };
     return map[String(status)] ?? (status ? String(status) : '未知');
+  }
+
+  protected statusColor(status: DeviceStatus | undefined): string {
+    const map: Record<string, string> = {
+      0: 'gold',
+      1: 'gold',
+      2: 'success',
+      3: 'error',
+      4: 'default',
+      registered: 'gold',
+      online: 'success',
+      offline: 'error',
+      disabled: 'default',
+    };
+    return map[String(status)] ?? 'default';
+  }
+
+  protected activationText(status: DeviceStatus | undefined): string {
+    const value = String(status);
+    if (value === 'registered' || value === '1' || value === '0') return '待激活';
+    if (value === 'online' || value === '2') return '已激活';
+    if (value === 'offline' || value === '3') return '已激活';
+    if (value === 'disabled' || value === '4') return '已禁用';
+    return '未知';
+  }
+
+  protected activationColor(status: DeviceStatus | undefined): string {
+    const value = String(status);
+    if (value === 'registered' || value === '1' || value === '0') return 'gold';
+    if (value === 'online' || value === '2') return 'success';
+    if (value === 'offline' || value === '3') return 'blue';
+    if (value === 'disabled' || value === '4') return 'default';
+    return 'default';
   }
 
   protected deviceStateClass(status: DeviceStatus | undefined): string {
@@ -255,6 +185,34 @@ export class DeviceListComponent implements OnInit {
     return 'os-unknown';
   }
 
+  protected typeName(type: string | undefined): string {
+    if (!type) return '-';
+    const item = this.types.find((row) => this.typeValue(row) === type);
+    return item?.remark || type;
+  }
+
+  protected productName(type: string | undefined): string {
+    if (!type) return '-';
+    const item = this.types.find((row) => this.typeValue(row) === type);
+    return this.typeValue(item) || type;
+  }
+
+  protected typeValue(item: DeviceTypeDefault | undefined): string {
+    return this.firstText(item?.guid, item?.type, item?.name);
+  }
+
+  protected productLink(type: string | undefined): void {
+    if (!type) return;
+    this.q.type = type;
+    this.q.page = 1;
+    this.getData();
+  }
+
+  protected reset(): void {
+    this.q = { page: 1, size: this.q.size, status: '', content: '', type: '' };
+    this.getData();
+  }
+
   protected formatTags(value: string): string[] {
     if (!value) return [];
     try {
@@ -268,38 +226,23 @@ export class DeviceListComponent implements OnInit {
     }
   }
 
-  /**
-   * 表格复选框变化回调
-   *
-   * @param {STChange} event
-   * @memberof ListComponent
-   */
-  tableChange(event: STChange): void {
-    switch (event.type) {
-      case 'checkbox':
-        break;
-      case 'pi':
-      case 'ps':
-      case 'filter':
-      case 'sort':
-        this.q.page = event.pi;
-        this.q.size = event.ps;
-        this.getData();
-        break;
-      default:
-        break;
-    }
+  protected pageChange(page: number): void {
+    this.q.page = page;
+    this.getData();
+  }
+
+  protected trackByGuid(_: number, item: Device): string {
+    return item.guid;
   }
 
   private normalizeDevice(item: Device): Device {
     return {
       ...item,
-      name: this.firstText(item.alias, item.name, item.sncode, item.deviceId, item.device_id, item.hostname, item.guid),
+      name: this.firstText(item.alias, item.name, item.sncode, item.hostname, item.guid),
       hostname: this.firstText(item.hostname, item.remark),
       ip: this.firstText(item.sourceIp, item.source_ip, item.ip),
       sourceIp: this.firstText(item.sourceIp, item.source_ip, item.ip),
       hostIp: this.firstText(item.hostIp, item.host_ip, item.privateIp, item.private_ip),
-      deviceId: this.firstText(item.deviceId, item.device_id),
       deviceType: this.firstText(item.deviceType, item.device_type),
       sshPort: this.firstNumber(item.sshPort, item.ssh_port),
       webPort: this.firstNumber(item.webPort, item.web_port),
@@ -316,9 +259,16 @@ export class DeviceListComponent implements OnInit {
     };
   }
 
-  private normalizeGroup(item: DeviceGroup): DeviceGroup {
+  private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {
     return {
       ...item,
+      guid: this.firstText(item.guid, item.type, item.name),
+      type: this.firstText(item.type, item.guid, item.name),
+      name: this.firstText(item.name, item.type, item.guid),
+      webPort: this.firstNumber(item.webPort, item.defaultWebPort, item.default_web_port),
+      webDomain: this.firstText(item.webDomain, item.defaultDomain, item.default_domain),
+      sort: this.firstNumber(item.sort),
+      status: this.firstNumber(item.status),
       createTime: this.firstNumber(item.createTime, item.create_time),
       updateTime: this.firstNumber(item.updateTime, item.update_time),
     };

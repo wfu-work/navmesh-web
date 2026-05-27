@@ -14,11 +14,11 @@
     <div class="upload-card__preview">
       <img [src]="url" alt="上传图片" />
       <div class="upload-card__mask">
-        <button nz-button nzType="primary" nzShape="round" (click)="preview(); $event.stopPropagation()">
+        <button nz-button nzType="primary" (click)="preview(); $event.stopPropagation()">
           <span nz-icon nzType="eye"></span>
           预览
         </button>
-        <button nz-button nzDanger nzShape="round" (click)="remove();$event.stopPropagation()" [disabled]="!url">
+        <button nz-button nzDanger (click)="remove();$event.stopPropagation()" [disabled]="!url">
           <span nz-icon nzType="delete"></span>
           删除
         </button>

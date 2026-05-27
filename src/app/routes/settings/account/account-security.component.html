@@ -1,7 +1,7 @@
 <section class="account-page">
   <div class="account-header">
     <title-label title="账号安全" description="查看当前管理员资料，并维护登录密码。" />
-    <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+    <button nz-button [nzLoading]="loading" (click)="load()">
       <nz-icon nzType="reload" />
       刷新
     </button>
@@ -42,7 +42,7 @@
           </nz-form-control>
         </nz-form-item>
 
-        <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="savePassword()">
+        <button nz-button nzType="primary" [nzLoading]="saving" (click)="savePassword()">
           <nz-icon nzType="save" />
           保存密码
         </button>

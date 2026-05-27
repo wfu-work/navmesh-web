@@ -2,11 +2,11 @@
   <div class="settings-header">
     <title-label title="数据保留" description="配置审计、访问日志、会话和设备心跳历史的保留周期。" />
     <div class="header-actions">
-      <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+      <button nz-button [nzLoading]="loading" (click)="load()">
         <nz-icon nzType="reload" />
         刷新
       </button>
-      <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="save()">
+      <button nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
         <nz-icon nzType="save" />
         保存
       </button>
@@ -38,7 +38,6 @@
         <button
           nz-button
           nzDanger
-          nzShape="round"
           [nzLoading]="cleaning"
           nz-popconfirm
           nzPopconfirmTitle="确认立即执行过期数据清理？"

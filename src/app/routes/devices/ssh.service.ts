@@ -22,6 +22,7 @@ export interface SaveSSHEntrypointPayload {
 
 export interface SSHAlias {
   id: number;
+  guid?: string;
   deviceGuid: string;
   device_guid?: string;
   alias: string;
@@ -63,7 +64,7 @@ export class SSHService {
     return this.http.post<SSHAlias>('/ssh-aliases', payload);
   }
 
-  disableAlias(id: number): Observable<boolean> {
-    return this.http.delete<boolean>(`/ssh-aliases/${id}`);
+  disableAlias(guid: string | number): Observable<boolean> {
+    return this.http.delete<boolean>(`/ssh-aliases/${guid}`);
   }
 }

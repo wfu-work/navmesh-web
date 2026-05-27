@@ -7,15 +7,15 @@
     />
 
     <div class="detail-actions">
-      <button nz-button nzShape="round" (click)="back()">返回列表</button>
+      <button nz-button (click)="back()">返回列表</button>
       @if (event && isOpen(event.status)) {
-        <button nz-button nzShape="round" (click)="ack()">
+        <button nz-button (click)="ack()">
           <nz-icon nzType="check" />
           标记已处理
         </button>
       }
       @if (event && !isClosed(event.status)) {
-        <button nz-button nzType="primary" nzDanger nzShape="round" (click)="close()">
+        <button nz-button nzType="primary" nzDanger (click)="close()">
           <nz-icon nzType="close" />
           关闭
         </button>

@@ -2,286 +2,337 @@
   min-width: 0;
 }
 
-:host-context([data-theme='dark']) .device-page {
-  color: rgba(255, 255, 255, 0.84);
-}
-
 .device-header {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  justify-content: space-between;
   margin-bottom: 22px;
 }
 
-:host-context([data-theme='dark']) h2 {
-  color: rgba(255, 255, 255, 0.9);
+.device-filter-card {
+  margin-bottom: 18px;
 }
 
-:host-context([data-theme='dark']) .device-header title-label,
-:host-context([data-theme='dark']) .device-header .title-label-title {
-  color: rgba(255, 255, 255, 0.94);
+.device-toolbar {
+  display: flex;
+  gap: 18px;
+  align-items: flex-end;
+  justify-content: space-between;
 }
 
-:host-context([data-theme='dark']) .device-header .title-label-description {
-  color: rgba(255, 255, 255, 0.58);
-}
+.device-group-filter {
+  min-width: 220px;
+  margin-bottom: 0;
 
-:host-context([data-theme='dark']) .ant-card {
-  border-color: rgb(255 255 255 / 6%);
-  background: linear-gradient(180deg, rgb(18 26 41 / 96%) 0%, rgb(14 20 31 / 96%) 100%);
-  box-shadow:
-    0 18px 46px rgb(0 0 0 / 24%),
-    inset 0 1px 0 rgb(255 255 255 / 6%);
-}
-
-:host-context([data-theme='dark']) .ant-btn:not(.ant-btn-primary) {
-  border-color: rgb(255 255 255 / 18%);
-  color: rgba(255, 255, 255, 0.78);
-  background: transparent;
-}
-
-:host-context([data-theme='dark']) .ant-btn:not(.ant-btn-primary):hover {
-  border-color: rgb(255 255 255 / 32%);
-  color: #fff;
-  background: rgb(255 255 255 / 6%);
-}
-
-:host-context([data-theme='dark']) .ant-btn-primary {
-  border-color: rgb(255 255 255 / 24%) !important;
-  color: #fff !important;
-  background: rgb(255 255 255 / 8%) !important;
-  box-shadow: none !important;
-}
-
-:host-context([data-theme='dark']) .ant-btn-primary:hover {
-  border-color: rgb(255 255 255 / 40%) !important;
-  background: rgb(255 255 255 / 12%) !important;
-}
-
-.device-name-wrap {
-  display: grid;
-  grid-template-columns: 30px minmax(0, 1fr);
-  gap: 10px;
-  align-items: center;
-  min-width: 0;
-}
-
-.device-os-icon {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
-  color: #4f6174;
-  background: #eef3f1;
-
-  nz-icon {
-    font-size: 16px;
+  nz-select {
+    width: 240px;
   }
 }
 
-.os-macos {
-  color: #202733;
-  background: #edf0f5;
+.device-search {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+  align-items: center;
+
+  nz-input-wrapper {
+    width: 300px;
+  }
 }
 
-.os-windows {
-  color: #1677ff;
-  background: #eaf3ff;
-}
-
-.os-linux {
-  color: #0d8f5d;
-  background: #e7f5f0;
-}
-
-.device-name-cell,
-.device-os-cell {
+.device-card-grid {
   display: grid;
-  gap: 4px;
+  grid-template-columns: repeat(3, minmax(300px, 1fr));
+  gap: 18px;
+}
+
+:host ::ng-deep {
+  .device-card {
+    overflow: hidden;
+    border: 1px solid #dfe8ee;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 14px 30px rgb(71 101 130 / 7%);
+    transition:
+      border-color 0.18s ease,
+      box-shadow 0.18s ease,
+      transform 0.18s ease;
+
+    .ant-card-body {
+      min-height: 254px;
+      padding: 0;
+    }
+
+    .ant-card-actions {
+      border-top-color: #e4edf2;
+      background: #fbfdff;
+
+      > li {
+        margin: 12px 0;
+      }
+
+      button {
+        height: 32px;
+        padding-inline: 8px;
+        font-weight: 850;
+      }
+    }
+  }
+
+  .device-card:hover {
+    border-color: #b8d8ff;
+    box-shadow: 0 18px 40px rgb(50 96 148 / 12%);
+    transform: translateY(-1px);
+  }
+
+  .device-card.device-online {
+    border-color: #cbeee1;
+  }
+}
+
+.device-card-main {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 132px;
+  gap: 20px;
+  min-height: 254px;
+  padding: 24px;
+  background: linear-gradient(135deg, rgb(250 253 255 / 96%) 0%, rgb(244 250 253 / 96%) 100%), #fff;
+}
+
+.device-card-copy {
+  display: flex;
   min-width: 0;
+  flex-direction: column;
+}
+
+.device-card-title {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+}
+
+:host ::ng-deep .device-avatar {
+  flex: 0 0 auto;
+  color: #314154;
+  background: #eef4f7;
+  font-size: 26px;
+}
+
+.device-title-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 
   strong {
     color: #223047;
+    font-size: 22px;
+    font-weight: 850;
+    line-height: 1.25;
   }
 
-  span,
-  small {
-    min-width: 0;
+  span {
+    color: #8a96a4;
     font-size: 12px;
-    color: #7b8794;
+    font-weight: 750;
   }
 }
 
-.device-name-meta {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  min-width: 0;
+.device-card-meta {
+  display: grid;
+  gap: 11px;
+  margin: 24px 0 12px;
 
-  > span:first-child {
+  div {
+    display: grid;
+    grid-template-columns: 65px minmax(0, 1fr);
+    gap: 8px;
+    align-items: center;
+  }
+
+  dt {
+    color: #8b96a6;
+    font-size: 13px;
+    font-weight: 760;
+  }
+
+  dd {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: #2f3b4d;
+    font-size: 15px;
+    font-weight: 850;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.product-link {
+  padding: 0;
+  border: 0;
+  color: #2b7de9;
+  font-size: 15px;
+  font-weight: 850;
+  font: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+:host ::ng-deep .device-id-chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 0;
+  font-size: 14px;
+  font-weight: 850;
+
+  span {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 }
 
-.device-state-pill {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  height: 20px;
-  padding: 0 7px;
-  border-radius: 999px;
-  color: #667789;
-  font-size: 11px;
-  font-weight: 800;
-  line-height: 20px;
-  background: #eef2f5;
-}
-
-.device-online {
-  .device-os-icon {
-    border: 1px solid #bfe8d7;
-    color: #0d8f5d;
-    background: #e7f8f0;
-    box-shadow: 0 0 0 3px rgba(13, 143, 93, 0.08);
-  }
-
-  .device-state-pill {
-    color: #0d8f5d;
-    background: #e7f8f0;
-  }
-}
-
-.device-offline {
-  .device-os-icon {
-    border: 1px solid #f1c6c6;
-    color: #b94a48;
-    background: #fff0f0;
-  }
-
-  .device-state-pill {
-    color: #b94a48;
-    background: #fff0f0;
-  }
-
-  .device-name-cell {
-    strong {
-      color: #6f7c89;
-    }
-
-    span {
-      color: #9aa5b1;
-    }
-  }
-}
-
-.device-registered,
-.device-unknown {
-  .device-os-icon {
-    border: 1px solid #f2ddb5;
-    color: #b56a00;
-    background: #fff7e6;
-  }
-
-  .device-state-pill {
-    color: #b56a00;
-    background: #fff7e6;
-  }
-}
-
-.device-ip-cell {
-  display: grid;
-  gap: 5px;
-  min-width: 0;
-
-  span {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-    color: #223047;
-    font-size: 12px;
-    line-height: 1.35;
-  }
-
-  b {
-    flex: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 18px;
-    height: 18px;
-    border-radius: 6px;
-    color: #0d8f5d;
-    font-size: 11px;
-    font-weight: 850;
-    background: #e7f5f0;
-  }
-}
-
-.tag-list {
+.device-access-chips {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
-
-  span {
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 700;
-    color: #4f6174;
-    background: #f1f5f4;
-  }
-
-  .tag-empty {
-    color: #a4adb7;
-    background: transparent;
-  }
-}
-
-.device-group-filter {
-  width: 160px;
-  margin-right: 12px;
-}
-
-.device-group-pill {
-  display: inline-flex;
-  max-width: 130px;
-  min-height: 24px;
+  gap: 8px;
   align-items: center;
-  padding: 0 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  color: #405165;
-  font-size: 12px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: #f1f5f4;
+  margin-top: auto;
 }
 
-.assign-device-name {
-  margin: 0 0 12px;
-  color: #223047;
-  font-weight: 800;
+.device-card-side {
+  display: grid;
+  justify-items: end;
+  align-content: start;
+  gap: 18px;
 }
 
-.w-100 {
-  width: 100%;
+.device-status-stack {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
 }
 
-@media (max-width: 767px) {
-  .device-header {
-    display: grid;
+:host ::ng-deep .device-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  margin: 0;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.device-illustration {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d9e9ff;
+  border-radius: 8px;
+  color: #3d8cff;
+  font-size: 48px;
+  padding: 6px;
+  background: linear-gradient(145deg, rgb(64 148 255 / 14%), rgb(53 199 180 / 10%)), #f5faff;
+}
+
+.device-offline .device-illustration,
+.device-unknown .device-illustration {
+  border-color: #e2e8ef;
+  color: #94a3b8;
+  background: #f7fafc;
+}
+
+.device-registered .device-illustration {
+  border-color: #f2dfb8;
+  color: #c88a18;
+  background: #fffaf0;
+}
+
+.device-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+
+  nz-icon {
+    color: #9aa6b2;
+    font-size: 34px;
   }
 
-  .device-group-filter {
+  h2 {
+    margin: 12px 0 6px;
+    color: #243246;
+    font-size: 18px;
+    font-weight: 850;
+  }
+
+  p {
+    margin: 0;
+    color: #718096;
+  }
+}
+
+.device-pagination {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+@media (max-width: 1320px) {
+  .device-card-grid {
+    grid-template-columns: repeat(2, minmax(300px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .device-toolbar {
+    display: grid;
+    align-items: stretch;
+  }
+
+  .device-group-filter,
+  .device-group-filter nz-select {
     width: 100%;
-    margin-right: 0;
+  }
+
+  .device-search {
+    flex-wrap: wrap;
+
+    nz-input-wrapper {
+      width: min(100%, 360px);
+    }
+  }
+
+  .device-card-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .device-card-main {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+
+  .device-card-side {
+    justify-items: start;
+  }
+
+  .device-status-stack {
+    justify-items: start;
+  }
+
+  .device-card-meta div {
+    grid-template-columns: 84px minmax(0, 1fr);
   }
 }

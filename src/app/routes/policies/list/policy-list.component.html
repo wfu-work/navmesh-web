@@ -1,7 +1,7 @@
 <section class="policy-page">
   <div class="policy-header">
-    <title-label title="访问策略" description="控制全局、设备或 HTTP 映射是否允许 SSH/HTTP 访问。" />
-    <button nz-button nzType="primary" nzShape="round" (click)="openModal()">
+    <title-label title="访问策略" description="控制全局、设备、设备类型或 HTTP 映射是否允许 SSH/HTTP 访问。" />
+    <button nz-button nzType="primary" (click)="openModal()">
       <nz-icon nzType="plus" />
       新增策略
     </button>
@@ -15,7 +15,7 @@
           <nz-option nzValue="" nzLabel="全部范围" />
           <nz-option nzValue="global" nzLabel="全局" />
           <nz-option nzValue="device" nzLabel="设备" />
-          <nz-option nzValue="group" nzLabel="分组" />
+          <nz-option nzValue="group" nzLabel="设备类型" />
           <nz-option nzValue="mapping" nzLabel="映射" />
         </nz-select>
         <input nz-input [(ngModel)]="q.targetId" placeholder="目标 ID" (keydown.enter)="search()" />
@@ -23,8 +23,8 @@
           <nz-option nzValue="" nzLabel="全部状态" />
           <nz-option [nzValue]="1" nzLabel="启用" />
         </nz-select>
-        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
-        <button nz-button nzShape="round" (click)="reset()">重置</button>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
       </div>
     </div>
 
@@ -106,7 +106,7 @@
             <nz-select formControlName="scope" (ngModelChange)="onScopeChange($event)">
               <nz-option nzValue="global" nzLabel="全局" />
               <nz-option nzValue="device" nzLabel="设备" />
-              <nz-option nzValue="group" nzLabel="分组" />
+              <nz-option nzValue="group" nzLabel="设备类型" />
               <nz-option nzValue="mapping" nzLabel="映射" />
             </nz-select>
           </nz-form-control>
@@ -123,7 +123,7 @@
                   }
                 </nz-select>
               } @else if (form.controls.scope.value === 'group') {
-                <nz-select nzShowSearch formControlName="targetId" nzPlaceHolder="请选择设备分组">
+                <nz-select nzShowSearch formControlName="targetId" nzPlaceHolder="请选择设备类型">
                   @for (group of groups; track group.guid) {
                     <nz-option [nzValue]="group.guid" [nzLabel]="group.name || group.guid" />
                   }

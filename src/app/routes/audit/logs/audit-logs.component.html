@@ -1,7 +1,7 @@
 <section class="audit-page">
   <div class="audit-header">
     <title-label title="操作审计" description="查询登录、配置保存、禁用资源和密码修改等管理操作记录。" />
-    <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+    <button nz-button [nzLoading]="loading" (click)="load()">
       <nz-icon nzType="reload" />
       刷新
     </button>
@@ -22,8 +22,8 @@
         </nz-select>
         <input nz-input [(ngModel)]="q.resource" placeholder="资源" (keydown.enter)="search()" />
         <input nz-input [(ngModel)]="q.resourceId" placeholder="资源 ID" (keydown.enter)="search()" />
-        <button nz-button nzType="primary" nzShape="round" (click)="search()">查询</button>
-        <button nz-button nzShape="round" (click)="reset()">重置</button>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
       </div>
     </div>
 

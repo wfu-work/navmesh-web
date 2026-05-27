@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 export interface MappingQuery {
   keyword?: string;
   content?: string;
+  deviceGuid?: string;
   status?: string | number;
   page?: number;
   size?: number;

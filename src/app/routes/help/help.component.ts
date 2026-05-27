@@ -18,19 +18,9 @@ interface HelpLink {
 export class HelpComponent {
   protected readonly links: HelpLink[] = [
     {
-      title: '设备接入凭证',
-      description: '创建设备 Token，并在客户端注册或心跳时使用。',
-      link: '/devices/tokens',
-    },
-    {
-      title: 'SSH 入口地址',
-      description: '维护 SSH Gateway 对外入口 IP 和设备别名。',
-      link: '/ssh/entrypoints',
-    },
-    {
-      title: 'HTTP 映射',
-      description: '把公网 Host 转发到设备侧本地 HTTP 服务。',
-      link: '/mappings/list',
+      title: '设备接入配置',
+      description: '从设备详情进入激活凭证、SSH 别名和 HTTP 映射配置。',
+      link: '/devices/list',
     },
     {
       title: '访问策略',

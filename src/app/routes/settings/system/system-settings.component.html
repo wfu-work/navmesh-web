@@ -2,11 +2,11 @@
   <div class="settings-header">
     <title-label title="系统配置" description="维护公网域名、网关监听地址、隧道连接和运行限制。" />
     <div class="header-actions">
-      <button nz-button nzShape="round" [nzLoading]="loading" (click)="load()">
+      <button nz-button [nzLoading]="loading" (click)="load()">
         <nz-icon nzType="reload" />
         刷新
       </button>
-      <button nz-button nzType="primary" nzShape="round" [nzLoading]="saving" (click)="save()">
+      <button nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
         <nz-icon nzType="save" />
         保存
       </button>

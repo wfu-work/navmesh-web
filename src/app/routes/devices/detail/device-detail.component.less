@@ -129,6 +129,293 @@
   margin-bottom: 18px;
 }
 
+.device-profile {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 22px 24px;
+  border: 1px solid #dfe8ee;
+  border-radius: 8px;
+  background: #fff;
+}
+
+:host-context([data-theme='dark']) .device-profile {
+  border-color: rgb(255 255 255 / 6%);
+  background: rgb(17 24 39 / 94%);
+}
+
+.device-profile .detail-device-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.device-profile .detail-device-title strong {
+  font-size: 22px;
+}
+
+.profile-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+
+  span {
+    overflow: hidden;
+    padding: 9px 11px;
+    border: 1px solid #e7efec;
+    border-radius: 8px;
+    color: #596879;
+    font-size: 12px;
+    font-weight: 760;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    background: #fbfdfc;
+  }
+}
+
+:host-context([data-theme='dark']) .profile-meta-grid span {
+  border-color: rgb(255 255 255 / 8%);
+  color: rgba(255, 255, 255, 0.62);
+  background: rgb(255 255 255 / 4%);
+}
+
+.detail-summary-metrics {
+  margin-bottom: 18px;
+}
+
+.access-section-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.access-card {
+  min-width: 0;
+}
+
+.detail-card-title > div {
+  min-width: 0;
+}
+
+.detail-card-title p {
+  margin: 4px 0 0;
+  color: #6a7785;
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+:host-context([data-theme='dark']) .detail-card-title p {
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.access-actions,
+.access-item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.access-list {
+  display: grid;
+  gap: 10px;
+}
+
+.access-list-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #e1ebe8;
+  border-radius: 8px;
+  background: #fbfdfc;
+
+  > div:first-child {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: #223047;
+    font-size: 15px;
+    font-weight: 850;
+  }
+
+  span {
+    color: #6a7785;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+:host-context([data-theme='dark']) .access-list-item {
+  border-color: rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 4%);
+}
+
+:host-context([data-theme='dark']) .access-list-item strong {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:host-context([data-theme='dark']) .access-list-item span {
+  color: rgba(255, 255, 255, 0.54);
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.traffic-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(360px, 0.9fr);
+  gap: 18px;
+}
+
+.traffic-card {
+  min-width: 0;
+}
+
+.traffic-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 22px;
+
+  article {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #e3ece9;
+    border-radius: 8px;
+    background: #fbfdfc;
+  }
+
+  span,
+  strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: #6a7785;
+    font-size: 12px;
+    font-weight: 720;
+  }
+
+  strong {
+    margin-top: 6px;
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+  }
+}
+
+.traffic-bars {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  align-items: end;
+  gap: 14px;
+  height: 180px;
+  padding-top: 12px;
+  border-top: 1px solid #edf2f0;
+}
+
+.traffic-bar-wrap {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+  height: 100%;
+  min-width: 0;
+  text-align: center;
+
+  span {
+    color: #8a96a4;
+    font-size: 11px;
+    font-weight: 720;
+  }
+}
+
+.traffic-bar {
+  width: 100%;
+  min-height: 8px;
+  border-radius: 8px 8px 0 0;
+  background: #7fcfc1;
+}
+
+.session-list {
+  display: grid;
+  gap: 10px;
+}
+
+.session-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: center;
+  padding: 13px 14px;
+  border: 1px solid #e3ece9;
+  border-radius: 8px;
+  background: #fbfdfc;
+
+  div {
+    display: grid;
+    gap: 3px;
+    min-width: 0;
+  }
+
+  div:last-child {
+    text-align: right;
+  }
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: #223047;
+    font-weight: 850;
+  }
+
+  span {
+    color: #6a7785;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+:host-context([data-theme='dark']) .traffic-stats article,
+:host-context([data-theme='dark']) .session-item {
+  border-color: rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 4%);
+}
+
+:host-context([data-theme='dark']) .traffic-stats strong,
+:host-context([data-theme='dark']) .session-item strong {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:host-context([data-theme='dark']) .traffic-stats span,
+:host-context([data-theme='dark']) .session-item span {
+  color: rgba(255, 255, 255, 0.54);
+}
+
 .detail-device-title {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr);
@@ -230,6 +517,15 @@
   background: rgb(255 255 255 / 8%);
 }
 
+.token-secret {
+  display: block;
+  max-height: 96px;
+  margin-top: 8px;
+  overflow: auto;
+  word-break: break-all;
+  white-space: normal;
+}
+
 .detail-empty {
   min-height: 260px;
   display: grid;
@@ -238,7 +534,9 @@
 
 @media (max-width: 1199px) {
   .detail-summary,
-  .detail-grid {
+  .detail-grid,
+  .traffic-grid,
+  .profile-meta-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -249,7 +547,29 @@
   }
 
   .detail-summary,
-  .detail-grid {
+  .detail-grid,
+  .traffic-grid,
+  .profile-meta-grid,
+  .traffic-stats {
     grid-template-columns: 1fr;
+  }
+
+  .detail-card-title,
+  .access-list-item,
+  .session-item,
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .session-item div:last-child {
+    text-align: left;
+  }
+
+  .detail-card-title {
+    align-items: flex-start;
+  }
+
+  .access-item-actions {
+    justify-content: flex-start;
   }
 }

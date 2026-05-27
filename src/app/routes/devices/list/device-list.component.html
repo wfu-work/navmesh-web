@@ -1,159 +1,156 @@
 <section class="device-page">
   <div class="device-header">
-    <div>
-      <title-label
-        title="设备列表"
-        description="查看设备序列号、业务设备 ID、设备类型、接入地址和最后在线时间。"
-      />
-    </div>
+    <title-label
+      title="设备列表"
+      description="按设备类型查看接入设备、在线状态、序列号和最近心跳。"
+    />
   </div>
 
-  <nz-card class="card-border" [nzBordered]="false">
-    <div class="d-flex justify-content-between mb-lg">
-      <h2>设备列表</h2>
-      <div class="d-flex">
-        <nz-select
-          class="device-group-filter"
-          nzAllowClear
-          nzPlaceHolder="设备分组"
-          [(ngModel)]="q.groupGuid"
-          (ngModelChange)="q.page = 1; getData()"
-        >
-          <nz-option nzValue="" nzLabel="全部分组" />
-          @for (group of groups; track group.guid) {
-            <nz-option [nzValue]="group.guid" [nzLabel]="group.name" />
-          }
-        </nz-select>
+  <nz-card class="card-border device-filter-card" [nzBordered]="false">
+    <div class="device-toolbar">
+      <nz-form-item class="device-group-filter">
+        <nz-form-label>设备分组</nz-form-label>
+        <nz-form-control>
+          <nz-select
+            nzShowSearch
+            nzAllowClear
+            nzPlaceHolder="全部分组"
+            [(ngModel)]="q.type"
+            (ngModelChange)="q.page = 1; getData()"
+          >
+            <nz-option nzValue="" nzLabel="全部分组" />
+            @for (type of types; track typeValue(type)) {
+              <nz-option [nzValue]="typeValue(type)" [nzLabel]="type.remark || typeValue(type)" />
+            }
+          </nz-select>
+        </nz-form-control>
+      </nz-form-item>
+
+      <div class="device-search">
         <nz-input-wrapper>
           <nz-icon nzInputPrefix nzType="search" />
           <input
             nz-input
             [(ngModel)]="q.content"
-            placeholder="搜索序列号、别名、备注或业务设备 ID"
+            placeholder="搜索序列号、别名、备注或主机名"
             (keydown.enter)="q.page = 1; getData()"
           />
         </nz-input-wrapper>
-        <button nz-button nzType="primary" nzShape="round" class="ml-lg" (click)="q.page = 1; getData()">
-          查询
-        </button>
-        <button nz-button nzShape="round" (click)="q.page = 1; q.content = ''; q.groupGuid = ''; getData()">
-          重置
-        </button>
+        <button nz-button nzType="primary" (click)="q.page = 1; getData()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
       </div>
     </div>
-
-    <st
-      #st
-      [data]="data"
-      [columns]="columns"
-      (change)="tableChange($event)"
-      bordered="false"
-      [loading]="loading"
-      [pi]="q.page"
-      [ps]="q.size"
-      [total]="totalCount"
-      [expand]="expand"
-      [expandRowByClick]="true"
-      [scroll]="{ x: '2100px' }"
-    >
-      <ng-template st-row="nameRender" let-item>
-        <div class="device-name-wrap {{ deviceStateClass(item.status) }}">
-          <span class="device-os-icon {{ osClass(item.os) }}">
-            <nz-icon [nzType]="osIcon(item.os)" />
-          </span>
-          <div class="device-name-cell">
-            <ellipsis [lines]="1" tooltip>
-              <strong>{{ item.name || item.hostname || item.guid }}</strong>
-            </ellipsis>
-            <div class="device-name-meta">
-              <span>{{ item.sncode || item.guid }}</span>
-              <span class="device-state-pill">{{ statusText(item.status) }}</span>
-            </div>
-          </div>
-        </div>
-      </ng-template>
-
-      <ng-template st-row="hostRender" let-item>
-        <div class="device-ip-cell">
-          <span><b>主</b>{{ item.hostname || '-' }}</span>
-          <span><b>IP</b>{{ item.hostIp || '-' }}</span>
-        </div>
-      </ng-template>
-
-      <ng-template st-row="accessRender" let-item>
-        <div class="device-ip-cell">
-          <span><b>SSH</b>{{ item.sshPort || '-' }}</span>
-          <span><b>Web</b>{{ item.webPort || '-' }}</span>
-        </div>
-      </ng-template>
-
-      <ng-template st-row="webDomainRender" let-item>
-        <ellipsis [lines]="1" tooltip>
-          {{ item.webDomain || '-' }}
-        </ellipsis>
-      </ng-template>
-
-      <ng-template st-row="groupRender" let-item>
-        <span class="device-group-pill">{{ groupName(item.groupGuid) }}</span>
-      </ng-template>
-
-      <ng-template st-row="tagsRender" let-item>
-        <div class="tag-list">
-          @for (tag of formatTags(item.tags); track tag) {
-            <span>{{ tag }}</span>
-          } @empty {
-            <span class="tag-empty">-</span>
-          }
-        </div>
-      </ng-template>
-
-      <ng-template #expand let-item>
-        <sv-container col="3">
-          <sv label="设备名称">{{ item.name || '-' }}</sv>
-          <sv label="别名">{{ item.alias || '-' }}</sv>
-          <sv label="GUID">{{ item.guid }}</sv>
-          <sv label="序列号">{{ item.sncode || '-' }}</sv>
-          <sv label="业务设备 ID">{{ item.deviceId || '-' }}</sv>
-          <sv label="设备类型">{{ item.deviceType || '-' }}</sv>
-          <sv label="备注">{{ item.remark || '-' }}</sv>
-          <sv label="主机名">{{ item.hostname || '-' }}</sv>
-          <sv label="本机 IP">{{ item.hostIp || '-' }}</sv>
-          <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
-          <sv label="本机 SSH 端口">{{ item.sshPort || '-' }}</sv>
-          <sv label="本机 Web 端口">{{ item.webPort || '-' }}</sv>
-          <sv label="Web 映射域名">{{ item.webDomain || '-' }}</sv>
-          <sv label="设备分组">{{ groupName(item.groupGuid) }}</sv>
-          <sv label="客户端版本">{{ item.clientVersion || '-' }}</sv>
-          <sv label="状态">{{ statusText(item.status) }}</sv>
-          <sv label="最后在线">{{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
-          <sv label="创建时间">{{ item.createTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
-        </sv-container>
-      </ng-template>
-    </st>
   </nz-card>
 
-  <nz-modal
-    [(nzVisible)]="assignModalVisible"
-    nzTitle="分配设备分组"
-    [nzFooter]="assignFooter"
-    (nzOnCancel)="assignModalVisible = false"
-  >
-    <ng-container *nzModalContent>
-      <p class="assign-device-name">{{ assignDevice?.name || assignDevice?.sncode || assignDevice?.guid }}</p>
-      <nz-select class="w-100" nzAllowClear nzPlaceHolder="选择分组" [(ngModel)]="selectedGroupGuid">
-        <nz-option nzValue="" nzLabel="未分组" />
-        @for (group of groups; track group.guid) {
-          <nz-option [nzValue]="group.guid" [nzLabel]="group.name" />
-        }
-      </nz-select>
-    </ng-container>
+  <nz-spin [nzSpinning]="loading">
+    <div class="device-card-grid">
+      @for (item of data; track trackByGuid($index, item)) {
+        <nz-card
+          class="device-card {{ deviceStateClass(item.status) }}"
+          [nzBordered]="false"
+          [nzActions]="[configAction, detailAction, deleteAction]"
+        >
+          <div class="device-card-main">
+            <div class="device-card-copy">
+              <div class="device-card-title">
+                <nz-avatar class="device-avatar" nzIcon="appstore" />
+                <div class="device-title-text">
+                  <strong>{{ item.name || item.sncode || item.hostname || item.guid }}</strong>
+                  <span>设备号：{{ item.sncode || item.guid }}</span>
+                </div>
+              </div>
 
-    <ng-template #assignFooter>
-      <button nz-button nzShape="round" (click)="assignModalVisible = false">取消</button>
-      <button nz-button nzType="primary" nzShape="round" [nzLoading]="assigning" (click)="assignGroup()">
-        <nz-icon nzType="save" />
-        保存
-      </button>
-    </ng-template>
-  </nz-modal>
+              <dl class="device-card-meta">
+                <div>
+                  <dt>所属产品</dt>
+                  <dd>
+                    <button type="button" class="product-link" (click)="productLink(item.deviceType)">
+                      {{ productName(item.deviceType) }}
+                    </button>
+                  </dd>
+                </div>
+                <div>
+                  <dt>本机端口</dt>
+                  <dd>SSH {{ item.sshPort || '-' }} / HTTP {{ item.webPort || '-' }}</dd>
+                </div>
+                <div>
+                  <dt>最近连接</dt>
+                  <dd>{{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</dd>
+                </div>
+              </dl>
+
+              <div class="device-access-chips">
+                <nz-tag class="device-id-chip" nzColor="blue">
+                  <nz-icon nzType="cluster" />
+                  <span>{{ item.hostname || item.hostIp || '待激活' }}</span>
+                </nz-tag>
+                @if (item.webDomain) {
+                  <nz-tag class="device-id-chip" nzColor="green">
+                    <nz-icon nzType="api" />
+                    <span>{{ item.webDomain }}</span>
+                  </nz-tag>
+                }
+              </div>
+            </div>
+
+            <div class="device-card-side">
+              <div class="device-status-stack">
+                <nz-tag class="device-status-tag" [nzColor]="activationColor(item.status)">
+                  {{ activationText(item.status) }}
+                </nz-tag>
+                <nz-tag class="device-status-tag" [nzColor]="statusColor(item.status)">
+                  {{ statusText(item.status) }}
+                </nz-tag>
+              </div>
+              <div class="device-illustration">
+                <nz-icon [nzType]="osIcon(item.os)" />
+              </div>
+            </div>
+          </div>
+
+          <ng-template #configAction>
+            <button nz-button nzType="link" (click)="accessConfig(item.guid)">
+              <nz-icon nzType="setting" />
+              配置
+            </button>
+          </ng-template>
+          <ng-template #detailAction>
+            <button nz-button nzType="link" (click)="detail(item.guid)">
+              <nz-icon nzType="eye" />
+              详情
+            </button>
+          </ng-template>
+          <ng-template #deleteAction>
+            <button
+              nz-button
+              nzType="link"
+              nzDanger
+              nz-popconfirm
+              nzPopconfirmTitle="禁用后设备将无法继续接入，确认继续？"
+              (nzOnConfirm)="delete(item.guid)"
+            >
+              <nz-icon nzType="delete" />
+            </button>
+          </ng-template>
+        </nz-card>
+      } @empty {
+        <nz-card class="card-border device-empty" [nzBordered]="false">
+          <nz-icon nzType="inbox" />
+          <h2>暂无设备</h2>
+          <p>调整筛选条件，或启动 navmesh-client 完成设备注册。</p>
+        </nz-card>
+      }
+    </div>
+  </nz-spin>
+
+  @if (totalCount > q.size) {
+    <div class="device-pagination">
+      <nz-pagination
+        [nzPageIndex]="q.page"
+        [nzPageSize]="q.size"
+        [nzTotal]="totalCount"
+        (nzPageIndexChange)="pageChange($event)"
+      />
+    </div>
+  }
 </section>

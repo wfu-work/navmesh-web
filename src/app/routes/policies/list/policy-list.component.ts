@@ -50,7 +50,7 @@ export class PolicyListComponent implements OnInit {
   protected readonly scopeTag: STColumnTag = {
     global: { text: '全局', color: 'geekblue' },
     device: { text: '设备', color: 'green' },
-    group: { text: '分组', color: 'cyan' },
+    group: { text: '类型', color: 'cyan' },
     mapping: { text: '映射', color: 'blue' },
   };
 

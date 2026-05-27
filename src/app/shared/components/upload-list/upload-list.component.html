@@ -4,11 +4,11 @@
     <div class="upload-list__card">
       <img [src]="file.url || file.response" [alt]="file.name || '上传图片'" />
       <div class="upload-list__mask">
-        <button nz-button nzType="primary" nzShape="round" (click)="openPreview(file); $event.stopPropagation()">
+        <button nz-button nzType="primary" (click)="openPreview(file); $event.stopPropagation()">
           <span nz-icon nzType="eye"></span>
           预览
         </button>
-        <button nz-button nzDanger nzShape="round" (click)="removeFile(file, $event)">
+        <button nz-button nzDanger (click)="removeFile(file, $event)">
           <span nz-icon nzType="delete"></span>
           删除
         </button>
