@@ -40,6 +40,7 @@ export class DeviceListComponent implements OnInit {
   protected types: DeviceTypeDefault[] = [];
   protected totalCount = 0;
   protected loading = false;
+  protected statusChanging = new Set<string>();
 
   ngOnInit(): void {
     this.q.type = this.route.snapshot.queryParamMap.get('type') ?? '';
@@ -85,7 +86,7 @@ export class DeviceListComponent implements OnInit {
   }
 
   protected accessConfig(guid: string): void {
-    this.router.navigate(['/devices/detail', guid], { queryParams: { tab: 'access' } });
+    this.router.navigate(['/devices/config', guid]);
   }
 
   protected metrics(guid: string): void {
@@ -96,77 +97,84 @@ export class DeviceListComponent implements OnInit {
     this.devicesService.delete(guid).subscribe({
       next: (r) => {
         if (r) {
-          this.message.success('设备已禁用');
+          this.message.success('设备已删除');
+          this.data = this.data.filter((item) => item.guid !== guid);
+          this.totalCount = Math.max(0, this.totalCount - 1);
+          this.cdr.markForCheck();
           this.getData();
         } else {
-          this.message.error('设备禁用失败');
+          this.message.error('设备删除失败');
         }
       },
-      error: () => this.message.error('设备禁用失败'),
+      error: () => this.message.error('设备删除失败'),
     });
   }
 
+  protected enabled(status: DeviceStatus | undefined): boolean {
+    return status !== 4;
+  }
+
+  protected activate(item: Device): void {
+    this.toggleEnabled(item, true);
+  }
+
+  protected toggleEnabled(item: Device, checked: boolean): void {
+    if (this.statusChanging.has(item.guid)) return;
+    this.statusChanging.add(item.guid);
+    const request = checked ? this.devicesService.enable(item.guid) : this.devicesService.disable(item.guid);
+    request
+      .pipe(
+        finalize(() => {
+          this.statusChanging.delete(item.guid);
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: (ok) => {
+          if (!ok) {
+            this.message.error(checked ? '设备启用失败' : '设备禁用失败');
+            this.getData();
+            return;
+          }
+          this.message.success(checked && item.status === 1 ? '设备已激活' : checked ? '设备已启用' : '设备已禁用');
+          item.status = checked ? 3 : 4;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.message.error(checked ? '设备启用失败' : '设备禁用失败');
+          this.getData();
+        },
+      });
+  }
+
   protected statusText(status: DeviceStatus | undefined): string {
-    const map: Record<string, string> = {
-      0: '已注册',
+    const map: Record<DeviceStatus, string> = {
       1: '已注册',
       2: '在线',
       3: '离线',
       4: '已禁用',
-      online: '在线',
-      offline: '离线',
-      registered: '已注册',
-      disabled: '已禁用',
     };
-    return map[String(status)] ?? (status ? String(status) : '未知');
+    return status ? map[status] : '未知';
   }
 
   protected statusColor(status: DeviceStatus | undefined): string {
-    const map: Record<string, string> = {
-      0: 'gold',
+    const map: Record<DeviceStatus, string> = {
       1: 'gold',
       2: 'success',
       3: 'error',
       4: 'default',
-      registered: 'gold',
-      online: 'success',
-      offline: 'error',
-      disabled: 'default',
     };
-    return map[String(status)] ?? 'default';
-  }
-
-  protected activationText(status: DeviceStatus | undefined): string {
-    const value = String(status);
-    if (value === 'registered' || value === '1' || value === '0') return '待激活';
-    if (value === 'online' || value === '2') return '已激活';
-    if (value === 'offline' || value === '3') return '已激活';
-    if (value === 'disabled' || value === '4') return '已禁用';
-    return '未知';
-  }
-
-  protected activationColor(status: DeviceStatus | undefined): string {
-    const value = String(status);
-    if (value === 'registered' || value === '1' || value === '0') return 'gold';
-    if (value === 'online' || value === '2') return 'success';
-    if (value === 'offline' || value === '3') return 'blue';
-    if (value === 'disabled' || value === '4') return 'default';
-    return 'default';
+    return status ? map[status] : 'default';
   }
 
   protected deviceStateClass(status: DeviceStatus | undefined): string {
-    const map: Record<string, string> = {
-      0: 'device-registered',
+    const map: Record<DeviceStatus, string> = {
       1: 'device-registered',
       2: 'device-online',
       3: 'device-offline',
-      4: 'device-unknown',
-      registered: 'device-registered',
-      online: 'device-online',
-      offline: 'device-offline',
-      disabled: 'device-unknown',
+      4: 'device-disabled',
     };
-    return map[String(status)] ?? 'device-unknown';
+    return status ? map[status] : 'device-unknown';
   }
 
   protected osIcon(os: string | undefined): string {
@@ -188,17 +196,17 @@ export class DeviceListComponent implements OnInit {
   protected typeName(type: string | undefined): string {
     if (!type) return '-';
     const item = this.types.find((row) => this.typeValue(row) === type);
-    return item?.remark || type;
+    return item?.name || item?.remark || type;
   }
 
   protected productName(type: string | undefined): string {
     if (!type) return '-';
     const item = this.types.find((row) => this.typeValue(row) === type);
-    return this.typeValue(item) || type;
+    return item?.name || this.typeValue(item) || type;
   }
 
   protected typeValue(item: DeviceTypeDefault | undefined): string {
-    return this.firstText(item?.guid, item?.type, item?.name);
+    return this.firstText(item?.key, item?.group_key, item?.guid, item?.type);
   }
 
   protected productLink(type: string | undefined): void {
@@ -260,11 +268,13 @@ export class DeviceListComponent implements OnInit {
   }
 
   private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {
+    const key = this.firstText(item.key, item.group_key, item.guid, item.type);
     return {
       ...item,
-      guid: this.firstText(item.guid, item.type, item.name),
-      type: this.firstText(item.type, item.guid, item.name),
-      name: this.firstText(item.name, item.type, item.guid),
+      key,
+      guid: this.firstText(item.guid, key),
+      type: this.firstText(item.type, key),
+      name: this.firstText(item.name, key),
       webPort: this.firstNumber(item.webPort, item.defaultWebPort, item.default_web_port),
       webDomain: this.firstText(item.webDomain, item.defaultDomain, item.default_domain),
       sort: this.firstNumber(item.sort),

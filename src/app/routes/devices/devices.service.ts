@@ -46,21 +46,7 @@ export interface DevicePayload {
   group_guid?: string;
 }
 
-export type DeviceStatus =
-  | 0
-  | 1
-  | 2
-  | 3
-  | 4
-  | '0'
-  | '1'
-  | '2'
-  | '3'
-  | '4'
-  | 'registered'
-  | 'online'
-  | 'offline'
-  | 'disabled';
+export type DeviceStatus = 1 | 2 | 3 | 4;
 
 export interface Device {
   guid: string;
@@ -116,6 +102,7 @@ export interface Device {
 export interface DeviceToken {
   guid: string;
   deviceGuid?: string;
+  token?: string;
   name: string;
   tokenPrefix: string;
   token_prefix?: string;
@@ -143,6 +130,8 @@ export interface DeviceTokenResult {
 
 export interface DeviceTypeDefault {
   guid?: string;
+  key?: string;
+  group_key?: string;
   type?: string;
   name?: string;
   defaultWebPort?: number;
@@ -171,6 +160,8 @@ export interface DeviceGroupQuery {
 export interface DeviceGroup {
   id: number;
   guid: string;
+  key?: string;
+  group_key?: string;
   name: string;
   description?: string;
   defaultWebPort?: number;
@@ -188,6 +179,7 @@ export interface DeviceGroup {
 
 export interface SaveDeviceGroupPayload {
   guid?: string;
+  key?: string;
   name: string;
   description?: string;
   defaultWebPort?: number;
@@ -209,12 +201,20 @@ export class DevicesService {
     return this.http.get<DeviceDetail>(`/devices/${guid}`);
   }
 
-  update(guid: string, payload: DevicePayload): Observable<boolean> {
-    return this.http.put<boolean>(`/devices/${guid}`, payload);
+  update(guid: string, payload: DevicePayload): Observable<Device> {
+    return this.http.put<Device>(`/devices/${guid}`, payload);
   }
 
   delete(guid: string): Observable<boolean> {
     return this.http.delete<boolean>(`/devices/${guid}`);
+  }
+
+  enable(guid: string): Observable<boolean> {
+    return this.http.post<boolean>(`/devices/${guid}/enable`, {});
+  }
+
+  disable(guid: string): Observable<boolean> {
+    return this.http.post<boolean>(`/devices/${guid}/disable`, {});
   }
 
   createToken(deviceGuid: string, payload: DeviceTokenPayload): Observable<DeviceTokenResult> {

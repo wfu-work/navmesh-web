@@ -19,7 +19,7 @@
           <input
             nz-input
             [(ngModel)]="q.keyword"
-            placeholder="搜索名称、Host 或设备 GUID"
+            placeholder="搜索名称、Host 或设备标识"
             (keydown.enter)="search()"
           />
         </nz-input-wrapper>
@@ -71,11 +71,11 @@
 
       <ng-template #expand let-item>
         <sv-container col="3">
-          <sv label="映射 GUID">{{ item.guid }}</sv>
+          <sv label="映射标识">{{ item.guid }}</sv>
           <sv label="名称">{{ item.name || '-' }}</sv>
           <sv label="外部 Host">{{ item.publicHost || '-' }}</sv>
           <sv label="绑定设备">{{ deviceName(item.deviceGuid) }}</sv>
-          <sv label="设备 GUID">{{ item.deviceGuid }}</sv>
+          <sv label="设备标识">{{ item.deviceGuid }}</sv>
           <sv label="目标服务">{{ item.targetHost }}:{{ item.targetPort }}</sv>
           <sv label="协议">{{ item.protocol || '-' }}</sv>
           <sv label="域名类型">{{ item.isCustomDomain ? '自定义域名' : '系统分配域名' }}</sv>

@@ -69,7 +69,7 @@
 
       <ng-template #expand let-item>
         <sv-container col="3">
-          <sv label="策略 GUID">{{ item.guid }}</sv>
+          <sv label="策略标识">{{ item.guid }}</sv>
           <sv label="名称">{{ item.name || '-' }}</sv>
           <sv label="范围">{{ item.scope }}</sv>
           <sv label="目标">{{ targetName(item) }}</sv>
@@ -124,8 +124,8 @@
                 </nz-select>
               } @else if (form.controls.scope.value === 'group') {
                 <nz-select nzShowSearch formControlName="targetId" nzPlaceHolder="请选择设备类型">
-                  @for (group of groups; track group.guid) {
-                    <nz-option [nzValue]="group.guid" [nzLabel]="group.name || group.guid" />
+                  @for (group of groups; track groupKey(group)) {
+                    <nz-option [nzValue]="groupKey(group)" [nzLabel]="group.name || groupKey(group)" />
                   }
                 </nz-select>
               } @else {

@@ -39,7 +39,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
             <i nz-icon nzType="home"></i>
             <span>工作台</span>
           </li>
-          <li nz-submenu nzTitle="设备管理" nzIcon="desktop">
+          <li nz-submenu nzTitle="设备管理" nzIcon="mobile">
             <ul>
               <li nz-menu-item nzMatchRouter routerLink="/devices/list">
                 <span>设备列表</span>

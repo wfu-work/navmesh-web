@@ -236,7 +236,7 @@ export class PolicyListComponent implements OnInit {
       return device?.alias || device?.sncode || device?.hostname || device?.name || item.targetId || '-';
     }
     if (item.scope === 'group') {
-      const group = this.groups.find((row) => row.guid === item.targetId);
+      const group = this.groups.find((row) => this.groupKey(row) === item.targetId);
       return group?.name || item.targetId || '-';
     }
     if (item.scope === 'mapping') {
@@ -274,9 +274,14 @@ export class PolicyListComponent implements OnInit {
   private normalizeGroup(item: DeviceGroup): DeviceGroup {
     return {
       ...item,
+      key: this.firstText(item.key, item.group_key, item.guid),
       createTime: this.firstNumber(item.createTime, item.create_time),
       updateTime: this.firstNumber(item.updateTime, item.update_time),
     };
+  }
+
+  protected groupKey(item: DeviceGroup | undefined): string {
+    return this.firstText(item?.key, item?.group_key, item?.guid);
   }
 
   private firstText(...values: Array<string | undefined>): string {

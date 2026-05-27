@@ -1,4 +1,5 @@
 import { AsyncPipe, JsonPipe, NgTemplateOutlet } from '@angular/common';
+import { ClipboardModule } from '@angular/cdk/clipboard';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { RouterOutlet, RouterLink } from '@angular/router';
 import { DatePipe, I18nPipe } from '@delon/theme';
@@ -11,6 +12,7 @@ import { PasswordInputComponent } from './components/password-input/password-inp
 export const SHARED_IMPORTS = [
   FormsModule,
   ReactiveFormsModule,
+  ClipboardModule,
   RouterLink,
   RouterOutlet,
   NgTemplateOutlet,

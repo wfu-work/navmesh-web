@@ -28,16 +28,16 @@ import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
   imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule],
 })
 export class DeviceDetailComponent implements OnInit {
-  private readonly route = inject(ActivatedRoute);
-  private readonly router = inject(Router);
-  private readonly devicesService = inject(DevicesService);
-  private readonly sshService = inject(SSHService);
-  private readonly mappingsService = inject(MappingsService);
-  private readonly sessionsService = inject(SessionsService);
-  private readonly tunnelsService = inject(TunnelsService);
-  private readonly fb = inject(NonNullableFormBuilder);
-  private readonly message = inject(NzMessageService);
-  private readonly cdr = inject(ChangeDetectorRef);
+  protected readonly route = inject(ActivatedRoute);
+  protected readonly router = inject(Router);
+  protected readonly devicesService = inject(DevicesService);
+  protected readonly sshService = inject(SSHService);
+  protected readonly mappingsService = inject(MappingsService);
+  protected readonly sessionsService = inject(SessionsService);
+  protected readonly tunnelsService = inject(TunnelsService);
+  protected readonly fb = inject(NonNullableFormBuilder);
+  protected readonly message = inject(NzMessageService);
+  protected readonly cdr = inject(ChangeDetectorRef);
 
   protected readonly guid = this.route.snapshot.paramMap.get('guid') ?? '';
   protected loading = false;
@@ -49,24 +49,15 @@ export class DeviceDetailComponent implements OnInit {
   protected sessions: TunnelSession[] = [];
   protected accessLogs: HTTPAccessLog[] = [];
   protected connections: TunnelConnection[] = [];
-  protected readonly accessMode = this.route.snapshot.queryParamMap.get('tab') === 'access';
-  protected tokenModalVisible = false;
-  protected tokenCreating = false;
-  protected latestToken = '';
   protected sshModalVisible = false;
   protected sshSaving = false;
   protected mappingModalVisible = false;
   protected mappingSaving = false;
 
-  protected readonly tokenForm = this.fb.group({
-    name: ['manual', [Validators.required]],
-    expireDays: [0, [Validators.min(0)]],
-  });
-
   protected readonly sshForm = this.fb.group({
     alias: ['', [Validators.required]],
     domain: ['', [Validators.required]],
-    entrypointIp: ['', [Validators.required]],
+    entrypointIp: [''],
     status: [1],
   });
 
@@ -87,7 +78,7 @@ export class DeviceDetailComponent implements OnInit {
 
   protected readonly tokenColumns: STColumn<DeviceToken>[] = [
     { title: '凭证名称', index: 'name', render: 'tokenNameRender', width: 240 },
-    { title: '凭证前缀', index: 'tokenPrefix', render: 'tokenPrefixRender', width: 160 },
+    { title: '完整凭证', index: 'token', render: 'tokenValueRender', width: 420 },
     { title: '状态', index: 'status', type: 'tag', tag: this.tokenStatusTag, width: 100 },
     { title: '最后使用', index: 'lastUsedAt', render: 'lastUsedAtRender', width: 180 },
     { title: '过期时间', index: 'expiresAt', render: 'expiresAtRender', width: 180 },
@@ -107,7 +98,7 @@ export class DeviceDetailComponent implements OnInit {
           icon: 'sync',
           click: (item) => this.rotateToken(item),
           pop: {
-            title: '轮换后旧凭证会立即禁用，请确认已准备更新客户端 Token。',
+            title: '轮换后客户端需要使用新凭证重新上线，确认继续？',
             okType: 'primary',
             icon: 'sync',
           },
@@ -143,7 +134,7 @@ export class DeviceDetailComponent implements OnInit {
 
   protected load(): void {
     if (!this.guid) {
-      this.message.error('设备 GUID 不存在');
+      this.message.error('设备标识不存在');
       return;
     }
 
@@ -191,7 +182,7 @@ export class DeviceDetailComponent implements OnInit {
 
   protected openAccessConfig(): void {
     if (!this.guid) return;
-    this.router.navigate(['/devices/detail', this.guid], { queryParams: { tab: 'access' } });
+    this.router.navigate(['/devices/config', this.guid]);
   }
 
   protected openDetail(): void {
@@ -212,47 +203,11 @@ export class DeviceDetailComponent implements OnInit {
     this.router.navigate(['/sessions/list'], { queryParams: { deviceGuid: this.guid } });
   }
 
-  protected openCreateToken(): void {
-    this.latestToken = '';
-    this.tokenForm.reset({ name: 'manual', expireDays: 0 });
-    this.tokenModalVisible = true;
-  }
-
-  protected createToken(): void {
-    if (this.tokenForm.invalid) {
-      this.markFormDirty(this.tokenForm.controls);
-      return;
-    }
-    const value = this.tokenForm.getRawValue();
-    this.tokenCreating = true;
-    this.devicesService
-      .createToken(this.guid, {
-        name: value.name.trim(),
-        expireTime: this.expireTime(value.expireDays),
-      })
-      .pipe(
-        finalize(() => {
-          this.tokenCreating = false;
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: (res) => {
-          this.latestToken = res.token || '';
-          this.message.success('凭证已创建，请及时复制完整 Token');
-          this.load();
-        },
-        error: () => this.message.error('凭证创建失败'),
-      });
-  }
-
   protected rotateToken(token: DeviceToken): void {
     const deviceGuid = token.deviceGuid || this.guid;
     this.devicesService.rotateToken(deviceGuid, token.guid).subscribe({
       next: (res) => {
-        this.latestToken = res.token || '';
-        this.tokenModalVisible = true;
-        this.message.success('凭证已轮换，请及时复制新 Token');
+        this.message.success('凭证已轮换');
         this.load();
       },
       error: () => this.message.error('凭证轮换失败'),
@@ -262,7 +217,7 @@ export class DeviceDetailComponent implements OnInit {
   protected openSshModal(item?: SSHAlias): void {
     const alias = item ? this.normalizeAlias(item) : this.sshAliases[0];
     this.sshForm.reset({
-      alias: alias?.alias || this.device?.alias || this.device?.sncode || '',
+      alias: alias?.alias || this.device?.sncode || this.device?.alias || '',
       domain: alias?.domain || this.defaultSshDomain(),
       entrypointIp: alias?.entrypointIp || this.defaultEntrypointIp(),
       status: alias?.status ?? 1,
@@ -391,48 +346,33 @@ export class DeviceDetailComponent implements OnInit {
   }
 
   protected statusText(status: DeviceStatus | undefined): string {
-    const map: Record<string, string> = {
-      0: '已注册',
+    const map: Record<DeviceStatus, string> = {
       1: '已注册',
       2: '在线',
       3: '离线',
       4: '已禁用',
-      registered: '已注册',
-      online: '在线',
-      offline: '离线',
-      disabled: '已禁用',
     };
-    return map[String(status)] ?? '未知';
+    return status ? map[status] : '未知';
   }
 
   protected statusClass(status: DeviceStatus | undefined): string {
-    const map: Record<string, string> = {
-      0: 'status-registered',
+    const map: Record<DeviceStatus, string> = {
       1: 'status-registered',
       2: 'status-online',
       3: 'status-offline',
-      4: 'status-unknown',
-      registered: 'status-registered',
-      online: 'status-online',
-      offline: 'status-offline',
-      disabled: 'status-unknown',
+      4: 'status-disabled',
     };
-    return map[String(status)] ?? 'status-unknown';
+    return status ? map[status] : 'status-unknown';
   }
 
   protected deviceStateClass(status: DeviceStatus | undefined): string {
-    const map: Record<string, string> = {
-      0: 'device-registered',
+    const map: Record<DeviceStatus, string> = {
       1: 'device-registered',
       2: 'device-online',
       3: 'device-offline',
-      4: 'device-unknown',
-      registered: 'device-registered',
-      online: 'device-online',
-      offline: 'device-offline',
-      disabled: 'device-unknown',
+      4: 'device-disabled',
     };
-    return map[String(status)] ?? 'device-unknown';
+    return status ? map[status] : 'device-unknown';
   }
 
   protected enabledTokenCount(): number {
@@ -520,14 +460,13 @@ export class DeviceDetailComponent implements OnInit {
   }
 
   protected activationText(status: DeviceStatus | undefined): string {
-    const value = String(status);
-    if (value === 'registered' || value === '1' || value === '0') {
-      return '已注册，等待设备使用独立凭证上线';
-    }
-    if (value === 'online' || value === '2') return '已激活并在线';
-    if (value === 'offline' || value === '3') return '已激活，当前离线';
-    if (value === 'disabled' || value === '4') return '设备已禁用';
-    return '未知';
+    const map: Record<DeviceStatus, string> = {
+      1: '已注册，等待设备使用独立凭证上线',
+      2: '已激活并在线',
+      3: '已激活，当前离线',
+      4: '设备已禁用',
+    };
+    return status ? map[status] : '未知';
   }
 
   protected formatTags(value: string | undefined): string[] {
@@ -658,6 +597,7 @@ export class DeviceDetailComponent implements OnInit {
   private normalizeToken(token: DeviceToken): DeviceToken {
     return {
       ...token,
+      token: this.firstText(token.token),
       tokenPrefix: this.firstText(token.tokenPrefix, token.token_prefix, this.guidPrefix(token.guid)),
       lastUsedAt: this.firstNumber(token.lastUsedAt, token.last_used_at),
       expiresAt: this.firstNumber(token.expiresAt, token.expireTime, token.expire_time),
@@ -700,8 +640,18 @@ export class DeviceDetailComponent implements OnInit {
     return bound?.ip || free?.ip || this.sshEntrypoints[0]?.ip || '';
   }
 
+  protected entrypointHint(): string {
+    if (this.sshForm.controls.entrypointIp.value) return '已选择入口 IP';
+    if (this.availableSshEntrypoints().length > 0) return '未选择时后台会自动分配可用入口 IP';
+    return '暂无可用入口 IP，保存后会先生成 SSH 域名，待配置入口后再自动绑定';
+  }
+
+  protected availableSshEntrypoints(): SSHEntrypoint[] {
+    return this.sshEntrypoints.filter((item) => item.status !== 0 && (!item.deviceGuid || item.deviceGuid === this.guid));
+  }
+
   private defaultSshDomain(): string {
-    const alias = this.device?.alias || this.device?.sncode || this.device?.hostname || '';
-    return alias ? `${alias}.navfirst.com` : '';
+    const sncode = this.device?.sncode || this.device?.alias || this.device?.hostname || '';
+    return sncode ? `${sncode}.navfirst.com` : '';
   }
 }

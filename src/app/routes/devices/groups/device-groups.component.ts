@@ -38,7 +38,7 @@ export class DeviceGroupsComponent implements OnInit {
   protected editingGuid = '';
 
   protected readonly form = this.fb.group({
-    guid: ['', [Validators.required]],
+    key: ['', [Validators.required]],
     name: ['', [Validators.required]],
     defaultWebPort: [0],
     defaultDomain: [''],
@@ -53,26 +53,24 @@ export class DeviceGroupsComponent implements OnInit {
   };
 
   protected readonly columns: STColumn<DeviceGroup>[] = [
-    { title: '设备类型', index: 'name', render: 'nameRender', fixed: 'left', width: 220 },
-    { title: '默认 Web 端口', index: 'defaultWebPort', render: 'portRender', width: 160 },
-    { title: '默认映射域名', index: 'defaultDomain', render: 'domainRender', width: 260 },
-    { title: '排序', index: 'sort', width: 90 },
-    { title: '说明', index: 'remark', default: '-', width: 220 },
-    { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 100 },
+    { title: '设备类型', index: 'name', render: 'nameRender' },
+    { title: '唯一标识', index: 'key', render: 'keyRender' },
+    { title: '默认 Web 端口', index: 'defaultWebPort', render: 'portRender' },
+    { title: '默认映射域名', index: 'defaultDomain', render: 'domainRender' },
+    { title: '排序', index: 'sort' },
+    { title: '说明', index: 'remark', default: '-' },
+    { title: '状态', index: 'status', type: 'tag', tag: this.statusTag },
     {
       title: '更新时间',
       index: 'updateTime',
       type: 'date',
       dateFormat: 'yyyy-MM-dd HH:mm:ss',
-      width: 180,
     },
     {
       title: '操作',
-      fixed: 'right',
-      width: 170,
       buttons: [
         { icon: 'edit', click: (item) => this.openModal(item) },
-        { icon: 'appstore', click: (item) => this.openDevices(item.guid) },
+        { icon: 'appstore', click: (item) => this.openDevices(this.groupKey(item)) },
         {
           icon: 'stop',
           className: 'text-error',
@@ -140,7 +138,7 @@ export class DeviceGroupsComponent implements OnInit {
     const row = item ? this.normalizeGroup(item) : undefined;
     this.editingGuid = row?.guid ?? '';
     this.form.reset({
-      guid: row?.guid ?? '',
+      key: this.groupKey(row) ?? '',
       name: row?.name ?? '',
       defaultWebPort: row?.defaultWebPort ?? 0,
       defaultDomain: row?.defaultDomain ?? '',
@@ -149,14 +147,17 @@ export class DeviceGroupsComponent implements OnInit {
       status: row?.status ?? 1,
     });
     if (row) {
-      this.form.controls.guid.disable({ emitEvent: false });
+      this.form.controls.key.disable({ emitEvent: false });
     } else {
-      this.form.controls.guid.enable({ emitEvent: false });
+      this.form.controls.key.enable({ emitEvent: false });
     }
     this.modalVisible = true;
   }
 
   protected save(): void {
+    if (this.saving) {
+      return;
+    }
     if (this.form.invalid) {
       Object.values(this.form.controls).forEach((control) => {
         control.markAsDirty();
@@ -168,7 +169,8 @@ export class DeviceGroupsComponent implements OnInit {
     this.saving = true;
     this.devicesService
       .saveGroup({
-        guid: this.editingGuid || value.guid.trim(),
+        guid: this.editingGuid || undefined,
+        key: value.key.trim(),
         name: value.name.trim(),
         defaultWebPort: Number(value.defaultWebPort || 0),
         defaultDomain: value.defaultDomain.trim(),
@@ -185,7 +187,9 @@ export class DeviceGroupsComponent implements OnInit {
       .subscribe({
         next: () => {
           this.message.success('设备类型已保存');
+          this.saving = false;
           this.modalVisible = false;
+          this.cdr.detectChanges();
           this.load();
         },
         error: () => this.message.error('设备类型保存失败'),
@@ -193,7 +197,7 @@ export class DeviceGroupsComponent implements OnInit {
   }
 
   protected disable(item: DeviceGroup): void {
-    this.devicesService.disableGroup(item.guid).subscribe({
+    this.devicesService.disableGroup(item.guid || this.groupKey(item)).subscribe({
       next: () => {
         this.message.success('设备类型已禁用');
         this.load();
@@ -209,6 +213,7 @@ export class DeviceGroupsComponent implements OnInit {
   private normalizeGroup(item: DeviceGroup): DeviceGroup {
     return {
       ...item,
+      key: this.firstText(item.key, item.group_key, item.guid),
       defaultWebPort: this.firstNumber(item.defaultWebPort, item.default_web_port),
       defaultDomain: this.firstText(item.defaultDomain, item.default_domain),
       sort: this.firstNumber(item.sort),
@@ -216,6 +221,10 @@ export class DeviceGroupsComponent implements OnInit {
       createTime: this.firstNumber(item.createTime, item.create_time),
       updateTime: this.firstNumber(item.updateTime, item.update_time),
     };
+  }
+
+  protected groupKey(item: DeviceGroup | undefined): string {
+    return this.firstText(item?.key, item?.group_key, item?.guid);
   }
 
   private firstText(...values: Array<string | undefined>): string {

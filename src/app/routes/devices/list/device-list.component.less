@@ -71,7 +71,26 @@
       button {
         height: 32px;
         padding-inline: 8px;
+        color: var(--nm-primary);
         font-weight: 850;
+      }
+
+      button:hover,
+      button:focus {
+        color: var(--nm-primary-hover);
+      }
+
+      button:active {
+        color: var(--nm-primary-active);
+      }
+
+      .ant-btn-dangerous {
+        color: var(--ant-error-color, #ff4d4f);
+      }
+
+      .ant-btn-dangerous:hover,
+      .ant-btn-dangerous:focus {
+        color: var(--ant-error-color-hover, #ff7875);
       }
     }
   }
@@ -82,8 +101,40 @@
     transform: translateY(-1px);
   }
 
+  .device-card.device-registered {
+    border-color: #f2d392;
+
+    .ant-card-actions {
+      border-top-color: #f4dfae;
+      background: #fffaf0;
+    }
+  }
+
   .device-card.device-online {
     border-color: #cbeee1;
+
+    .ant-card-actions {
+      border-top-color: #cbeee1;
+      background: #f2fbf7;
+    }
+  }
+
+  .device-card.device-offline {
+    border-color: #f1c3c3;
+
+    .ant-card-actions {
+      border-top-color: #f3d2d2;
+      background: #fff7f6;
+    }
+  }
+
+  .device-card.device-disabled {
+    border-color: #d5dbe3;
+
+    .ant-card-actions {
+      border-top-color: #dde3ea;
+      background: #f7f9fb;
+    }
   }
 }
 
@@ -95,6 +146,30 @@
   min-height: 254px;
   padding: 24px;
   background: linear-gradient(135deg, rgb(250 253 255 / 96%) 0%, rgb(244 250 253 / 96%) 100%), #fff;
+}
+
+.device-card.device-registered .device-card-main {
+  background:
+    radial-gradient(circle at 88% 18%, rgb(245 169 54 / 18%) 0, rgb(245 169 54 / 0%) 34%),
+    linear-gradient(135deg, #fffdf7 0%, #fff3d2 100%);
+}
+
+.device-card.device-online .device-card-main {
+  background:
+    radial-gradient(circle at 88% 18%, rgb(35 184 128 / 18%) 0, rgb(35 184 128 / 0%) 34%),
+    linear-gradient(135deg, #f8fffc 0%, #e5f8ef 100%);
+}
+
+.device-card.device-offline .device-card-main {
+  background:
+    radial-gradient(circle at 88% 18%, rgb(214 84 84 / 16%) 0, rgb(214 84 84 / 0%) 34%),
+    linear-gradient(135deg, #fffafa 0%, #ffe8e8 100%);
+}
+
+.device-card.device-disabled .device-card-main {
+  background:
+    radial-gradient(circle at 88% 18%, rgb(94 111 132 / 14%) 0, rgb(94 111 132 / 0%) 34%),
+    linear-gradient(135deg, #fbfcfd 0%, #edf1f5 100%);
 }
 
 .device-card-copy {
@@ -176,12 +251,17 @@
 .product-link {
   padding: 0;
   border: 0;
-  color: #2b7de9;
+  color: var(--nm-primary);
   font-size: 15px;
   font-weight: 850;
   font: inherit;
   background: transparent;
   cursor: pointer;
+
+  &:hover,
+  &:focus {
+    color: var(--nm-primary-hover);
+  }
 }
 
 :host ::ng-deep .device-id-chip {
@@ -214,13 +294,7 @@
   display: grid;
   justify-items: end;
   align-content: start;
-  gap: 18px;
-}
-
-.device-status-stack {
-  display: grid;
-  justify-items: end;
-  gap: 8px;
+  gap: 14px;
 }
 
 :host ::ng-deep .device-status-tag {
@@ -235,6 +309,39 @@
   font-weight: 850;
 }
 
+.device-switch-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+  max-width: 100%;
+  overflow: visible;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.device-activate-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  padding: 0 14px;
+  border-color: var(--nm-primary);
+  background: var(--nm-primary);
+  box-shadow: 0 10px 22px rgb(var(--nm-primary-rgb) / 18%);
+  font-weight: 850;
+}
+
+:host ::ng-deep .device-switch-row .ant-switch-checked {
+  background-color: var(--nm-primary);
+}
+
+:host ::ng-deep .device-switch-row .ant-switch-checked:focus {
+  box-shadow: 0 0 0 2px rgb(var(--nm-primary-rgb) / 16%);
+}
+
 .device-illustration {
   display: flex;
   align-items: center;
@@ -247,17 +354,23 @@
   background: linear-gradient(145deg, rgb(64 148 255 / 14%), rgb(53 199 180 / 10%)), #f5faff;
 }
 
-.device-offline .device-illustration,
+.device-offline .device-illustration {
+  border-color: #f0cccc;
+  color: #cf5a5a;
+  background: linear-gradient(145deg, rgb(218 78 78 / 12%), rgb(247 186 106 / 8%)), #fff8f8;
+}
+
+.device-disabled .device-illustration,
 .device-unknown .device-illustration {
   border-color: #e2e8ef;
-  color: #94a3b8;
-  background: #f7fafc;
+  color: #778598;
+  background: linear-gradient(145deg, rgb(99 115 135 / 10%), rgb(151 163 178 / 8%)), #f7fafc;
 }
 
 .device-registered .device-illustration {
   border-color: #f2dfb8;
   color: #c88a18;
-  background: #fffaf0;
+  background: linear-gradient(145deg, rgb(230 158 42 / 14%), rgb(244 198 89 / 10%)), #fffaf0;
 }
 
 .device-empty {
@@ -325,10 +438,6 @@
   }
 
   .device-card-side {
-    justify-items: start;
-  }
-
-  .device-status-stack {
     justify-items: start;
   }
 

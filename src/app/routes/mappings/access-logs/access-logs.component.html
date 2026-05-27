@@ -89,9 +89,9 @@
           <sv label="方法">{{ item.method || '-' }}</sv>
           <sv label="状态码">{{ item.statusCode || '-' }}</sv>
           <sv label="路径" col="1">{{ item.path || '-' }}</sv>
-          <sv label="映射 GUID">{{ item.mappingGuid || '-' }}</sv>
+          <sv label="映射标识">{{ item.mappingGuid || '-' }}</sv>
           <sv label="绑定设备">{{ deviceName(item.deviceGuid) }}</sv>
-          <sv label="设备 GUID">{{ item.deviceGuid || '-' }}</sv>
+          <sv label="设备标识">{{ item.deviceGuid || '-' }}</sv>
           <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
           <sv label="耗时">{{ item.durationMs }} ms</sv>
           <sv label="入站流量">{{ formatBytes(item.bytesIn) }}</sv>

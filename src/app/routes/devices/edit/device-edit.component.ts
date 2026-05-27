@@ -31,6 +31,7 @@ export class DeviceEditComponent implements OnInit {
 
   protected readonly guid = this.route.snapshot.paramMap.get('guid') ?? 'new';
   protected loading = false;
+  protected saving = false;
 
   protected form = this.fb.group({
     sncode: ['', [Validators.required]],
@@ -81,13 +82,40 @@ export class DeviceEditComponent implements OnInit {
             status: this.normalizeStatus(device.status),
           });
           this.form.disable({ emitEvent: false });
+          this.form.controls.alias.enable({ emitEvent: false });
+          this.form.controls.remark.enable({ emitEvent: false });
         },
         error: () => this.message.error('设备信息加载失败'),
       });
   }
 
   protected submit(): void {
-    this.message.info('设备基础信息由客户端注册和心跳上报维护');
+    if (this.form.controls.alias.invalid) {
+      this.form.controls.alias.markAsDirty();
+      this.form.controls.alias.updateValueAndValidity();
+      return;
+    }
+    const value = this.form.getRawValue();
+    this.saving = true;
+    this.devicesService
+      .update(this.guid, {
+        hostname: value.hostname,
+        alias: value.alias.trim(),
+        remark: value.remark.trim(),
+      })
+      .pipe(
+        finalize(() => {
+          this.saving = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.message.success('设备别名和备注已保存，客户端重启上线后会同步使用');
+          this.load();
+        },
+        error: () => this.message.error('设备信息保存失败'),
+      });
   }
 
   protected back(): void {
@@ -99,17 +127,47 @@ export class DeviceEditComponent implements OnInit {
   }
 
   protected manageTokens(): void {
-    this.router.navigate(['/devices/detail', this.guid], { queryParams: { tab: 'access' } });
+    this.router.navigate(['/devices/config', this.guid]);
+  }
+
+  protected title(): string {
+    return this.firstText(
+      this.form.controls.alias.value,
+      this.form.controls.sncode.value,
+      this.form.controls.hostname.value,
+      this.guid,
+    );
+  }
+
+  protected subtitle(): string {
+    return this.firstText(this.form.controls.remark.value, this.form.controls.hostname.value, '客户端注册设备');
+  }
+
+  protected statusText(status: DeviceStatus | number): string {
+    const map: Record<DeviceStatus, string> = {
+      1: '已注册',
+      2: '在线',
+      3: '离线',
+      4: '已禁用',
+    };
+    return map[this.normalizeStatus(status)];
+  }
+
+  protected statusClass(status: DeviceStatus | number): string {
+    const map: Record<DeviceStatus, string> = {
+      1: 'is-registered',
+      2: 'is-online',
+      3: 'is-offline',
+      4: 'is-disabled',
+    };
+    return map[this.normalizeStatus(status)];
   }
 
   private normalizeStatus(status: DeviceStatus | number): 1 | 2 | 3 | 4 {
-    const map: Record<string, 1 | 2 | 3 | 4> = {
-      registered: 1,
-      online: 2,
-      offline: 3,
-      disabled: 4,
-    };
-    const normalized = map[String(status)] ?? Number(status);
-    return normalized === 2 || normalized === 3 || normalized === 4 ? normalized : 1;
+    return status === 2 || status === 3 || status === 4 ? status : 1;
+  }
+
+  private firstText(...values: Array<string | undefined>): string {
+    return values.find((value) => value !== undefined && value !== '') ?? '';
   }
 }

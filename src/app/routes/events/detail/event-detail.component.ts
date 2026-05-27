@@ -40,7 +40,7 @@ export class EventDetailComponent implements OnInit {
 
   protected load(): void {
     if (!this.guid) {
-      this.message.error('事件 GUID 不存在');
+      this.message.error('事件标识不存在');
       return;
     }
 

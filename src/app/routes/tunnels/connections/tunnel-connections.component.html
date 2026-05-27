@@ -58,8 +58,8 @@
       <ng-template #expand let-item>
         <sv-container col="3">
           <sv label="设备">{{ deviceName(item) }}</sv>
-          <sv label="设备 GUID">{{ item.deviceGuid }}</sv>
-          <sv label="序列号">{{ item.sncode || '-' }}</sv>
+          <sv label="设备标识">{{ item.deviceGuid }}</sv>
+          <sv label="sncode">{{ item.sncode || '-' }}</sv>
           <sv label="远端地址">{{ item.remoteAddr || '-' }}</sv>
           <sv label="协议">QUIC</sv>
           <sv label="连接时间">{{ item.connectedTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>

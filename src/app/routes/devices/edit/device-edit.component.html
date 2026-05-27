@@ -1,81 +1,142 @@
 <section class="device-edit-page">
   <div class="device-edit-header">
     <title-label
-      title="设备注册信息"
-      description="设备基础信息由客户端注册和心跳上报维护，激活凭证、SSH 和 HTTP 配置从设备详情进入。"
+      title="编辑设备"
+      description="查看客户端注册和心跳上报的设备资料，并进入接入配置或同类型设备列表。"
       [showBack]="true"
     />
   </div>
 
-  <nz-alert
-    class="mb-lg"
-    nzType="info"
-    nzShowIcon
-    nzMessage="当前后台未开放设备基础信息保存接口"
-    nzDescription="如需修改序列号、端口或 Web 域名，请更新客户端注册参数后重新上报；控制台侧可在设备详情管理激活凭证、SSH 接入和 HTTP 映射。"
-  />
-
-  <nz-card class="card-border" [nzBordered]="false">
-    <nz-spin [nzSpinning]="loading">
-      <form nz-form [formGroup]="form" (ngSubmit)="submit()">
-        <se-container col="2" nzLayout="vertical">
-          <se label="序列号" required error="请输入设备序列号">
-            <input id="sncode" nz-input formControlName="sncode" placeholder="例如 test01" />
-          </se>
-          <se label="设备别名" required error="请输入设备别名">
-            <input id="alias" nz-input formControlName="alias" placeholder="默认与序列号一致，例如 test01" />
-          </se>
-          <se label="设备类型" required error="请输入设备类型">
-            <input id="deviceType" nz-input formControlName="deviceType" placeholder="例如 ssh、radar、rain、data" />
-          </se>
-          <se label="备注">
-            <input id="remark" nz-input formControlName="remark" placeholder="例如 深圳工厂1号测试网关" />
-          </se>
-          <se label="主机名" required error="请输入主机名">
-            <input id="hostname" nz-input formControlName="hostname" placeholder="例如 web-01" />
-          </se>
-          <se label="本机 IP">
-            <input id="hostIp" nz-input formControlName="hostIp" placeholder="例如 192.168.1.10" />
-          </se>
-          <se label="客户端版本">
-            <input
-              id="clientVersion"
-              nz-input
-              formControlName="clientVersion"
-              placeholder="例如 v1.0.0"
-            />
-          </se>
-          <se label="本机 SSH 端口">
-            <nz-input-number id="sshPort" formControlName="sshPort" [nzMin]="1" [nzMax]="65535" />
-          </se>
-          <se label="本机 Web 端口">
-            <nz-input-number id="webPort" formControlName="webPort" [nzMin]="1" [nzMax]="65535" />
-          </se>
-          <se label="Web 映射域名" col="1">
-            <input id="webDomain" nz-input formControlName="webDomain" placeholder="例如 qx.navfirst.com" />
-          </se>
-          <se label="状态">
-            <nz-select id="status" formControlName="status">
-              <nz-option [nzValue]="1" nzLabel="已注册" />
-              <nz-option [nzValue]="2" nzLabel="在线" />
-              <nz-option [nzValue]="3" nzLabel="离线" />
-              <nz-option [nzValue]="4" nzLabel="已禁用" />
-            </nz-select>
-          </se>
-        </se-container>
-
-        <div class="device-edit-actions">
-          <button nz-button type="button" (click)="back()">返回列表</button>
-          <button nz-button type="button" (click)="manageTokens()">
-            <nz-icon nzType="key" />
-            接入配置
-          </button>
-          <button nz-button nzType="primary" type="button" (click)="manageGroup()">
-            <nz-icon nzType="appstore" />
-            查看同类型设备
-          </button>
+  <nz-spin [nzSpinning]="loading">
+    <section class="device-edit-hero">
+      <div class="device-edit-identity">
+        <span class="device-edit-avatar">
+          <nz-icon nzType="desktop" />
+        </span>
+        <div>
+          <strong>{{ title() || '设备信息' }}</strong>
+          <p>{{ subtitle() }}</p>
         </div>
-      </form>
-    </nz-spin>
-  </nz-card>
+      </div>
+
+      <div class="device-edit-status {{ statusClass(form.controls.status.value) }}">
+        <div class="status-card">
+          <span class="status-label">当前状态</span>
+          <span class="status-pill {{ statusClass(form.controls.status.value) }}">
+            <i></i>
+            {{ statusText(form.controls.status.value) }}
+          </span>
+        </div>
+        <div class="device-edit-identifier">
+          <span>设备标识</span>
+          <strong>{{ guid }}</strong>
+        </div>
+      </div>
+
+      <div class="device-edit-actions">
+        <button nz-button type="button" (click)="back()">返回列表</button>
+        <button nz-button type="button" (click)="manageTokens()">
+          <nz-icon nzType="setting" />
+          接入配置
+        </button>
+        <button nz-button nzType="primary" type="button" [nzLoading]="saving" (click)="submit()">
+          <nz-icon nzType="save" />
+          保存
+        </button>
+        <button nz-button nzType="primary" type="button" (click)="manageGroup()">
+          <nz-icon nzType="appstore" />
+          同类型设备
+        </button>
+      </div>
+    </section>
+
+    <nz-alert
+      class="device-edit-alert"
+      nzType="info"
+      nzShowIcon
+      nzMessage="设备别名和备注可在控制台修改"
+      nzDescription="保存后后台会在设备注册响应中回传最新值，navmesh-client 重启并重新上线后会写入本地状态；sncode、端口和域名仍由客户端注册参数维护。"
+    />
+
+    <form nz-form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="device-edit-grid">
+        <nz-card class="card-border device-edit-card" [nzBordered]="false">
+          <div class="device-edit-card-title">
+            <nz-icon nzType="idcard" />
+            <div>
+              <h2>基础资料</h2>
+              <p>设备身份、类型和备注信息。</p>
+            </div>
+          </div>
+
+          <se-container col="2" nzLayout="vertical">
+            <se label="sncode" required error="请输入 sncode">
+              <input id="sncode" nz-input formControlName="sncode" placeholder="例如 test01" />
+            </se>
+            <se label="设备别名" required error="请输入设备别名">
+              <input id="alias" nz-input formControlName="alias" placeholder="默认与 sncode 一致，例如 test01" />
+            </se>
+            <se label="设备类型" required error="请输入设备类型">
+              <input id="deviceType" nz-input formControlName="deviceType" placeholder="例如 ssh、radar、rain、data" />
+            </se>
+            <se label="状态">
+              <nz-select id="status" formControlName="status">
+                <nz-option [nzValue]="1" nzLabel="已注册" />
+                <nz-option [nzValue]="2" nzLabel="在线" />
+                <nz-option [nzValue]="3" nzLabel="离线" />
+                <nz-option [nzValue]="4" nzLabel="已禁用" />
+              </nz-select>
+            </se>
+            <se label="备注" col="1">
+              <input id="remark" nz-input formControlName="remark" placeholder="例如 深圳工厂1号测试网关" />
+            </se>
+          </se-container>
+        </nz-card>
+
+        <nz-card class="card-border device-edit-card" [nzBordered]="false">
+          <div class="device-edit-card-title">
+            <nz-icon nzType="cloud-server" />
+            <div>
+              <h2>运行环境</h2>
+              <p>客户端所在主机和版本信息。</p>
+            </div>
+          </div>
+
+          <se-container col="2" nzLayout="vertical">
+            <se label="主机名" required error="请输入主机名">
+              <input id="hostname" nz-input formControlName="hostname" placeholder="例如 web-01" />
+            </se>
+            <se label="本机 IP">
+              <input id="hostIp" nz-input formControlName="hostIp" placeholder="例如 192.168.1.10" />
+            </se>
+            <se label="客户端版本" col="1">
+              <input id="clientVersion" nz-input formControlName="clientVersion" placeholder="例如 v1.0.0" />
+            </se>
+          </se-container>
+        </nz-card>
+
+        <nz-card class="card-border device-edit-card device-edit-card-wide" [nzBordered]="false">
+          <div class="device-edit-card-title">
+            <nz-icon nzType="api" />
+            <div>
+              <h2>本地服务</h2>
+              <p>客户端上报的 SSH、HTTP 端口和默认映射域名。</p>
+            </div>
+          </div>
+
+          <se-container col="3" nzLayout="vertical">
+            <se label="本机 SSH 端口">
+              <nz-input-number id="sshPort" formControlName="sshPort" [nzMin]="1" [nzMax]="65535" />
+            </se>
+            <se label="本机 Web 端口">
+              <nz-input-number id="webPort" formControlName="webPort" [nzMin]="1" [nzMax]="65535" />
+            </se>
+            <se label="Web 映射域名">
+              <input id="webDomain" nz-input formControlName="webDomain" placeholder="例如 qx.navfirst.com" />
+            </se>
+          </se-container>
+        </nz-card>
+      </div>
+    </form>
+  </nz-spin>
 </section>

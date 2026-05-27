@@ -3,7 +3,7 @@
     <title-label title="设备类型" description="设备类型即设备分组，用于注册默认值、列表筛选和访问策略归类。" />
     <button nz-button nzType="primary" (click)="openModal()">
       <nz-icon nzType="plus" />
-      新建设备类型
+      新建
     </button>
   </div>
 
@@ -34,13 +34,16 @@
       [total]="totalCount"
       (change)="tableChange($event)"
       bordered="false"
-      [scroll]="{ x: '1180px' }"
     >
       <ng-template st-row="nameRender" let-item>
         <div class="group-name-cell">
-          <strong>{{ item.name || item.guid }}</strong>
-          <span>{{ item.guid }}</span>
+          <strong>{{ item.name || groupKey(item) }}</strong>
+          <span>{{ item.remark || '设备类型' }}</span>
         </div>
+      </ng-template>
+
+      <ng-template st-row="keyRender" let-item>
+        <code class="type-code">{{ groupKey(item) }}</code>
       </ng-template>
 
       <ng-template st-row="portRender" let-item>
@@ -73,14 +76,14 @@
           <nz-form-item>
             <nz-form-label nzRequired>类型标识</nz-form-label>
             <nz-form-control nzErrorTip="请输入类型标识">
-              <input nz-input formControlName="guid" placeholder="例如 rain" [readonly]="!!editingGuid" />
+              <input nz-input formControlName="key" placeholder="例如 ssh、rain" [readonly]="!!editingGuid" />
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
             <nz-form-label nzRequired>类型名称</nz-form-label>
             <nz-form-control nzErrorTip="请输入类型名称">
-              <input nz-input formControlName="name" placeholder="例如 rain" />
+              <input nz-input formControlName="name" placeholder="例如 SSH 接入、气象雨量" />
             </nz-form-control>
           </nz-form-item>
         </div>

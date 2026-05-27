@@ -47,7 +47,7 @@
       <div class="detail-grid">
         <nz-card class="card-border" [nzBordered]="false" nzTitle="基础信息">
           <sv-container col="2">
-            <sv label="事件 GUID">{{ item.guid }}</sv>
+            <sv label="事件标识">{{ item.guid }}</sv>
             <sv label="关联设备">{{ deviceName() }}</sv>
             <sv label="来源">{{ sourceText(item.source) }}</sv>
             <sv label="等级">{{ levelText(item.level) }}</sv>
@@ -95,7 +95,7 @@
     } @else if (!loading) {
       <nz-card class="card-border empty-card" [nzBordered]="false">
         <h2>未找到事件</h2>
-        <p>当前后端暂未提供单事件详情接口，页面会在最近 500 条事件中查找该 GUID。</p>
+        <p>当前后端暂未提供单事件详情接口，页面会在最近 500 条事件中查找该标识。</p>
       </nz-card>
     }
   </nz-spin>

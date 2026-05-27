@@ -69,12 +69,22 @@ import {
   ReloadOutline,
   AppleOutline,
   ThunderboltOutline,
+  MobileOutline,
+  ProfileOutline,
+  FileSearchOutline,
+  IdcardOutline,
+  CloudSyncOutline,
 } from '@ant-design/icons-angular/icons';
 
 export const ICONS_AUTO = [
   HomeOutline,
+  IdcardOutline,
+  CloudSyncOutline,
   AppleOutline,
   ApiOutline,
+  FileSearchOutline,
+  ProfileOutline,
+  MobileOutline,
   AlertOutline,
   AuditOutline,
   BgColorsOutline,

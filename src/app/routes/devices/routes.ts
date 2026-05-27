@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { DeviceConfigComponent } from './config/device-config.component';
 import { DeviceDetailComponent } from './detail/device-detail.component';
 import { DeviceEditComponent } from './edit/device-edit.component';
 import { DeviceGroupsComponent } from './groups/device-groups.component';
@@ -17,6 +18,11 @@ export const routes: Routes = [
     path: 'edit/:guid',
     component: DeviceEditComponent,
     data: { title: '编辑设备' },
+  },
+  {
+    path: 'config/:guid',
+    component: DeviceConfigComponent,
+    data: { title: '设备配置' },
   },
   {
     path: 'detail/:guid',

@@ -1,8 +1,8 @@
 <section class="device-page">
   <div class="device-header">
-    <title-label
-      title="设备列表"
-      description="按设备类型查看接入设备、在线状态、序列号和最近心跳。"
+      <title-label
+        title="设备列表"
+      description="按设备类型查看接入设备、在线状态、sncode 和最近心跳。"
     />
   </div>
 
@@ -20,7 +20,7 @@
           >
             <nz-option nzValue="" nzLabel="全部分组" />
             @for (type of types; track typeValue(type)) {
-              <nz-option [nzValue]="typeValue(type)" [nzLabel]="type.remark || typeValue(type)" />
+              <nz-option [nzValue]="typeValue(type)" [nzLabel]="type.name || typeValue(type)" />
             }
           </nz-select>
         </nz-form-control>
@@ -32,7 +32,7 @@
           <input
             nz-input
             [(ngModel)]="q.content"
-            placeholder="搜索序列号、别名、备注或主机名"
+            placeholder="搜索 sncode、别名、备注或主机名"
             (keydown.enter)="q.page = 1; getData()"
           />
         </nz-input-wrapper>
@@ -48,7 +48,7 @@
         <nz-card
           class="device-card {{ deviceStateClass(item.status) }}"
           [nzBordered]="false"
-          [nzActions]="[configAction, detailAction, deleteAction]"
+          [nzActions]="[configAction, detailAction, editAction, deleteAction]"
         >
           <div class="device-card-main">
             <div class="device-card-copy">
@@ -56,7 +56,7 @@
                 <nz-avatar class="device-avatar" nzIcon="appstore" />
                 <div class="device-title-text">
                   <strong>{{ item.name || item.sncode || item.hostname || item.guid }}</strong>
-                  <span>设备号：{{ item.sncode || item.guid }}</span>
+                  <span>sncode：{{ item.sncode || item.guid }}</span>
                 </div>
               </div>
 
@@ -77,6 +77,31 @@
                   <dt>最近连接</dt>
                   <dd>{{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</dd>
                 </div>
+                <div>
+                  <dt>{{ item.status === 1 ? '设备激活' : '设备开关' }}</dt>
+                  <dd>
+                    @if (item.status === 1) {
+                      <button
+                        nz-button
+                        nzType="primary"
+                        class="device-activate-btn"
+                        [nzLoading]="statusChanging.has(item.guid)"
+                        (click)="activate(item)"
+                      >
+                        <nz-icon nzType="thunderbolt" />
+                        激活设备
+                      </button>
+                    } @else {
+                      <div class="device-switch-row">
+                        <nz-switch
+                          [ngModel]="enabled(item.status)"
+                          [nzDisabled]="statusChanging.has(item.guid)"
+                          (ngModelChange)="toggleEnabled(item, $event)"
+                        />
+                      </div>
+                    }
+                  </dd>
+                </div>
               </dl>
 
               <div class="device-access-chips">
@@ -94,14 +119,9 @@
             </div>
 
             <div class="device-card-side">
-              <div class="device-status-stack">
-                <nz-tag class="device-status-tag" [nzColor]="activationColor(item.status)">
-                  {{ activationText(item.status) }}
-                </nz-tag>
-                <nz-tag class="device-status-tag" [nzColor]="statusColor(item.status)">
-                  {{ statusText(item.status) }}
-                </nz-tag>
-              </div>
+              <nz-tag class="device-status-tag" [nzColor]="statusColor(item.status)">
+                {{ statusText(item.status) }}
+              </nz-tag>
               <div class="device-illustration">
                 <nz-icon [nzType]="osIcon(item.os)" />
               </div>
@@ -120,16 +140,22 @@
               详情
             </button>
           </ng-template>
+          <ng-template #editAction>
+            <button nz-button nzType="link" (click)="edit(item.guid)">
+              <nz-icon nzType="edit" />
+              编辑
+            </button>
+          </ng-template>
           <ng-template #deleteAction>
             <button
               nz-button
               nzType="link"
               nzDanger
               nz-popconfirm
-              nzPopconfirmTitle="禁用后设备将无法继续接入，确认继续？"
+              nzPopconfirmTitle="删除后设备记录将从列表移除，确认删除？"
               (nzOnConfirm)="delete(item.guid)"
             >
-              <nz-icon nzType="delete" />
+              <nz-icon nzType="delete" />删除
             </button>
           </ng-template>
         </nz-card>
