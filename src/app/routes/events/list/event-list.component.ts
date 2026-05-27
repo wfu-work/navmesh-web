@@ -53,7 +53,10 @@ export class EventListComponent implements OnInit {
 
   protected readonly levelTag: STColumnTag = {
     critical: { text: '严重', color: 'red' },
+    error: { text: '错误', color: 'red' },
     high: { text: '高危', color: 'volcano' },
+    warn: { text: '警告', color: 'gold' },
+    warning: { text: '警告', color: 'gold' },
     medium: { text: '中危', color: 'gold' },
     low: { text: '低危', color: 'blue' },
     info: { text: '信息', color: 'default' },
@@ -61,11 +64,14 @@ export class EventListComponent implements OnInit {
 
   protected readonly sourceTag: STColumnTag = {
     device: { text: '设备', color: 'green' },
+    device_offline: { text: '设备离线', color: 'orange' },
     ssh: { text: 'SSH', color: 'purple' },
     http: { text: 'HTTP', color: 'blue' },
     tunnel: { text: '隧道', color: 'cyan' },
     auth: { text: '认证', color: 'gold' },
     mapping: { text: '映射', color: 'geekblue' },
+    session_rejected: { text: '会话拒绝', color: 'gold' },
+    open_tcp_failed: { text: '连接失败', color: 'red' },
   };
 
   protected readonly columns: STColumn<EventRow>[] = [
@@ -180,7 +186,7 @@ export class EventListComponent implements OnInit {
   }
 
   protected severeCount(): number {
-    return this.rows.filter((item) => ['critical', 'high'].includes(item.level)).length;
+    return this.rows.filter((item) => ['critical', 'error', 'high'].includes(item.level)).length;
   }
 
   protected statusText(status: EventStatus): string {
@@ -209,12 +215,49 @@ export class EventListComponent implements OnInit {
     }
   }
 
+  protected timeValue(item: EventRow, index: string | string[] | undefined): number {
+    const key = Array.isArray(index) ? index[0] : index;
+    if (key === 'closedAt') return item.closedAt;
+    if (key === 'createTime') return item.createTime;
+    if (key === 'updateTime') return item.updateTime;
+    return item.occurredAt;
+  }
+
   private toRows(items: EventItem[]): EventRow[] {
     const deviceMap = new Map(this.devices.map((device) => [device.guid, device.name || device.hostname || device.guid]));
-    return items.map((item) => ({
-      ...item,
-      source: item.source || item.eventType || '',
-      deviceName: deviceMap.get(item.deviceGuid) ?? item.deviceGuid,
-    }));
+    return items.map((item) => {
+      const eventType = this.firstText(item.eventType, item.event_type);
+      const deviceGuid = this.firstText(item.deviceGuid, item.device_guid);
+      const title = this.firstText(item.title, eventType, '事件');
+      return {
+        ...item,
+        deviceGuid,
+        eventType,
+        source: this.firstText(item.source, eventType),
+        level: this.normalizeLevel(item.level),
+        title,
+        message: this.firstText(item.message, title, eventType),
+        payload: this.firstText(item.payload, item.payload_json),
+        occurredAt: this.firstNumber(item.occurredAt, item.occurred_at, item.createTime, item.create_time),
+        closedAt: this.firstNumber(item.closedAt, item.closed_at),
+        createTime: this.firstNumber(item.createTime, item.create_time),
+        updateTime: this.firstNumber(item.updateTime, item.update_time),
+        deviceName: deviceMap.get(deviceGuid) ?? deviceGuid,
+      };
+    });
+  }
+
+  private normalizeLevel(level: string | undefined): string {
+    const value = String(level || 'info').toLowerCase();
+    if (value === 'warning') return 'warn';
+    return value;
+  }
+
+  private firstText(...values: Array<string | undefined>): string {
+    return values.find((value) => value !== undefined && value !== '') ?? '';
+  }
+
+  private firstNumber(...values: Array<number | undefined>): number {
+    return values.find((value) => value !== undefined && value !== null) ?? 0;
   }
 }

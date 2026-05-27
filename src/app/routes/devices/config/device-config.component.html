@@ -88,7 +88,7 @@
           <div class="detail-card-title">
             <div>
               <h2>SSH 接入</h2>
-              <p>SSH 别名由设备注册自动创建，可在设备内调整入口 IP 或域名。</p>
+              <p>SSH 别名由设备注册自动创建，通过 ProxyCommand 连接到设备。</p>
             </div>
             <button nz-button (click)="openSshModal()">
               <nz-icon nzType="cluster" />
@@ -101,9 +101,13 @@
               <article class="access-list-item">
                 <div>
                   <strong>{{ alias.domain || '-' }}</strong>
-                  <span>{{ alias.alias || '-' }} · {{ alias.entrypointIp || '未分配入口 IP' }}</span>
+                  <span>{{ alias.alias || '-' }} · ProxyCommand</span>
+                  <code class="token-secret-inline">{{ sshProxyCommand(alias) }}</code>
                 </div>
                 <div class="access-item-actions">
+                  <button nz-button nzType="link" nz-tooltip nzTooltipTitle="复制 SSH 命令" [cdkCopyToClipboard]="sshProxyCommand(alias)">
+                    <nz-icon nzType="copy" />
+                  </button>
                   <nz-tag [nzColor]="alias.status === 0 ? 'default' : 'success'">{{ statusLabel(alias.status) }}</nz-tag>
                   <button nz-button nzType="link" (click)="openSshModal(alias)">
                     <nz-icon nzType="edit" />
@@ -201,21 +205,7 @@
             <nz-form-item>
               <nz-form-label nzRequired>SSH 域名</nz-form-label>
               <nz-form-control nzErrorTip="请输入 SSH 域名">
-                <input nz-input formControlName="domain" placeholder="例如 test01.navfirst.com" />
-              </nz-form-control>
-            </nz-form-item>
-
-            <nz-form-item>
-              <nz-form-label>入口 IP</nz-form-label>
-              <nz-form-control [nzExtra]="entrypointHint()">
-                <nz-select nzShowSearch nzAllowClear formControlName="entrypointIp" nzPlaceHolder="自动分配入口 IP">
-                  @for (entrypoint of availableSshEntrypoints(); track entrypoint.ip) {
-                    <nz-option
-                      [nzValue]="entrypoint.ip"
-                      [nzLabel]="entrypoint.ip + (entrypoint.deviceGuid ? '（已绑定）' : '（空闲）')"
-                    />
-                  }
-                </nz-select>
+                <input nz-input formControlName="domain" placeholder="例如 test01.ssh.navfirst.com" />
               </nz-form-control>
             </nz-form-item>
           </form>

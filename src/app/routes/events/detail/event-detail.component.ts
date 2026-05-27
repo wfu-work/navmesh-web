@@ -56,7 +56,8 @@ export class EventDetailComponent implements OnInit {
       .subscribe({
         next: (res) => {
           const item = (res.data ?? []).find((event) => event.guid === this.guid);
-          this.event = item ? { ...item, source: item.source || item.eventType || '' } : undefined;
+          this.event = item ? this.normalizeEvent(item) : undefined;
+          this.device = undefined;
           if (this.event?.deviceGuid) {
             this.loadDevice(this.event.deviceGuid);
           }
@@ -120,7 +121,10 @@ export class EventDetailComponent implements OnInit {
   protected levelText(level: string | undefined): string {
     const map: Record<string, string> = {
       critical: '严重',
+      error: '错误',
       high: '高危',
+      warn: '警告',
+      warning: '警告',
       medium: '中危',
       low: '低危',
       info: '信息',
@@ -131,11 +135,14 @@ export class EventDetailComponent implements OnInit {
   protected sourceText(source: string | undefined): string {
     const map: Record<string, string> = {
       device: '设备',
+      device_offline: '设备离线',
       ssh: 'SSH',
       http: 'HTTP',
       tunnel: '隧道',
       auth: '认证',
       mapping: '映射',
+      session_rejected: '会话拒绝',
+      open_tcp_failed: '连接失败',
     };
     return map[String(source)] ?? (source || '-');
   }
@@ -163,6 +170,40 @@ export class EventDetailComponent implements OnInit {
 
   protected isClosed(status: EventStatus | undefined): boolean {
     return isClosedEventStatus(status);
+  }
+
+  private normalizeEvent(item: EventItem): EventItem {
+    const eventType = this.firstText(item.eventType, item.event_type);
+    const deviceGuid = this.firstText(item.deviceGuid, item.device_guid);
+    const title = this.firstText(item.title, eventType, '事件');
+    return {
+      ...item,
+      deviceGuid,
+      eventType,
+      source: this.firstText(item.source, eventType),
+      level: this.normalizeLevel(item.level),
+      title,
+      message: this.firstText(item.message, title, eventType),
+      payload: this.firstText(item.payload, item.payload_json),
+      occurredAt: this.firstNumber(item.occurredAt, item.occurred_at, item.createTime, item.create_time),
+      closedAt: this.firstNumber(item.closedAt, item.closed_at),
+      createTime: this.firstNumber(item.createTime, item.create_time),
+      updateTime: this.firstNumber(item.updateTime, item.update_time),
+    };
+  }
+
+  private normalizeLevel(level: string | undefined): string {
+    const value = String(level || 'info').toLowerCase();
+    if (value === 'warning') return 'warn';
+    return value;
+  }
+
+  private firstText(...values: Array<string | undefined>): string {
+    return values.find((value) => value !== undefined && value !== '') ?? '';
+  }
+
+  private firstNumber(...values: Array<number | undefined>): number {
+    return values.find((value) => value !== undefined && value !== null) ?? 0;
   }
 
   private loadDevice(deviceGuid: string): void {

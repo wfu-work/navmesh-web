@@ -650,8 +650,14 @@ export class DeviceDetailComponent implements OnInit {
     return this.sshEntrypoints.filter((item) => item.status !== 0 && (!item.deviceGuid || item.deviceGuid === this.guid));
   }
 
+  protected sshProxyCommand(alias: SSHAlias | undefined): string {
+    const target = this.firstText(alias?.domain, alias?.alias, this.device?.sncode);
+    if (!target) return '-';
+    return `ssh root@${this.device?.sncode || target} -o ProxyCommand="navmesh-client -proxy -server ssh.navfirst.com -port 22 -target ${target}"`;
+  }
+
   private defaultSshDomain(): string {
     const sncode = this.device?.sncode || this.device?.alias || this.device?.hostname || '';
-    return sncode ? `${sncode}.navfirst.com` : '';
+    return sncode ? `${sncode}.ssh.navfirst.com` : '';
   }
 }

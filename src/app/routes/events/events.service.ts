@@ -22,17 +22,24 @@ export type EventStatus = 0 | 1 | 2 | '0' | '1' | '2';
 export interface EventItem {
   guid: string;
   deviceGuid: string;
+  device_guid?: string;
   source: string;
   eventType?: string;
+  event_type?: string;
   level: string;
   title: string;
   message: string;
   status: EventStatus;
   payload: string;
+  payload_json?: string;
   occurredAt: number;
+  occurred_at?: number;
   closedAt: number;
+  closed_at?: number;
   createTime: number;
+  create_time?: number;
   updateTime: number;
+  update_time?: number;
 }
 
 export function isOpenEventStatus(status: EventStatus | undefined): boolean {
