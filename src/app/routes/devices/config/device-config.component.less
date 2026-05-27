@@ -110,6 +110,36 @@
   background: rgb(255 255 255 / 8%);
 }
 
+.ssh-command-inline {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: #405165;
+  white-space: nowrap;
+  background: #f1f5f4;
+}
+
+:host-context([data-theme='dark']) .ssh-command-inline {
+  color: rgba(255, 255, 255, 0.72);
+  background: rgb(255 255 255 / 8%);
+}
+
+:host ::ng-deep {
+  .token-table {
+    .ant-table-thead > tr > th:nth-child(2),
+    .ant-table-tbody > tr > td:nth-child(2) {
+      width: 170px;
+      max-width: 170px;
+    }
+
+    .token-secret-inline {
+      max-width: 128px;
+    }
+  }
+}
+
 @media (max-width: 767px) {
   .access-list-item,
   .form-grid {

@@ -130,6 +130,8 @@ export interface DeviceToken {
   status: number;
   lastUsedAt: number;
   last_used_at?: number;
+  lastUsedTime?: number;
+  last_used_time?: number;
   expiresAt: number;
   expireTime?: number;
   expire_time?: number;

@@ -3,10 +3,11 @@ import { AbstractControl, NonNullableFormBuilder, Validators } from '@angular/fo
 import { STColumn, STColumnTag } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
-import { finalize, forkJoin } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { MappingsService, PortMapping } from '../../mappings/mappings.service';
+import { NavMeshSetting, NavMeshSettingsService } from '../../settings/settings.service';
 import { DeviceToken } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
@@ -21,12 +22,14 @@ import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
 export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   private readonly sshService = inject(SSHService);
   private readonly mappingsService = inject(MappingsService);
+  private readonly settingsService = inject(NavMeshSettingsService);
   private readonly fb = inject(NonNullableFormBuilder);
 
   protected tokens: DeviceToken[] = [];
   protected sshAliases: SSHAlias[] = [];
   protected sshEntrypoints: SSHEntrypoint[] = [];
   protected mappings: PortMapping[] = [];
+  protected settings: NavMeshSetting[] = [];
   protected sshModalVisible = false;
   protected sshSaving = false;
   protected mappingModalVisible = false;
@@ -55,20 +58,20 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   };
 
   protected readonly tokenColumns: STColumn<DeviceToken>[] = [
-    { title: '凭证名称', index: 'name', render: 'tokenNameRender' },
-    { title: '完整凭证', index: 'token', render: 'tokenValueRender', width: '220px' },
-    { title: '状态', index: 'status', type: 'tag', tag: this.tokenStatusTag },
-    { title: '最后使用', index: 'lastUsedAt', render: 'lastUsedAtRender' },
-    { title: '过期时间', index: 'expiresAt', render: 'expiresAtRender' },
+    { title: '凭证名称', index: 'name', render: 'tokenNameRender', width: 260 },
+    { title: '完整凭证', index: 'token', render: 'tokenValueRender', width: 170 },
+    { title: '状态', index: 'status', type: 'tag', tag: this.tokenStatusTag, width: 90 },
+    { title: '最后使用', index: 'lastUsedAt', render: 'lastUsedAtRender', width: 170 },
     {
       title: '创建时间',
       index: 'createTime',
       type: 'date',
       dateFormat: 'yyyy-MM-dd HH:mm:ss',
+      width: 170,
     },
     {
       title: '操作',
-      width: '100',
+      width: 100,
       buttons: [
         {
           icon: 'sync',
@@ -120,6 +123,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       sshAliases: this.sshService.listAliases(),
       sshEntrypoints: this.sshService.listEntrypoints(),
       mappings: this.mappingsService.list({ page: 1, size: 100, deviceGuid: this.guid }),
+      settings: this.settingsService.list().pipe(catchError(() => of([] as NavMeshSetting[]))),
     })
       .pipe(
         finalize(() => {
@@ -128,7 +132,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ detail, sshAliases, sshEntrypoints, mappings }) => {
+        next: ({ detail, sshAliases, sshEntrypoints, mappings, settings }) => {
           this.device = this.normalizeDevice(detail.device);
           this.tokens = (detail.tokens ?? []).map((token) => this.normalizeToken(token));
           this.sshAliases = (sshAliases ?? [])
@@ -136,6 +140,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
             .filter((item) => item.deviceGuid === this.guid);
           this.sshEntrypoints = (sshEntrypoints ?? []).map((item) => this.normalizeEntrypoint(item));
           this.mappings = (mappings.data ?? []).map((item) => this.normalizeMapping(item));
+          this.settings = settings ?? [];
         },
         error: () => this.message.error('设备配置加载失败'),
       });
@@ -315,10 +320,19 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return this.sshEntrypoints.filter((item) => item.status !== 0 && (!item.deviceGuid || item.deviceGuid === this.guid));
   }
 
-  protected sshProxyCommand(alias: SSHAlias | undefined): string {
+  protected sshTargetHost(alias: SSHAlias | undefined): string {
     const target = this.firstText(alias?.domain, alias?.alias, this.device?.sncode);
-    if (!target) return '-';
-    return `ssh root@${this.device?.sncode || target} -o ProxyCommand="navmesh-client -proxy -server ssh.navfirst.com -port 22 -target ${target}"`;
+    return target || '-';
+  }
+
+  protected sshProxyAddress(): string {
+    return `${this.sshGatewayDomain()}:${this.sshGatewayPort()}`;
+  }
+
+  protected sshConnectCommand(alias: SSHAlias | undefined): string {
+    const target = this.sshTargetHost(alias);
+    if (target === '-') return '-';
+    return `ssh root@${target} -o 'ProxyCommand=nc -X connect -x ${this.sshProxyAddress()} %h %p'`;
   }
 
   private normalizeAlias(item: SSHAlias): SSHAlias {
@@ -359,7 +373,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       ...token,
       token: this.firstText(token.token),
       tokenPrefix: this.firstText(token.tokenPrefix, token.token_prefix, this.guidPrefix(token.guid)),
-      lastUsedAt: this.firstNumber(token.lastUsedAt, token.last_used_at),
+      lastUsedAt: this.firstNumber(token.lastUsedAt, token.last_used_at, token.lastUsedTime, token.last_used_time),
       expiresAt: this.firstNumber(token.expiresAt, token.expireTime, token.expire_time),
       createTime: this.firstNumber(token.createTime, token.create_time),
       updateTime: this.firstNumber(token.updateTime, token.update_time),
@@ -381,6 +395,22 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
 
   private defaultSshDomain(): string {
     const sncode = this.device?.sncode || this.device?.alias || this.device?.hostname || '';
-    return sncode ? `${sncode}.ssh.navfirst.com` : '';
+    return sncode ? `${sncode}.${this.sshGatewayDomain()}` : '';
+  }
+
+  private sshGatewayDomain(): string {
+    return this.setting('ssh_gateway_domain', 'ssh.navfirst.com').replace(/^\.+|\.+$/g, '') || 'ssh.navfirst.com';
+  }
+
+  private sshGatewayPort(): number {
+    const value = this.setting('ssh_listen', ':22').trim();
+    if (/^\d+$/.test(value)) return Number(value);
+    const match = value.match(/:(\d+)$/);
+    const port = match ? Number(match[1]) : 22;
+    return Number.isFinite(port) && port > 0 && port <= 65535 ? port : 22;
+  }
+
+  private setting(key: string, fallback: string): string {
+    return this.settings.find((item) => item.key === key)?.value || fallback;
   }
 }
