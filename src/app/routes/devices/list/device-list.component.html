@@ -2,7 +2,7 @@
   <div class="device-header">
       <title-label
         title="设备列表"
-      description="按设备类型查看接入设备、在线状态、sncode 和最近心跳。"
+      description="按设备类型查看接入设备、在线状态、设备号和最近心跳。"
     />
   </div>
 
@@ -32,7 +32,7 @@
           <input
             nz-input
             [(ngModel)]="q.content"
-            placeholder="搜索 sncode、别名、备注或主机名"
+            placeholder="搜索设备号、别名、备注或主机名"
             (keydown.enter)="q.page = 1; getData()"
           />
         </nz-input-wrapper>
@@ -53,10 +53,12 @@
           <div class="device-card-main">
             <div class="device-card-copy">
               <div class="device-card-title">
-                <nz-avatar class="device-avatar" nzIcon="appstore" />
+                <div class="device-os-badge {{ osClass(item.os) }}">
+                  <nz-icon [nzType]="osIcon(item.os)" />
+                </div>
                 <div class="device-title-text">
                   <strong>{{ item.name || item.sncode || item.hostname || item.guid }}</strong>
-                  <span>sncode：{{ item.sncode || item.guid }}</span>
+                  <span>设备号：{{ item.sncode || item.guid }}</span>
                 </div>
               </div>
 
@@ -105,12 +107,12 @@
               </dl>
 
               <div class="device-access-chips">
-                <nz-tag class="device-id-chip" nzColor="blue">
-                  <nz-icon nzType="cluster" />
-                  <span>{{ item.hostname || item.hostIp || '待激活' }}</span>
+                <nz-tag class="device-id-chip device-os-chip" nzColor="blue">
+                  <nz-icon [nzType]="osIcon(item.os)" />
+                  <span>{{ osLabel(item.os) }}</span>
                 </nz-tag>
                 @if (item.webDomain) {
-                  <nz-tag class="device-id-chip" nzColor="green">
+                  <nz-tag class="device-id-chip device-domain-chip" nzColor="green">
                     <nz-icon nzType="api" />
                     <span>{{ item.webDomain }}</span>
                   </nz-tag>
@@ -123,7 +125,7 @@
                 {{ statusText(item.status) }}
               </nz-tag>
               <div class="device-illustration">
-                <nz-icon [nzType]="osIcon(item.os)" />
+                <nz-icon [nzType]="productIcon(item.deviceType)" />
               </div>
             </div>
           </div>

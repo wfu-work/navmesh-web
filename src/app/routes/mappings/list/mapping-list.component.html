@@ -2,7 +2,7 @@
   <div class="mapping-header">
     <title-label
       title="映射列表"
-      description="维护外部 HTTP Host 到设备本地服务的转发规则。"
+      description="维护访问域名到设备本地服务的 HTTP 转发规则。"
     />
     <button nz-button nzType="primary" (click)="openModal()">
       <nz-icon nzType="plus" />
@@ -19,7 +19,7 @@
           <input
             nz-input
             [(ngModel)]="q.keyword"
-            placeholder="搜索名称、Host 或设备标识"
+            placeholder="搜索名称、访问域名或设备标识"
             (keydown.enter)="search()"
           />
         </nz-input-wrapper>
@@ -65,7 +65,7 @@
 
       <ng-template st-row="domainTypeRender" let-item>
         <span class="domain-type" [class.domain-type-custom]="item.isCustomDomain">
-          {{ item.isCustomDomain ? '自定义' : '系统分配' }}
+          {{ item.isCustomDomain ? '自有域名' : '系统域名' }}
         </span>
       </ng-template>
 
@@ -73,12 +73,12 @@
         <sv-container col="3">
           <sv label="映射标识">{{ item.guid }}</sv>
           <sv label="名称">{{ item.name || '-' }}</sv>
-          <sv label="外部 Host">{{ item.publicHost || '-' }}</sv>
+          <sv label="访问域名">{{ item.publicHost || '-' }}</sv>
           <sv label="绑定设备">{{ deviceName(item.deviceGuid) }}</sv>
           <sv label="设备标识">{{ item.deviceGuid }}</sv>
           <sv label="目标服务">{{ item.targetHost }}:{{ item.targetPort }}</sv>
           <sv label="协议">{{ item.protocol || '-' }}</sv>
-          <sv label="域名类型">{{ item.isCustomDomain ? '自定义域名' : '系统分配域名' }}</sv>
+          <sv label="域名来源">{{ item.isCustomDomain ? '自有域名' : '系统域名' }}</sv>
           <sv label="状态">{{ statusText(item.status) }}</sv>
           <sv label="创建时间">{{ item.createTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
           <sv label="更新时间">{{ item.updateTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>
@@ -123,8 +123,8 @@
         </nz-form-item>
 
         <nz-form-item>
-          <nz-form-label nzRequired>外部 Host</nz-form-label>
-          <nz-form-control nzErrorTip="请输入外部 Host">
+          <nz-form-label nzRequired>访问域名</nz-form-label>
+          <nz-form-control nzErrorTip="请输入访问域名">
             <input nz-input formControlName="publicHost" placeholder="例如 nas.example.com" />
           </nz-form-control>
         </nz-form-item>
@@ -157,9 +157,9 @@
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label>域名类型</nz-form-label>
+            <nz-form-label>域名来源</nz-form-label>
             <nz-form-control>
-              <label nz-checkbox formControlName="isCustomDomain">自定义域名</label>
+              <label nz-checkbox formControlName="isCustomDomain">使用自有域名</label>
             </nz-form-control>
           </nz-form-item>
         </div>

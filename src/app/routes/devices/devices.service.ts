@@ -157,6 +157,7 @@ export interface DeviceTypeDefault {
   group_key?: string;
   type?: string;
   name?: string;
+  icon?: string;
   defaultWebPort?: number;
   default_web_port?: number;
   webPort?: number;
@@ -186,6 +187,7 @@ export interface DeviceGroup {
   key?: string;
   group_key?: string;
   name: string;
+  icon?: string;
   description?: string;
   defaultWebPort?: number;
   default_web_port?: number;
@@ -204,6 +206,7 @@ export interface SaveDeviceGroupPayload {
   guid?: string;
   key?: string;
   name: string;
+  icon?: string;
   description?: string;
   defaultWebPort?: number;
   defaultDomain?: string;

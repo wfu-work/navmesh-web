@@ -61,12 +61,12 @@ export class MappingListComponent implements OnInit {
   });
 
   protected readonly columns: STColumn<PortMapping>[] = [
-    { title: '外部 Host', index: 'publicHost', render: 'hostRender', fixed: 'left', width: 260 },
+    { title: '访问域名', index: 'publicHost', render: 'hostRender', fixed: 'left', width: 260 },
     { title: '名称', index: 'name', width: 160, default: '-' },
     { title: '绑定设备', index: 'deviceGuid', render: 'deviceRender', width: 260 },
     { title: '目标服务', index: 'targetHost', render: 'targetRender', width: 220 },
     { title: '协议', index: 'protocol', type: 'tag', tag: this.protocolTag, width: 100 },
-    { title: '域名类型', index: 'isCustomDomain', render: 'domainTypeRender', width: 120 },
+    { title: '域名来源', index: 'isCustomDomain', render: 'domainTypeRender', width: 120 },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 100 },
     {
       title: '更新时间',
@@ -91,7 +91,7 @@ export class MappingListComponent implements OnInit {
           iif: (item) => item.status !== 0,
           click: (item) => this.disable(item),
           pop: {
-            title: '禁用后该 Host 将不再转发到设备，确认继续？',
+            title: '禁用后该访问域名将不再转发到设备，确认继续？',
             okType: 'danger',
             icon: 'stop',
           },

@@ -185,11 +185,33 @@
   min-width: 0;
 }
 
-:host ::ng-deep .device-avatar {
+.device-os-badge {
+  display: inline-flex;
   flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgb(var(--nm-primary-rgb) / 12%);
+  border-radius: 50%;
   color: #314154;
-  background: #eef4f7;
-  font-size: 26px;
+  background: rgb(var(--nm-primary-rgb) / 7%);
+  font-size: 25px;
+}
+
+.device-os-badge.os-macos {
+  color: #2f74e8;
+  background: #eef5ff;
+}
+
+.device-os-badge.os-windows {
+  color: #1877d3;
+  background: #ecf7ff;
+}
+
+.device-os-badge.os-linux {
+  color: #344054;
+  background: #f2f4f7;
 }
 
 .device-title-text {
@@ -267,6 +289,7 @@
 :host ::ng-deep .device-id-chip {
   display: inline-flex;
   max-width: 100%;
+  min-width: 0;
   align-items: center;
   gap: 8px;
   margin: 0;
@@ -283,11 +306,22 @@
 }
 
 .device-access-chips {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   gap: 8px;
   align-items: center;
   margin-top: auto;
+  max-width: 100%;
+}
+
+:host ::ng-deep .device-os-chip {
+  flex: 0 0 auto;
+  min-width: 78px;
+  justify-content: center;
+}
+
+:host ::ng-deep .device-domain-chip {
+  justify-content: flex-start;
 }
 
 .device-card-side {

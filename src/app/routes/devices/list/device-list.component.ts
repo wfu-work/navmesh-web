@@ -185,6 +185,17 @@ export class DeviceListComponent implements OnInit {
     return 'desktop';
   }
 
+  protected osLabel(os: string | undefined): string {
+    const value = String(os || '').toLowerCase();
+    if (value.includes('darwin') || value.includes('mac')) return 'Mac';
+    if (value.includes('win')) return 'Windows';
+    if (value.includes('ubuntu')) return 'Ubuntu';
+    if (value.includes('debian')) return 'Debian';
+    if (value.includes('centos')) return 'CentOS';
+    if (value.includes('linux')) return 'Linux';
+    return os || '未知系统';
+  }
+
   protected osClass(os: string | undefined): string {
     const value = String(os || '').toLowerCase();
     if (value.includes('darwin') || value.includes('mac')) return 'os-macos';
@@ -203,6 +214,11 @@ export class DeviceListComponent implements OnInit {
     if (!type) return '-';
     const item = this.types.find((row) => this.typeValue(row) === type);
     return item?.name || this.typeValue(item) || type;
+  }
+
+  protected productIcon(type: string | undefined): string {
+    const item = this.types.find((row) => this.typeValue(row) === type);
+    return this.normalizeIcon(this.firstText(item?.icon, this.defaultProductIcon(type)));
   }
 
   protected typeValue(item: DeviceTypeDefault | undefined): string {
@@ -283,6 +299,7 @@ export class DeviceListComponent implements OnInit {
       guid: this.firstText(item.guid, key),
       type: this.firstText(item.type, key),
       name: this.firstText(item.name, key),
+      icon: this.normalizeIcon(this.firstText(item.icon, this.defaultProductIcon(key))),
       webPort: this.firstNumber(item.webPort, item.defaultWebPort, item.default_web_port),
       webDomain: this.firstText(item.webDomain, item.defaultDomain, item.default_domain),
       sort: this.firstNumber(item.sort),
@@ -298,5 +315,22 @@ export class DeviceListComponent implements OnInit {
 
   private firstNumber(...values: Array<number | undefined>): number {
     return values.find((value) => value !== undefined && value !== null) ?? 0;
+  }
+
+  private defaultProductIcon(type: string | undefined): string {
+    const value = String(type || '').toLowerCase();
+    if (value.includes('ssh')) return 'code';
+    if (value.includes('radar')) return 'radar-chart';
+    if (value.includes('rain')) return 'cloud';
+    if (value.includes('data')) return 'database';
+    if (value.includes('dic')) return 'experiment';
+    if (value.includes('ppp')) return 'deployment-unit';
+    if (value.includes('sag')) return 'control';
+    return 'appstore';
+  }
+
+  private normalizeIcon(icon: string | undefined): string {
+    if (icon === 'terminal') return 'code';
+    return icon || 'appstore';
   }
 }

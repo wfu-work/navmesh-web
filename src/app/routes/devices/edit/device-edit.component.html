@@ -54,7 +54,7 @@
       nzType="info"
       nzShowIcon
       nzMessage="设备别名和备注可在控制台修改"
-      nzDescription="保存后后台会在设备注册响应中回传最新值，navmesh-client 重启并重新上线后会写入本地状态；sncode、端口和域名仍由客户端注册参数维护。"
+      nzDescription="保存后后台会在设备注册响应中回传最新值，navmesh-client 重启并重新上线后会写入本地状态；设备号、端口和域名仍由客户端注册参数维护。"
     />
 
     <form nz-form [formGroup]="form" (ngSubmit)="submit()">
@@ -69,11 +69,11 @@
           </div>
 
           <se-container col="2" nzLayout="vertical">
-            <se label="sncode" required error="请输入 sncode">
+            <se label="设备号" required error="请输入设备号">
               <input id="sncode" nz-input formControlName="sncode" placeholder="例如 test01" />
             </se>
             <se label="设备别名" required error="请输入设备别名">
-              <input id="alias" nz-input formControlName="alias" placeholder="默认与 sncode 一致，例如 test01" />
+              <input id="alias" nz-input formControlName="alias" placeholder="默认与设备号一致，例如 test01" />
             </se>
             <se label="设备类型" required error="请输入设备类型">
               <input id="deviceType" nz-input formControlName="deviceType" placeholder="例如 ssh、radar、rain、data" />

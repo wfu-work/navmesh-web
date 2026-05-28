@@ -40,6 +40,7 @@ export class DeviceGroupsComponent implements OnInit {
   protected readonly form = this.fb.group({
     key: ['', [Validators.required]],
     name: ['', [Validators.required]],
+    icon: ['appstore'],
     defaultWebPort: [0],
     defaultDomain: [''],
     sort: [0],
@@ -52,8 +53,68 @@ export class DeviceGroupsComponent implements OnInit {
     0: { text: '禁用', color: 'red' },
   };
 
+  protected readonly iconOptions = [
+    { value: 'appstore' },
+    { value: 'code' },
+    { value: 'radar-chart' },
+    { value: 'dot-chart' },
+    { value: 'cloud' },
+    { value: 'database' },
+    { value: 'experiment' },
+    { value: 'deployment-unit' },
+    { value: 'control' },
+    { value: 'global' },
+    { value: 'api' },
+    { value: 'dashboard' },
+    { value: 'desktop' },
+    { value: 'laptop' },
+    { value: 'mobile' },
+    { value: 'tablet' },
+    { value: 'hdd' },
+    { value: 'cloud-server' },
+    { value: 'cluster' },
+    { value: 'partition' },
+    { value: 'apartment' },
+    { value: 'branches' },
+    { value: 'node-index' },
+    { value: 'gateway' },
+    { value: 'wifi' },
+    { value: 'usb' },
+    { value: 'monitor' },
+    { value: 'container' },
+    { value: 'line-chart' },
+    { value: 'bar-chart' },
+    { value: 'area-chart' },
+    { value: 'box-plot' },
+    { value: 'fund' },
+    { value: 'fund-projection-screen' },
+    { value: 'tool' },
+    { value: 'setting' },
+    { value: 'sliders' },
+    { value: 'rocket' },
+    { value: 'thunderbolt' },
+    { value: 'bug' },
+    { value: 'build' },
+    { value: 'security-scan' },
+    { value: 'safety-certificate' },
+    { value: 'key' },
+    { value: 'lock' },
+    { value: 'printer' },
+    { value: 'scan' },
+    { value: 'barcode' },
+    { value: 'qrcode' },
+    { value: 'environment' },
+    { value: 'compass' },
+    { value: 'pushpin' },
+    { value: 'fire' },
+    { value: 'apple' },
+    { value: 'windows' },
+    { value: 'android' },
+  ];
+
   protected readonly columns: STColumn<DeviceGroup>[] = [
     { title: '设备类型', index: 'name', render: 'nameRender' },
+    { title: '图标', index: 'icon', render: 'iconRender', width: 90 },
     { title: '唯一标识', index: 'key', render: 'keyRender' },
     { title: '默认 Web 端口', index: 'defaultWebPort', render: 'portRender' },
     { title: '默认映射域名', index: 'defaultDomain', render: 'domainRender' },
@@ -140,6 +201,7 @@ export class DeviceGroupsComponent implements OnInit {
     this.form.reset({
       key: this.groupKey(row) ?? '',
       name: row?.name ?? '',
+      icon: this.iconLabel(row?.icon),
       defaultWebPort: row?.defaultWebPort ?? 0,
       defaultDomain: row?.defaultDomain ?? '',
       sort: row?.sort ?? 0,
@@ -172,6 +234,7 @@ export class DeviceGroupsComponent implements OnInit {
         guid: this.editingGuid || undefined,
         key: value.key.trim(),
         name: value.name.trim(),
+        icon: value.icon,
         defaultWebPort: Number(value.defaultWebPort || 0),
         defaultDomain: value.defaultDomain.trim(),
         sort: Number(value.sort || 0),
@@ -210,10 +273,16 @@ export class DeviceGroupsComponent implements OnInit {
     this.router.navigate(['/devices/list'], { queryParams: { type } });
   }
 
+  protected selectIcon(icon: string): void {
+    this.form.controls.icon.setValue(icon);
+    this.form.controls.icon.markAsDirty();
+  }
+
   private normalizeGroup(item: DeviceGroup): DeviceGroup {
     return {
       ...item,
       key: this.firstText(item.key, item.group_key, item.guid),
+      icon: this.iconLabel(item.icon),
       defaultWebPort: this.firstNumber(item.defaultWebPort, item.default_web_port),
       defaultDomain: this.firstText(item.defaultDomain, item.default_domain),
       sort: this.firstNumber(item.sort),
@@ -225,6 +294,11 @@ export class DeviceGroupsComponent implements OnInit {
 
   protected groupKey(item: DeviceGroup | undefined): string {
     return this.firstText(item?.key, item?.group_key, item?.guid);
+  }
+
+  protected iconLabel(icon: string | undefined): string {
+    if (icon === 'terminal') return 'code';
+    return icon || 'appstore';
   }
 
   private firstText(...values: Array<string | undefined>): string {
