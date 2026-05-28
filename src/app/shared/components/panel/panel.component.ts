@@ -40,16 +40,16 @@ type PanelTrendType = 'up' | 'down' | 'neutral';
         min-width: 0;
         width: 100%;
         padding: 26px 28px 24px;
-        border: 1px solid rgb(255 255 255 / 74%);
+        border: 1px solid rgb(var(--nm-primary-rgb) / 10%);
         border-radius: 24px;
         background: rgb(255 255 255 / 88%);
         box-shadow:
-          0 18px 46px rgb(47 103 124 / 10%),
+          0 18px 46px rgb(var(--nm-primary-rgb) / 10%),
           inset 0 1px 0 rgb(255 255 255 / 92%);
       }
 
       :host-context([data-theme='dark']) .panel {
-        border-color: rgb(255 255 255 / 6%);
+        border-color: rgb(var(--nm-primary-rgb) / 18%);
         background: linear-gradient(180deg, rgb(18 26 41 / 96%) 0%, rgb(14 20 31 / 96%) 100%);
         box-shadow:
           0 18px 46px rgb(0 0 0 / 24%),
@@ -72,14 +72,14 @@ type PanelTrendType = 'up' | 'down' | 'neutral';
         width: 58px;
         height: 58px;
         border-radius: 14px;
-        color: #35c7b4;
+        color: var(--nm-primary);
         font-size: 28px;
-        background: #f0f5ff;
+        background: rgb(var(--nm-primary-rgb) / 8%);
       }
 
       :host-context([data-theme='dark']) .panel-icon {
-        color: #60d5c8;
-        background: rgb(96 213 200 / 12%);
+        color: var(--nm-primary-hover);
+        background: rgb(var(--nm-primary-rgb) / 14%);
       }
 
       .panel-trend {
@@ -90,17 +90,17 @@ type PanelTrendType = 'up' | 'down' | 'neutral';
         min-height: 34px;
         padding: 0 14px;
         border-radius: 999px;
-        color: #188d7a;
+        color: var(--nm-primary);
         font-size: 16px;
         font-weight: 800;
         line-height: 1;
         white-space: nowrap;
-        background: #dcfbf2;
+        background: rgb(var(--nm-primary-rgb) / 10%);
       }
 
       :host-context([data-theme='dark']) .panel-trend {
-        color: #67d5c4;
-        background: rgb(103 213 196 / 14%);
+        color: var(--nm-primary-hover);
+        background: rgb(var(--nm-primary-rgb) / 16%);
       }
 
       .panel-trend-down {
@@ -115,12 +115,12 @@ type PanelTrendType = 'up' | 'down' | 'neutral';
 
       .panel-trend-neutral {
         color: #65727f;
-        background: #edf2f7;
+        background: rgb(var(--nm-primary-rgb) / 7%);
       }
 
       :host-context([data-theme='dark']) .panel-trend-neutral {
         color: rgba(255, 255, 255, 0.66);
-        background: rgb(255 255 255 / 8%);
+        background: rgb(var(--nm-primary-rgb) / 12%);
       }
 
       .panel-body {

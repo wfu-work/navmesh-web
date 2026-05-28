@@ -1,0 +1,50 @@
+<form nz-form [formGroup]="form" nzLayout="vertical">
+  <nz-form-item>
+    <nz-form-label nzRequired>映射名称</nz-form-label>
+    <nz-form-control nzErrorTip="请输入映射名称">
+      <input nz-input formControlName="name" placeholder="例如 nas-web" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label nzRequired>访问域名</nz-form-label>
+    <nz-form-control nzErrorTip="请输入访问域名">
+      <input nz-input formControlName="publicHost" placeholder="例如 nas.example.com" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <div class="form-grid">
+    <nz-form-item>
+      <nz-form-label nzRequired>目标主机</nz-form-label>
+      <nz-form-control nzErrorTip="请输入目标主机">
+        <input nz-input formControlName="targetHost" placeholder="127.0.0.1" />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label nzRequired>目标端口</nz-form-label>
+      <nz-form-control nzErrorTip="请输入 1-65535 的端口">
+        <nz-input-number formControlName="targetPort" [nzMin]="1" [nzMax]="65535" class="w-100" />
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+
+  <div class="form-grid">
+    <nz-form-item>
+      <nz-form-label>协议</nz-form-label>
+      <nz-form-control>
+        <nz-select formControlName="protocol">
+          <nz-option nzValue="http" nzLabel="HTTP" />
+          <nz-option nzValue="https" nzLabel="HTTPS" />
+        </nz-select>
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>域名来源</nz-form-label>
+      <nz-form-control>
+        <label nz-checkbox formControlName="isCustomDomain">使用自有域名</label>
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+</form>

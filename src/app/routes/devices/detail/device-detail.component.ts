@@ -4,11 +4,11 @@ import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { HTTPAccessLog, MappingsService } from '../../mappings/mappings.service';
 import { SessionsService, TunnelSession } from '../../sessions/sessions.service';
 import { TunnelConnection, TunnelsService } from '../../tunnels/tunnels.service';
 import { DeviceStatus } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
+import { HTTPAccessLog, HttpAccessService } from '../http-access.service';
 
 @Component({
   selector: 'app-device-detail',
@@ -18,7 +18,7 @@ import { DevicePageBase } from '../device-page-base';
   imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule],
 })
 export class DeviceDetailComponent extends DevicePageBase implements OnInit {
-  private readonly mappingsService = inject(MappingsService);
+  private readonly httpAccessService = inject(HttpAccessService);
   private readonly sessionsService = inject(SessionsService);
   private readonly tunnelsService = inject(TunnelsService);
 
@@ -40,7 +40,7 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     forkJoin({
       detail: this.devicesService.get(this.guid),
       sessions: this.sessionsService.list({ page: 1, size: 100, deviceGuid: this.guid }),
-      accessLogs: this.mappingsService.accessLogs({ page: 1, size: 100, deviceGuid: this.guid }),
+      accessLogs: this.httpAccessService.accessLogs({ page: 1, size: 100, deviceGuid: this.guid }),
       connections: this.tunnelsService.connections(),
     })
       .pipe(

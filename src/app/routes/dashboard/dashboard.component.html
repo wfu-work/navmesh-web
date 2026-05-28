@@ -40,7 +40,7 @@
   </div>
 
   <div class="dashboard-widgets">
-    <dashboard-traffic-trend [values]="eventTrend()" />
+    <dashboard-traffic-trend [buckets]="trafficDistribution()" />
     <dashboard-active-rules
       [offlineDevices]="devices.length - onlineDeviceCount()"
       [httpFailures]="recentFailureCount()"

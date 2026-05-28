@@ -48,13 +48,14 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
         height: 36px;
         margin-top: 2px;
         padding: 0;
-        border: 1px solid rgb(13 143 93 / 10%);
+        border: 1px solid rgb(var(--nm-primary-rgb) / 14%);
         border-radius: 12px;
-        color: #0d8f5d;
+        color: var(--nm-primary);
         font-size: 18px;
-        background: rgb(236 247 246 / 76%);
+        background: rgb(var(--nm-primary-rgb) / 8%);
         cursor: pointer;
         transition:
+          border-color 0.2s ease,
           color 0.2s ease,
           background-color 0.2s ease,
           transform 0.2s ease;
@@ -62,19 +63,21 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 
       .title-label-back:hover {
         transform: translateX(-1px);
-        color: #08724f;
-        background: rgb(213 241 235 / 88%);
+        border-color: rgb(var(--nm-primary-rgb) / 28%);
+        color: var(--nm-primary-hover);
+        background: rgb(var(--nm-primary-rgb) / 14%);
       }
 
       :host-context([data-theme='dark']) .title-label-back {
-        border-color: rgb(255 255 255 / 10%);
-        color: rgba(255, 255, 255, 0.76);
-        background: rgb(255 255 255 / 6%);
+        border-color: rgb(var(--nm-primary-rgb) / 30%);
+        color: var(--nm-primary-hover);
+        background: rgb(var(--nm-primary-rgb) / 12%);
       }
 
       :host-context([data-theme='dark']) .title-label-back:hover {
+        border-color: rgb(var(--nm-primary-rgb) / 42%);
         color: #fff;
-        background: rgb(255 255 255 / 10%);
+        background: rgb(var(--nm-primary-rgb) / 20%);
       }
 
       .title-label-content {

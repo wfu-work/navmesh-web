@@ -1,13 +1,14 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { STChange, STColumn, STColumnTag } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { finalize } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { DeviceGroup, DevicesService } from '../devices.service';
+import { DeviceGroupEditComponent } from '../group-edit/device-group-edit.component';
 
 @Component({
   selector: 'app-device-groups',
@@ -19,8 +20,8 @@ import { DeviceGroup, DevicesService } from '../devices.service';
 export class DeviceGroupsComponent implements OnInit {
   private readonly devicesService = inject(DevicesService);
   private readonly router = inject(Router);
-  private readonly fb = inject(NonNullableFormBuilder);
   private readonly message = inject(NzMessageService);
+  private readonly modalService = inject(NzModalService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   protected q = {
@@ -33,20 +34,6 @@ export class DeviceGroupsComponent implements OnInit {
   protected data: DeviceGroup[] = [];
   protected totalCount = 0;
   protected loading = false;
-  protected saving = false;
-  protected modalVisible = false;
-  protected editingGuid = '';
-
-  protected readonly form = this.fb.group({
-    key: ['', [Validators.required]],
-    name: ['', [Validators.required]],
-    icon: ['appstore'],
-    defaultWebPort: [0],
-    defaultDomain: [''],
-    sort: [0],
-    remark: [''],
-    status: [1],
-  });
 
   protected readonly statusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -130,7 +117,7 @@ export class DeviceGroupsComponent implements OnInit {
     {
       title: '操作',
       buttons: [
-        { icon: 'edit', click: (item) => this.openModal(item) },
+        { icon: 'edit', click: (item) => this.edit(item) },
         { icon: 'appstore', click: (item) => this.openDevices(this.groupKey(item)) },
         {
           icon: 'stop',
@@ -195,68 +182,33 @@ export class DeviceGroupsComponent implements OnInit {
     this.load();
   }
 
-  protected openModal(item?: DeviceGroup): void {
-    const row = item ? this.normalizeGroup(item) : undefined;
-    this.editingGuid = row?.guid ?? '';
-    this.form.reset({
-      key: this.groupKey(row) ?? '',
-      name: row?.name ?? '',
-      icon: this.iconLabel(row?.icon),
-      defaultWebPort: row?.defaultWebPort ?? 0,
-      defaultDomain: row?.defaultDomain ?? '',
-      sort: row?.sort ?? 0,
-      remark: row?.remark ?? '',
-      status: row?.status ?? 1,
-    });
-    if (row) {
-      this.form.controls.key.disable({ emitEvent: false });
-    } else {
-      this.form.controls.key.enable({ emitEvent: false });
-    }
-    this.modalVisible = true;
+  protected openModal(): void {
+    this.edit('new');
   }
 
-  protected save(): void {
-    if (this.saving) {
-      return;
-    }
-    if (this.form.invalid) {
-      Object.values(this.form.controls).forEach((control) => {
-        control.markAsDirty();
-        control.updateValueAndValidity();
-      });
-      return;
-    }
-    const value = this.form.getRawValue();
-    this.saving = true;
-    this.devicesService
-      .saveGroup({
-        guid: this.editingGuid || undefined,
-        key: value.key.trim(),
-        name: value.name.trim(),
-        icon: value.icon,
-        defaultWebPort: Number(value.defaultWebPort || 0),
-        defaultDomain: value.defaultDomain.trim(),
-        sort: Number(value.sort || 0),
-        remark: value.remark.trim(),
-        status: value.status,
-      })
-      .pipe(
-        finalize(() => {
-          this.saving = false;
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: () => {
-          this.message.success('设备类型已保存');
-          this.saving = false;
-          this.modalVisible = false;
-          this.cdr.detectChanges();
-          this.load();
-        },
-        error: () => this.message.error('设备类型保存失败'),
-      });
+  protected edit(item: DeviceGroup | 'new'): void {
+    const row = item === 'new' ? undefined : this.normalizeGroup(item);
+    const modal = this.modalService.create({
+      nzTitle: row ? '编辑设备类型' : '新建设备类型',
+      nzContent: DeviceGroupEditComponent,
+      nzOkText: '保存',
+      nzCancelText: '取消',
+      nzMaskClosable: false,
+      nzWidth: 720,
+      nzData: row,
+      nzOnOk: (componentInstance) => {
+        componentInstance.submit().subscribe({
+          next: (success) => {
+            if (!success) return;
+            modal.close();
+            this.message.success('设备类型已保存');
+            this.load();
+          },
+          error: (error) => this.message.error(error.message || '设备类型保存失败'),
+        });
+        return false;
+      },
+    });
   }
 
   protected disable(item: DeviceGroup): void {
@@ -271,11 +223,6 @@ export class DeviceGroupsComponent implements OnInit {
 
   protected openDevices(type: string): void {
     this.router.navigate(['/devices/list'], { queryParams: { type } });
-  }
-
-  protected selectIcon(icon: string): void {
-    this.form.controls.icon.setValue(icon);
-    this.form.controls.icon.markAsDirty();
   }
 
   private normalizeGroup(item: DeviceGroup): DeviceGroup {

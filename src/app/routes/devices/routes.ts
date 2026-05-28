@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 
+import { DeviceAccessLogsComponent } from './access-logs/device-access-logs.component';
 import { DeviceConfigComponent } from './config/device-config.component';
 import { DeviceDetailComponent } from './detail/device-detail.component';
 import { DeviceEditComponent } from './edit/device-edit.component';
@@ -14,6 +15,7 @@ export const routes: Routes = [
     data: { title: '设备列表' },
   },
   { path: 'groups', component: DeviceGroupsComponent, data: { title: '设备类型' } },
+  { path: 'access-logs', component: DeviceAccessLogsComponent, data: { title: '访问日志' } },
   {
     path: 'edit/:guid',
     component: DeviceEditComponent,

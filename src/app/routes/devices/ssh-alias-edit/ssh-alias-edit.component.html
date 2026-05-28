@@ -1,0 +1,15 @@
+<form nz-form [formGroup]="form" nzLayout="vertical">
+  <nz-form-item>
+    <nz-form-label nzRequired>设备别名</nz-form-label>
+    <nz-form-control nzErrorTip="请输入设备别名">
+      <input nz-input formControlName="alias" placeholder="例如 test01" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label nzRequired>SSH 域名</nz-form-label>
+    <nz-form-control nzErrorTip="请输入 SSH 域名">
+      <input nz-input formControlName="domain" placeholder="例如 test01.ssh.navfirst.com" />
+    </nz-form-control>
+  </nz-form-item>
+</form>

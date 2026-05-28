@@ -1,0 +1,79 @@
+<form nz-form [formGroup]="form" nzLayout="vertical">
+  <div class="form-grid">
+    <nz-form-item>
+      <nz-form-label nzRequired>类型标识</nz-form-label>
+      <nz-form-control nzErrorTip="请输入类型标识">
+        <input nz-input formControlName="key" placeholder="例如 ssh、rain" [readonly]="!!row" />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label nzRequired>类型名称</nz-form-label>
+      <nz-form-control nzErrorTip="请输入类型名称">
+        <input nz-input formControlName="name" placeholder="例如 SSH 接入、气象雨量" />
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+
+  <nz-form-item>
+    <nz-form-label>类型图标</nz-form-label>
+    <nz-form-control>
+      <div class="type-icon-grid" role="radiogroup" aria-label="类型图标">
+        @for (option of iconOptions; track option.value) {
+          <button
+            type="button"
+            class="type-icon-option"
+            [class.is-selected]="form.controls.icon.value === option.value"
+            [attr.aria-checked]="form.controls.icon.value === option.value"
+            [title]="option.value"
+            role="radio"
+            (click)="selectIcon(option.value)"
+          >
+            <nz-icon [nzType]="option.value" />
+            <code>{{ option.value }}</code>
+          </button>
+        }
+      </div>
+    </nz-form-control>
+  </nz-form-item>
+
+  <div class="form-grid">
+    <nz-form-item>
+      <nz-form-label>默认 Web 端口</nz-form-label>
+      <nz-form-control>
+        <nz-input-number class="w-100" formControlName="defaultWebPort" [nzMin]="0" [nzMax]="65535" />
+      </nz-form-control>
+    </nz-form-item>
+
+    <nz-form-item>
+      <nz-form-label>排序</nz-form-label>
+      <nz-form-control>
+        <nz-input-number class="w-100" formControlName="sort" [nzMin]="0" [nzMax]="9999" />
+      </nz-form-control>
+    </nz-form-item>
+  </div>
+
+  <nz-form-item>
+    <nz-form-label>默认映射域名</nz-form-label>
+    <nz-form-control>
+      <input nz-input formControlName="defaultDomain" placeholder="例如 vpn-rain.navfirst.com" />
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>说明</nz-form-label>
+    <nz-form-control>
+      <textarea nz-input rows="3" formControlName="remark" placeholder="用于描述这类设备的接入默认值"></textarea>
+    </nz-form-control>
+  </nz-form-item>
+
+  <nz-form-item>
+    <nz-form-label>状态</nz-form-label>
+    <nz-form-control>
+      <nz-select formControlName="status">
+        <nz-option [nzValue]="1" nzLabel="启用" />
+        <nz-option [nzValue]="0" nzLabel="禁用" />
+      </nz-select>
+    </nz-form-control>
+  </nz-form-item>
+</form>

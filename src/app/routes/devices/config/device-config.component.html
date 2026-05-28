@@ -117,7 +117,7 @@
           <div class="detail-card-title">
             <div>
               <h2>HTTP 映射</h2>
-              <p>将外部 Host 转发到当前设备的本地 HTTP 服务。</p>
+              <p>将访问域名转发到当前设备的本地 HTTP 服务。</p>
             </div>
             <div class="access-actions">
               <button nz-button (click)="openLogs()">
@@ -152,7 +152,7 @@
                       nzType="link"
                       nzDanger
                       nz-popconfirm
-                      nzPopconfirmTitle="禁用后该 Host 将不再转发到设备，确认继续？"
+                      nzPopconfirmTitle="禁用后该访问域名将不再转发到设备，确认继续？"
                       (nzOnConfirm)="disableMapping(mapping)"
                     >
                       <nz-icon nzType="stop" />
@@ -167,92 +167,6 @@
         </nz-card>
       </div>
 
-      <nz-modal
-        [(nzVisible)]="sshModalVisible"
-        nzTitle="SSH 接入配置"
-        [nzOkLoading]="sshSaving"
-        (nzOnCancel)="sshModalVisible = false"
-        (nzOnOk)="saveSshAlias()"
-      >
-        <ng-container *nzModalContent>
-          <form nz-form [formGroup]="sshForm" nzLayout="vertical">
-            <nz-form-item>
-              <nz-form-label nzRequired>设备别名</nz-form-label>
-              <nz-form-control nzErrorTip="请输入设备别名">
-                <input nz-input formControlName="alias" placeholder="例如 test01" />
-              </nz-form-control>
-            </nz-form-item>
-
-            <nz-form-item>
-              <nz-form-label nzRequired>SSH 域名</nz-form-label>
-              <nz-form-control nzErrorTip="请输入 SSH 域名">
-                <input nz-input formControlName="domain" placeholder="例如 test01.ssh.navfirst.com" />
-              </nz-form-control>
-            </nz-form-item>
-          </form>
-        </ng-container>
-      </nz-modal>
-
-      <nz-modal
-        [(nzVisible)]="mappingModalVisible"
-        nzTitle="HTTP 映射"
-        [nzOkLoading]="mappingSaving"
-        (nzOnCancel)="mappingModalVisible = false"
-        (nzOnOk)="saveMapping()"
-      >
-        <ng-container *nzModalContent>
-          <form nz-form [formGroup]="mappingForm" nzLayout="vertical">
-            <nz-form-item>
-              <nz-form-label nzRequired>映射名称</nz-form-label>
-              <nz-form-control nzErrorTip="请输入映射名称">
-                <input nz-input formControlName="name" placeholder="例如 nas-web" />
-              </nz-form-control>
-            </nz-form-item>
-
-            <nz-form-item>
-              <nz-form-label nzRequired>外部 Host</nz-form-label>
-              <nz-form-control nzErrorTip="请输入外部 Host">
-                <input nz-input formControlName="publicHost" placeholder="例如 nas.example.com" />
-              </nz-form-control>
-            </nz-form-item>
-
-            <div class="form-grid">
-              <nz-form-item>
-                <nz-form-label nzRequired>目标主机</nz-form-label>
-                <nz-form-control nzErrorTip="请输入目标主机">
-                  <input nz-input formControlName="targetHost" placeholder="127.0.0.1" />
-                </nz-form-control>
-              </nz-form-item>
-
-              <nz-form-item>
-                <nz-form-label nzRequired>目标端口</nz-form-label>
-                <nz-form-control nzErrorTip="请输入 1-65535 的端口">
-                  <nz-input-number formControlName="targetPort" [nzMin]="1" [nzMax]="65535" class="w-100" />
-                </nz-form-control>
-              </nz-form-item>
-            </div>
-
-            <div class="form-grid">
-              <nz-form-item>
-                <nz-form-label>协议</nz-form-label>
-                <nz-form-control>
-                  <nz-select formControlName="protocol">
-                    <nz-option nzValue="http" nzLabel="HTTP" />
-                    <nz-option nzValue="https" nzLabel="HTTPS" />
-                  </nz-select>
-                </nz-form-control>
-              </nz-form-item>
-
-              <nz-form-item>
-                <nz-form-label>域名类型</nz-form-label>
-                <nz-form-control>
-                  <label nz-checkbox formControlName="isCustomDomain">自定义域名</label>
-                </nz-form-control>
-              </nz-form-item>
-            </div>
-          </form>
-        </ng-container>
-      </nz-modal>
     } @else if (!loading) {
       <nz-card class="card-border detail-empty" [nzBordered]="false">
         <nz-empty nzNotFoundContent="未找到设备配置" />

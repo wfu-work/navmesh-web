@@ -51,16 +51,16 @@ interface RuleSnapshot {
         min-width: 0;
         height: 100%;
         padding: 28px 30px 26px;
-        border: 1px solid rgb(218 231 225 / 88%);
+        border: 1px solid rgb(var(--nm-primary-rgb) / 12%);
         border-radius: 22px;
         background: rgb(255 255 255 / 88%);
         box-shadow:
-          0 18px 44px rgb(55 105 119 / 8%),
+          0 18px 44px rgb(var(--nm-primary-rgb) / 8%),
           inset 0 1px 0 rgb(255 255 255 / 90%);
       }
 
       :host-context([data-theme='dark']) .rules-card {
-        border-color: rgb(255 255 255 / 6%);
+        border-color: rgb(var(--nm-primary-rgb) / 18%);
         background: linear-gradient(180deg, rgb(18 26 41 / 96%) 0%, rgb(14 20 31 / 96%) 100%);
         box-shadow:
           0 18px 44px rgb(0 0 0 / 24%),
@@ -88,7 +88,7 @@ interface RuleSnapshot {
       }
 
       .rules-more {
-        color: #4cc7b7;
+        color: var(--nm-primary);
         font-size: 22px;
         font-weight: 900;
         line-height: 1;
@@ -96,7 +96,7 @@ interface RuleSnapshot {
       }
 
       :host-context([data-theme='dark']) .rules-more {
-        color: #67d5c4;
+        color: var(--nm-primary-hover);
       }
 
       .rules-list {
@@ -117,17 +117,18 @@ interface RuleSnapshot {
         width: 10px;
         height: 10px;
         border-radius: 50%;
-        background: #49cdbd;
-        box-shadow: 0 0 0 5px rgb(73 205 189 / 12%);
+        background: var(--nm-primary);
+        box-shadow: 0 0 0 5px rgb(var(--nm-primary-rgb) / 12%);
       }
 
       :host-context([data-theme='dark']) .rule-dot {
-        box-shadow: 0 0 0 5px rgb(73 205 189 / 8%);
+        background: var(--nm-primary-hover);
+        box-shadow: 0 0 0 5px rgb(var(--nm-primary-rgb) / 12%);
       }
 
       .rule-dot-idle {
-        background: #5357d7;
-        box-shadow: 0 0 0 5px rgb(83 87 215 / 10%);
+        background: #94a3b8;
+        box-shadow: 0 0 0 5px rgb(148 163 184 / 12%);
       }
 
       .rule-dot-warning {
@@ -178,13 +179,13 @@ interface RuleSnapshot {
         align-self: center;
         margin-top: auto;
         padding-top: 34px;
-        color: #40bfac;
+        color: var(--nm-primary);
         font-size: 14px;
         font-weight: 800;
       }
 
       :host-context([data-theme='dark']) .rules-link {
-        color: #67d5c4;
+        color: var(--nm-primary-hover);
       }
 
       @media (max-width: 767px) {

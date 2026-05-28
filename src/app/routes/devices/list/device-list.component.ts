@@ -8,10 +8,11 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { Device, DeviceStatus, DeviceTypeDefault, DevicesService } from '../devices.service';
+import { HttpAccessService, PortMapping } from '../http-access.service';
 
 @Component({
   selector: 'app-device-list',
@@ -23,6 +24,7 @@ import { Device, DeviceStatus, DeviceTypeDefault, DevicesService } from '../devi
 })
 export class DeviceListComponent implements OnInit {
   private readonly devicesService = inject(DevicesService);
+  private readonly httpAccessService = inject(HttpAccessService);
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
@@ -38,6 +40,7 @@ export class DeviceListComponent implements OnInit {
 
   protected data: Device[] = [];
   protected types: DeviceTypeDefault[] = [];
+  protected mappingsByDevice = new Map<string, PortMapping[]>();
   protected totalCount = 0;
   protected loading = false;
   protected statusChanging = new Set<string>();
@@ -60,8 +63,10 @@ export class DeviceListComponent implements OnInit {
 
   protected getData(): void {
     this.loading = true;
-    this.devicesService
-      .list(this.q)
+    forkJoin({
+      devices: this.devicesService.list(this.q),
+      mappings: this.httpAccessService.list({ page: 1, size: 500, status: 1 }),
+    })
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -69,9 +74,10 @@ export class DeviceListComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: (res) => {
-          this.data = (res.data ?? []).map((item) => this.normalizeDevice(item));
-          this.totalCount = res.total ?? 0;
+        next: ({ devices, mappings }) => {
+          this.data = (devices.data ?? []).map((item) => this.normalizeDevice(item));
+          this.totalCount = devices.total ?? 0;
+          this.mappingsByDevice = this.groupMappingsByDevice((mappings.data ?? []).map((item) => this.normalizeMapping(item)));
         },
         error: () => this.message.error('设备列表加载失败'),
       });
@@ -259,6 +265,21 @@ export class DeviceListComponent implements OnInit {
     return item.guid;
   }
 
+  protected httpMappings(guid: string): PortMapping[] {
+    return this.mappingsByDevice.get(guid) ?? [];
+  }
+
+  protected mappingUrl(mapping: PortMapping): string {
+    const host = mapping.publicHost || '';
+    if (/^https?:\/\//i.test(host)) return host;
+    const protocol = String(mapping.protocol || 'http').toLowerCase() === 'https' ? 'https' : 'http';
+    return `${protocol}://${host}`;
+  }
+
+  protected mappingLabel(mapping: PortMapping): string {
+    return mapping.publicHost || mapping.name || '-';
+  }
+
   private normalizeDevice(item: Device): Device {
     return {
       ...item,
@@ -309,12 +330,40 @@ export class DeviceListComponent implements OnInit {
     };
   }
 
+  private normalizeMapping(item: PortMapping): PortMapping {
+    return {
+      ...item,
+      deviceGuid: this.firstText(item.deviceGuid, item.device_guid),
+      publicHost: this.firstText(item.publicHost, item.public_host),
+      targetHost: this.firstText(item.targetHost, item.target_host),
+      targetPort: this.firstNumber(item.targetPort, item.target_port),
+      isCustomDomain: this.firstBoolean(item.isCustomDomain, item.is_custom_domain),
+      createTime: this.firstNumber(item.createTime, item.create_time),
+      updateTime: this.firstNumber(item.updateTime, item.update_time),
+    };
+  }
+
+  private groupMappingsByDevice(mappings: PortMapping[]): Map<string, PortMapping[]> {
+    const result = new Map<string, PortMapping[]>();
+    mappings.forEach((mapping) => {
+      if (!mapping.deviceGuid || !mapping.publicHost || mapping.status === 0) return;
+      const items = result.get(mapping.deviceGuid) ?? [];
+      items.push(mapping);
+      result.set(mapping.deviceGuid, items);
+    });
+    return result;
+  }
+
   private firstText(...values: Array<string | undefined>): string {
     return values.find((value) => value !== undefined && value !== '') ?? '';
   }
 
   private firstNumber(...values: Array<number | undefined>): number {
     return values.find((value) => value !== undefined && value !== null) ?? 0;
+  }
+
+  private firstBoolean(...values: Array<boolean | undefined>): boolean {
+    return values.find((value) => value !== undefined && value !== null) ?? false;
   }
 
   private defaultProductIcon(type: string | undefined): string {

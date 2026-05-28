@@ -18,7 +18,6 @@ export const routes: Routes = [
       { path: 'dashboard', component: DashboardComponent, data: { title: '工作台' } },
       { path: 'devices', loadChildren: () => import('./devices/routes').then((m) => m.routes) },
       { path: 'events', loadChildren: () => import('./events/routes').then((m) => m.routes) },
-      { path: 'mappings', loadChildren: () => import('./mappings/routes').then((m) => m.routes) },
       { path: 'tunnels', loadChildren: () => import('./tunnels/routes').then((m) => m.routes) },
       { path: 'sessions', loadChildren: () => import('./sessions/routes').then((m) => m.routes) },
       { path: 'policies', loadChildren: () => import('./policies/routes').then((m) => m.routes) },

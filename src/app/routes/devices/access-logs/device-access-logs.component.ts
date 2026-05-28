@@ -6,18 +6,18 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { Device, DevicesService } from '../../devices/devices.service';
-import { HTTPAccessLog, MappingsService } from '../mappings.service';
+import { Device, DevicesService } from '../devices.service';
+import { HTTPAccessLog, HttpAccessService } from '../http-access.service';
 
 @Component({
-  selector: 'app-access-logs',
-  templateUrl: './access-logs.component.html',
-  styleUrls: ['../mappings.component.less'],
+  selector: 'app-device-access-logs',
+  templateUrl: './device-access-logs.component.html',
+  styleUrls: ['./device-access-logs.component.less'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [...SHARED_IMPORTS, TitleLabelComponent],
 })
-export class AccessLogsComponent implements OnInit {
-  private readonly mappingsService = inject(MappingsService);
+export class DeviceAccessLogsComponent implements OnInit {
+  private readonly httpAccessService = inject(HttpAccessService);
   private readonly devicesService = inject(DevicesService);
   private readonly route = inject(ActivatedRoute);
   private readonly message = inject(NzMessageService);
@@ -47,7 +47,7 @@ export class AccessLogsComponent implements OnInit {
   };
 
   protected readonly columns: STColumn<HTTPAccessLog>[] = [
-    { title: 'Host', index: 'host', render: 'hostRender', fixed: 'left', width: 240 },
+    { title: '访问域名', index: 'host', render: 'hostRender', fixed: 'left', width: 240 },
     { title: '方法', index: 'method', type: 'tag', tag: this.methodTag, width: 100 },
     { title: '路径', index: 'path', render: 'pathRender', width: 300 },
     { title: '状态码', index: 'statusCode', render: 'statusRender', width: 100 },
@@ -80,7 +80,7 @@ export class AccessLogsComponent implements OnInit {
   protected load(): void {
     this.loading = true;
     forkJoin({
-      logs: this.mappingsService.accessLogs(this.q),
+      logs: this.httpAccessService.accessLogs(this.q),
       devices: this.devicesService.list({ page: 1, size: 500 }),
     })
       .pipe(

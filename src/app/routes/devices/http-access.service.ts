@@ -81,36 +81,8 @@ export interface HTTPAccessLog {
   create_time?: number;
 }
 
-export interface CustomDomainQuery {
-  domain?: string;
-  mappingGuid?: string;
-  status?: string | number;
-  page?: number;
-  size?: number;
-}
-
-export interface CustomDomain {
-  id: number;
-  domain: string;
-  mappingGuid: string;
-  mapping_guid?: string;
-  verifyToken: string;
-  verify_token?: string;
-  verified: boolean;
-  status: number;
-  createTime: number;
-  create_time?: number;
-  updateTime: number;
-  update_time?: number;
-}
-
-export interface SaveCustomDomainPayload {
-  domain: string;
-  mappingGuid: string;
-}
-
 @Injectable({ providedIn: 'root' })
-export class MappingsService {
+export class HttpAccessService {
   private readonly http = inject(HttpClient);
 
   list(params?: MappingQuery): Observable<PageEntity<PortMapping>> {
@@ -131,24 +103,6 @@ export class MappingsService {
     return this.http.get<PageEntity<HTTPAccessLog>>('/http-access-logs/list', {
       params: this.cleanParams(params),
     });
-  }
-
-  customDomains(params?: CustomDomainQuery): Observable<PageEntity<CustomDomain>> {
-    return this.http.get<PageEntity<CustomDomain>>('/custom-domains/list', {
-      params: this.cleanParams(params),
-    });
-  }
-
-  saveCustomDomain(payload: SaveCustomDomainPayload): Observable<CustomDomain> {
-    return this.http.post<CustomDomain>('/custom-domains', payload);
-  }
-
-  verifyCustomDomain(domain: string, token: string): Observable<boolean> {
-    return this.http.post<boolean>(`/custom-domains/${domain}/verify`, { token });
-  }
-
-  disableCustomDomain(domain: string): Observable<boolean> {
-    return this.http.delete<boolean>(`/custom-domains/${domain}`);
   }
 
   private cleanParams(params?: object): Record<string, string | number | boolean> {

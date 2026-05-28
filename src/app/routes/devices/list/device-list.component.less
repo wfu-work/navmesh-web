@@ -306,22 +306,27 @@
 }
 
 .device-access-chips {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
   margin-top: auto;
   max-width: 100%;
 }
 
-:host ::ng-deep .device-os-chip {
-  flex: 0 0 auto;
-  min-width: 78px;
-  justify-content: center;
-}
-
-:host ::ng-deep .device-domain-chip {
+.device-domain-chip {
   justify-content: flex-start;
+  border-radius: 6px;
+  color: #389e0d;
+  background: #f6ffed;
+  text-decoration: none;
+
+  &:hover,
+  &:focus {
+    color: #237804;
+    background: #e9fbdc;
+    text-decoration: none;
+  }
 }
 
 .device-card-side {

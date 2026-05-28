@@ -92,7 +92,7 @@
 .device-edit-status-item:first-child {
   align-items: flex-start;
   padding-right: 14px;
-  border-right: 1px solid rgb(223 232 238 / 70%);
+  border-right: 1px solid rgb(var(--nm-primary-rgb) / 12%);
 }
 
 .device-edit-status-guid {
@@ -189,6 +189,41 @@
 
 .device-edit-alert {
   margin-bottom: 18px;
+}
+
+:host ::ng-deep .device-edit-alert.ant-alert-info {
+  border-color: rgb(var(--nm-primary-rgb) / 18%);
+  background: rgb(var(--nm-primary-rgb) / 8%);
+
+  .ant-alert-icon {
+    color: var(--nm-primary);
+  }
+
+  .ant-alert-message {
+    color: #223047;
+    font-weight: 760;
+  }
+
+  .ant-alert-description {
+    color: #526174;
+  }
+}
+
+:host-context([data-theme='dark']) ::ng-deep .device-edit-alert.ant-alert-info {
+  border-color: rgb(var(--nm-primary-rgb) / 32%);
+  background: rgb(var(--nm-primary-rgb) / 12%);
+
+  .ant-alert-icon {
+    color: var(--nm-primary-hover);
+  }
+
+  .ant-alert-message {
+    color: rgba(255, 255, 255, 0.9);
+  }
+
+  .ant-alert-description {
+    color: rgba(255, 255, 255, 0.62);
+  }
 }
 
 .device-edit-grid {
@@ -301,7 +336,7 @@
   .device-edit-status-item:first-child {
     padding-right: 0;
     border-right: 0;
-    border-bottom: 1px solid #e2ebe8;
+    border-bottom: 1px solid rgb(var(--nm-primary-rgb) / 12%);
     padding-bottom: 12px;
   }
 

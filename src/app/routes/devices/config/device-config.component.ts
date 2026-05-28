@@ -1,15 +1,17 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
-import { AbstractControl, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { STColumn, STColumnTag } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
+import { NzModalService } from 'ng-zorro-antd/modal';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { MappingsService, PortMapping } from '../../mappings/mappings.service';
 import { NavMeshSetting, NavMeshSettingsService } from '../../settings/settings.service';
 import { DeviceToken } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
+import { HttpMappingEditComponent } from '../mapping-edit/http-mapping-edit.component';
+import { HttpAccessService, PortMapping } from '../http-access.service';
+import { SshAliasEditComponent } from '../ssh-alias-edit/ssh-alias-edit.component';
 import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
 
 @Component({
@@ -21,36 +23,15 @@ import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
 })
 export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   private readonly sshService = inject(SSHService);
-  private readonly mappingsService = inject(MappingsService);
+  private readonly httpAccessService = inject(HttpAccessService);
   private readonly settingsService = inject(NavMeshSettingsService);
-  private readonly fb = inject(NonNullableFormBuilder);
+  private readonly modalService = inject(NzModalService);
 
   protected tokens: DeviceToken[] = [];
   protected sshAliases: SSHAlias[] = [];
   protected sshEntrypoints: SSHEntrypoint[] = [];
   protected mappings: PortMapping[] = [];
   protected settings: NavMeshSetting[] = [];
-  protected sshModalVisible = false;
-  protected sshSaving = false;
-  protected mappingModalVisible = false;
-  protected mappingSaving = false;
-
-  protected readonly sshForm = this.fb.group({
-    alias: ['', [Validators.required]],
-    domain: ['', [Validators.required]],
-    entrypointIp: [''],
-    status: [1],
-  });
-
-  protected readonly mappingForm = this.fb.group({
-    guid: [''],
-    name: ['', [Validators.required]],
-    publicHost: ['', [Validators.required]],
-    targetHost: ['127.0.0.1', [Validators.required]],
-    targetPort: [80, [Validators.required, Validators.min(1), Validators.max(65535)]],
-    protocol: ['http', [Validators.required]],
-    isCustomDomain: [false],
-  });
 
   protected readonly tokenStatusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -122,7 +103,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       detail: this.devicesService.get(this.guid),
       sshAliases: this.sshService.listAliases(),
       sshEntrypoints: this.sshService.listEntrypoints(),
-      mappings: this.mappingsService.list({ page: 1, size: 100, deviceGuid: this.guid }),
+      mappings: this.httpAccessService.list({ page: 1, size: 100, deviceGuid: this.guid }),
       settings: this.settingsService.list().pipe(catchError(() => of([] as NavMeshSetting[]))),
     })
       .pipe(
@@ -151,7 +132,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     if (item?.publicHost) {
       queryParams['host'] = item.publicHost;
     }
-    this.router.navigate(['/mappings/access-logs'], { queryParams });
+    this.router.navigate(['/devices/access-logs'], { queryParams });
   }
 
   protected rotateToken(token: DeviceToken): void {
@@ -189,44 +170,32 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
 
   protected openSshModal(item?: SSHAlias): void {
     const alias = item ? this.normalizeAlias(item) : this.sshAliases[0];
-    this.sshForm.reset({
-      alias: alias?.alias || this.device?.sncode || this.device?.alias || '',
-      domain: alias?.domain || this.defaultSshDomain(),
-      entrypointIp: alias?.entrypointIp || this.defaultEntrypointIp(),
-      status: alias?.status ?? 1,
-    });
-    this.sshModalVisible = true;
-  }
-
-  protected saveSshAlias(): void {
-    if (this.sshForm.invalid) {
-      this.markFormDirty(this.sshForm.controls);
-      return;
-    }
-    const value = this.sshForm.getRawValue();
-    this.sshSaving = true;
-    this.sshService
-      .saveAlias({
+    const modal = this.modalService.create({
+      nzTitle: 'SSH 接入配置',
+      nzContent: SshAliasEditComponent,
+      nzOkText: '保存',
+      nzCancelText: '取消',
+      nzMaskClosable: false,
+      nzData: {
         deviceGuid: this.guid,
-        alias: value.alias.trim(),
-        domain: value.domain.trim(),
-        entrypointIp: value.entrypointIp.trim(),
-        status: value.status,
-      })
-      .pipe(
-        finalize(() => {
-          this.sshSaving = false;
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: () => {
-          this.message.success('SSH 接入配置已保存');
-          this.sshModalVisible = false;
-          this.load();
-        },
-        error: () => this.message.error('SSH 接入配置保存失败'),
-      });
+        alias,
+        defaultAlias: this.device?.sncode || this.device?.alias || '',
+        defaultDomain: this.defaultSshDomain(),
+        defaultEntrypointIp: this.defaultEntrypointIp(),
+      },
+      nzOnOk: (componentInstance) => {
+        componentInstance.submit().subscribe({
+          next: (success) => {
+            if (!success) return;
+            modal.close();
+            this.message.success('SSH 接入配置已保存');
+            this.load();
+          },
+          error: (error) => this.message.error(error.message || 'SSH 接入配置保存失败'),
+        });
+        return false;
+      },
+    });
   }
 
   protected disableSshAlias(item: SSHAlias): void {
@@ -241,55 +210,35 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
 
   protected openMappingModal(item?: PortMapping): void {
     const mapping = item ? this.normalizeMapping(item) : undefined;
-    this.mappingForm.reset({
-      guid: mapping?.guid ?? '',
-      name: mapping?.name || this.device?.alias || this.device?.hostname || '',
-      publicHost: mapping?.publicHost || this.device?.webDomain || '',
-      targetHost: mapping?.targetHost || '127.0.0.1',
-      targetPort: mapping?.targetPort || this.device?.webPort || 80,
-      protocol: mapping?.protocol || 'http',
-      isCustomDomain: mapping?.isCustomDomain ?? Boolean(this.device?.webDomain),
-    });
-    this.mappingModalVisible = true;
-  }
-
-  protected saveMapping(): void {
-    if (this.mappingForm.invalid) {
-      this.markFormDirty(this.mappingForm.controls);
-      return;
-    }
-    const value = this.mappingForm.getRawValue();
-    this.mappingSaving = true;
-    this.mappingsService
-      .save({
-        guid: value.guid || undefined,
+    const modal = this.modalService.create({
+      nzTitle: mapping ? '编辑 HTTP 映射' : '新增 HTTP 映射',
+      nzContent: HttpMappingEditComponent,
+      nzOkText: '保存',
+      nzCancelText: '取消',
+      nzMaskClosable: false,
+      nzWidth: 640,
+      nzData: {
         deviceGuid: this.guid,
-        name: value.name.trim(),
-        publicHost: value.publicHost.trim(),
-        targetHost: value.targetHost.trim(),
-        targetPort: Number(value.targetPort),
-        protocol: value.protocol,
-        isCustomDomain: value.isCustomDomain,
-        status: 1,
-      })
-      .pipe(
-        finalize(() => {
-          this.mappingSaving = false;
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: () => {
-          this.message.success('HTTP 映射已保存');
-          this.mappingModalVisible = false;
-          this.load();
-        },
-        error: () => this.message.error('HTTP 映射保存失败'),
-      });
+        device: this.device,
+        mapping,
+      },
+      nzOnOk: (componentInstance) => {
+        componentInstance.submit().subscribe({
+          next: (success) => {
+            if (!success) return;
+            modal.close();
+            this.message.success('HTTP 映射已保存');
+            this.load();
+          },
+          error: (error) => this.message.error(error.message || 'HTTP 映射保存失败'),
+        });
+        return false;
+      },
+    });
   }
 
   protected disableMapping(item: PortMapping): void {
-    this.mappingsService.disable(item.guid).subscribe({
+    this.httpAccessService.disable(item.guid).subscribe({
       next: () => {
         this.message.success('HTTP 映射已禁用');
         this.load();
@@ -311,7 +260,6 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   protected entrypointHint(): string {
-    if (this.sshForm.controls.entrypointIp.value) return '已选择入口 IP';
     if (this.availableSshEntrypoints().length > 0) return '未选择时后台会自动分配可用入口 IP';
     return '暂无可用入口 IP，保存后会先生成 SSH 域名，待配置入口后再自动绑定';
   }
@@ -378,13 +326,6 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       createTime: this.firstNumber(token.createTime, token.create_time),
       updateTime: this.firstNumber(token.updateTime, token.update_time),
     };
-  }
-
-  private markFormDirty(controls: Record<string, AbstractControl>): void {
-    Object.values(controls).forEach((control) => {
-      control.markAsDirty();
-      control.updateValueAndValidity();
-    });
   }
 
   private defaultEntrypointIp(): string {

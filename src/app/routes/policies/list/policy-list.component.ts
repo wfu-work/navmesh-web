@@ -7,7 +7,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { Device, DeviceGroup, DevicesService } from '../../devices/devices.service';
-import { MappingsService, PortMapping } from '../../mappings/mappings.service';
+import { HttpAccessService, PortMapping } from '../../devices/http-access.service';
 import { AccessPolicy, PoliciesService } from '../policies.service';
 
 @Component({
@@ -20,7 +20,7 @@ import { AccessPolicy, PoliciesService } from '../policies.service';
 export class PolicyListComponent implements OnInit {
   private readonly policiesService = inject(PoliciesService);
   private readonly devicesService = inject(DevicesService);
-  private readonly mappingsService = inject(MappingsService);
+  private readonly httpAccessService = inject(HttpAccessService);
   private readonly fb = inject(NonNullableFormBuilder);
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -108,7 +108,7 @@ export class PolicyListComponent implements OnInit {
       policies: this.policiesService.list(this.q),
       devices: this.devicesService.list({ page: 1, size: 500 }),
       groups: this.devicesService.groups({ page: 1, size: 500, status: 1 }),
-      mappings: this.mappingsService.list({ page: 1, size: 500 }),
+      mappings: this.httpAccessService.list({ page: 1, size: 500 }),
     })
       .pipe(
         finalize(() => {

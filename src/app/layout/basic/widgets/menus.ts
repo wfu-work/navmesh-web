@@ -47,6 +47,9 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
               <li nz-menu-item nzMatchRouter routerLink="/devices/groups">
                 <span>设备类型</span>
               </li>
+              <li nz-menu-item nzMatchRouter routerLink="/devices/access-logs">
+                <span>访问日志</span>
+              </li>
             </ul>
           </li>
           <li nz-submenu nzTitle="隧道会话" nzIcon="partition">

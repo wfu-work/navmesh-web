@@ -107,15 +107,18 @@
               </dl>
 
               <div class="device-access-chips">
-                <nz-tag class="device-id-chip device-os-chip" nzColor="blue">
-                  <nz-icon [nzType]="osIcon(item.os)" />
-                  <span>{{ osLabel(item.os) }}</span>
-                </nz-tag>
-                @if (item.webDomain) {
-                  <nz-tag class="device-id-chip device-domain-chip" nzColor="green">
+                @for (mapping of httpMappings(item.guid); track mapping.guid) {
+                  <a
+                    class="device-id-chip device-domain-chip"
+                    [href]="mappingUrl(mapping)"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    [title]="mappingUrl(mapping)"
+                    (click)="$event.stopPropagation()"
+                  >
                     <nz-icon nzType="api" />
-                    <span>{{ item.webDomain }}</span>
-                  </nz-tag>
+                    <span>{{ mappingLabel(mapping) }}</span>
+                  </a>
                 }
               </div>
             </div>

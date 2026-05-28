@@ -6,12 +6,13 @@ import { PanelComponent } from 'src/app/shared/components/panel/panel.component'
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { Device, DevicesService } from '../devices/devices.service';
+import { HTTPAccessLog, HttpAccessService, PortMapping } from '../devices/http-access.service';
 import { EventItem, EventsService, isOpenEventStatus } from '../events/events.service';
-import { HTTPAccessLog, MappingsService, PortMapping } from '../mappings/mappings.service';
 import { SessionsService, TunnelSession } from '../sessions/sessions.service';
 import { TunnelConnection, TunnelsService } from '../tunnels/tunnels.service';
 import { DashboardActiveRulesComponent } from './widgets/active-rules';
 import { DashboardTrafficTrendComponent } from './widgets/traffic-trend';
+import type { TrafficDistributionBucket } from './widgets/traffic-trend';
 
 @Component({
   selector: 'app-dashboard',
@@ -29,7 +30,7 @@ import { DashboardTrafficTrendComponent } from './widgets/traffic-trend';
 export class DashboardComponent implements OnInit {
   private readonly devicesService = inject(DevicesService);
   private readonly tunnelsService = inject(TunnelsService);
-  private readonly mappingsService = inject(MappingsService);
+  private readonly httpAccessService = inject(HttpAccessService);
   private readonly sessionsService = inject(SessionsService);
   private readonly eventsService = inject(EventsService);
   private readonly message = inject(NzMessageService);
@@ -52,10 +53,10 @@ export class DashboardComponent implements OnInit {
     forkJoin({
       devices: this.devicesService.list({ page: 1, size: 500 }),
       connections: this.tunnelsService.connections(),
-      mappings: this.mappingsService.list({ page: 1, size: 500 }),
+      mappings: this.httpAccessService.list({ page: 1, size: 500 }),
       sessions: this.sessionsService.list({ page: 1, size: 100 }),
       events: this.eventsService.list({ page: 1, size: 100 }),
-      accessLogs: this.mappingsService.accessLogs({ page: 1, size: 100 }),
+      accessLogs: this.httpAccessService.accessLogs({ page: 1, size: 100 }),
     })
       .pipe(
         finalize(() => {
@@ -96,22 +97,54 @@ export class DashboardComponent implements OnInit {
     return this.accessLogs.filter((item) => this.statusCode(item) >= 500 || item.errorMessage || item.error_message).length;
   }
 
-  protected eventTrend(): number[] {
-    const buckets = Array.from({ length: 8 }, () => 0);
+  protected trafficDistribution(): TrafficDistributionBucket[] {
+    const bucketCount = 8;
+    const buckets = Array.from({ length: bucketCount }, (_, index) => ({
+      label: '',
+      inbound: 0,
+      outbound: 0,
+      index,
+    }));
     const now = Date.now();
     const windowMs = 60 * 60 * 1000;
-    const bucketMs = windowMs / buckets.length;
-    this.events.forEach((item) => {
-      const time = item.occurredAt || item.createTime || item.updateTime || 0;
+    const bucketMs = windowMs / bucketCount;
+
+    buckets.forEach((bucket) => {
+      const time = now - windowMs + bucket.index * bucketMs;
+      bucket.label = this.formatHourMinute(time);
+    });
+
+    this.accessLogs.forEach((item) => {
+      const time = this.logTime(item);
       const age = now - time;
       if (age < 0 || age > windowMs) return;
-      const index = Math.min(buckets.length - 1, Math.floor((windowMs - age) / bucketMs));
-      buckets[index] += 1;
+      const index = Math.min(bucketCount - 1, Math.floor((windowMs - age) / bucketMs));
+      buckets[index].inbound += this.bytesIn(item);
+      buckets[index].outbound += this.bytesOut(item);
     });
+
     return buckets;
   }
 
   private statusCode(item: HTTPAccessLog): number {
     return Number(item.statusCode ?? item.status_code ?? 0);
+  }
+
+  private logTime(item: HTTPAccessLog): number {
+    const time = Number(item.createTime ?? item.create_time ?? 0);
+    return time > 0 && time < 1000000000000 ? time * 1000 : time;
+  }
+
+  private bytesIn(item: HTTPAccessLog): number {
+    return Number(item.bytesIn ?? item.bytes_in ?? 0);
+  }
+
+  private bytesOut(item: HTTPAccessLog): number {
+    return Number(item.bytesOut ?? item.bytes_out ?? 0);
+  }
+
+  private formatHourMinute(time: number): string {
+    const date = new Date(time);
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
   }
 }

@@ -43,9 +43,9 @@
   align-items: center;
   min-width: 0;
   padding: 14px 16px;
-  border: 1px solid #e1ebe8;
+  border: 1px solid rgb(var(--nm-primary-rgb) / 12%);
   border-radius: 8px;
-  background: #fbfdfc;
+  background: rgb(var(--nm-primary-rgb) / 4%);
 
   > div:first-child {
     display: grid;
@@ -74,8 +74,8 @@
 }
 
 :host-context([data-theme='dark']) .access-list-item {
-  border-color: rgb(255 255 255 / 8%);
-  background: rgb(255 255 255 / 4%);
+  border-color: rgb(var(--nm-primary-rgb) / 20%);
+  background: rgb(var(--nm-primary-rgb) / 8%);
 }
 
 :host-context([data-theme='dark']) .access-list-item strong {
@@ -97,17 +97,19 @@
   max-width: min(100%, 220px);
   overflow: hidden;
   padding: 2px 8px;
+  border: 1px solid rgb(var(--nm-primary-rgb) / 10%);
   border-radius: 6px;
   color: #405165;
   text-overflow: ellipsis;
   vertical-align: middle;
   white-space: nowrap;
-  background: #f1f5f4;
+  background: rgb(var(--nm-primary-rgb) / 7%);
 }
 
 :host-context([data-theme='dark']) .token-secret-inline {
+  border-color: rgb(var(--nm-primary-rgb) / 22%);
   color: rgba(255, 255, 255, 0.72);
-  background: rgb(255 255 255 / 8%);
+  background: rgb(var(--nm-primary-rgb) / 12%);
 }
 
 .ssh-command-inline {
@@ -115,15 +117,17 @@
   max-width: 100%;
   overflow-x: auto;
   padding: 5px 8px;
+  border: 1px solid rgb(var(--nm-primary-rgb) / 10%);
   border-radius: 6px;
   color: #405165;
   white-space: nowrap;
-  background: #f1f5f4;
+  background: rgb(var(--nm-primary-rgb) / 7%);
 }
 
 :host-context([data-theme='dark']) .ssh-command-inline {
+  border-color: rgb(var(--nm-primary-rgb) / 22%);
   color: rgba(255, 255, 255, 0.72);
-  background: rgb(255 255 255 / 8%);
+  background: rgb(var(--nm-primary-rgb) / 12%);
 }
 
 :host ::ng-deep {
