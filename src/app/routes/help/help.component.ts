@@ -57,7 +57,7 @@ export class HelpComponent {
   protected readonly steps: HelpStep[] = [
     {
       title: '安装并启动客户端',
-      description: '优先使用在线安装脚本；内网环境可下载二进制后手动启动。',
+      description: '优先使用 Release 在线安装脚本；内网环境可使用自建下载镜像。',
     },
     {
       title: '确认设备上线',
@@ -93,7 +93,16 @@ export class HelpComponent {
   ];
 
   protected readonly installCommand = [
-    'curl -fsSL https://raw.githubusercontent.com/wfu-work/navmesh-go/main/deploy/install-client.sh | sudo sh -s -- \\',
+    'curl -fsSL https://github.com/wfu-work/navmesh-go/releases/latest/download/install-client.sh | sudo sh -s -- \\',
+    '  --server navmesh.navfirst.com \\',
+    '  --api https://navmesh.navfirst.com \\',
+    '  --port 3008 \\',
+    '  --token navfirst@2020',
+  ].join('\n');
+
+  protected readonly mirrorInstallCommand = [
+    'curl -fsSL https://navmesh.navfirst.com/download/install-client.sh | sudo sh -s -- \\',
+    '  --download-base https://navmesh.navfirst.com/download \\',
     '  --server navmesh.navfirst.com \\',
     '  --api https://navmesh.navfirst.com \\',
     '  --port 3008 \\',
@@ -102,13 +111,11 @@ export class HelpComponent {
 
   protected readonly manualCommand = [
     'navmesh-client',
-    '-server tunnel.navfirst.com',
+    '-server navmesh.navfirst.com',
+    '-api https://navmesh.navfirst.com',
     '-port 3008',
-    '-token <device-token>',
-    '-sncode test01',
-    '-type rain',
+    '-token navfirst@2020',
     '-sshPort 22',
-    '-webPort 7090',
   ].join(' ');
 
   protected readonly installPaths = [

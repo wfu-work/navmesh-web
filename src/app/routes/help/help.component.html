@@ -17,12 +17,16 @@
       <div class="guide-section-head">
         <div>
           <h2>navmesh-client 在线安装</h2>
-          <p>Linux 设备推荐使用在线安装脚本。脚本会下载对应平台的客户端二进制，安装到系统目录，并创建 systemd 服务。</p>
+          <p>Linux 设备推荐使用 GitHub Release 中的在线安装脚本。脚本会下载对应平台的裸二进制，安装到系统目录，并创建 systemd 服务。</p>
         </div>
         <nz-tag nzColor="green">Recommended</nz-tag>
       </div>
 
       <pre class="guide-command"><code class="command-code">{{ installCommand }}</code></pre>
+
+      <p class="guide-copy">如果设备无法稳定访问 GitHub，可以把 <span class="inline-code">install-client.sh</span> 和对应平台二进制同步到自己的下载域名：</p>
+
+      <pre class="guide-command"><code class="command-code">{{ mirrorInstallCommand }}</code></pre>
 
       <div class="guide-install-meta">
         @for (path of installPaths; track path) {
@@ -56,7 +60,7 @@
       <div class="guide-section-head">
         <div>
           <h2>手动启动示例</h2>
-          <p>边缘客户端不使用 YAML 配置文件，启动参数会写入 systemd ExecStart 或命令行。</p>
+          <p>边缘客户端不使用 YAML 配置文件。设备号、别名、备注和类型都可以后续在管理端在线修改。</p>
         </div>
         <nz-tag nzColor="gold">CLI</nz-tag>
       </div>
@@ -67,7 +71,7 @@
         <span><b class="inline-code">-server</b> 隧道服务地址</span>
         <span><b class="inline-code">-api</b> 管理 API 地址</span>
         <span><b class="inline-code">-token</b> 首次注册令牌</span>
-        <span><b class="inline-code">-sncode</b> 设备号，可后续在线修改</span>
+        <span><b class="inline-code">navmesh-client.json</b> 保存设备专属 Token</span>
       </div>
     </nz-card>
 
