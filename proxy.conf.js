@@ -6,8 +6,16 @@
  * Note: The proxy is only valid for real requests, Mock does not actually generate requests, so the priority of Mock will be higher than the proxy
  */
 module.exports = {
-  '/api/': {
+  '/dev/': {
     target: 'http://127.0.0.1:3007/api/',
+    secure: false,
+    pathRewrite: {
+      '^/dev/': '',
+    },
+    changeOrigin: true,
+  },
+  '/api/': {
+    target: 'https://navmesh.navfirst.com/api/',
     secure: false,
     pathRewrite: {
       '^/api/': '',
