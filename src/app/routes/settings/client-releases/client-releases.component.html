@@ -1,0 +1,148 @@
+<section class="settings-page">
+  <div class="settings-header">
+    <title-label
+      title="客户端发布"
+      description="上传 navmesh-client 裸二进制，并作为设备在线升级和 download-base 的下载源。"
+    />
+    <div class="header-actions">
+      <button nz-button [nzLoading]="loading" (click)="load()">
+        <nz-icon nzType="reload" />
+        刷新
+      </button>
+    </div>
+  </div>
+
+  <div class="settings-grid">
+    <nz-card class="card-border settings-wide" [nzBordered]="false">
+      <div class="settings-section-head">
+        <div>
+          <h2>上传二进制</h2>
+          <p>文件名建议使用 navmesh-client-linux-amd64 这类格式；未填写系统和架构时会从文件名自动识别。</p>
+        </div>
+        <nz-tag nzColor="blue">Release</nz-tag>
+      </div>
+
+      <form nz-form [formGroup]="form" nzLayout="vertical" (ngSubmit)="upload()">
+        <div class="form-grid">
+          <nz-form-item>
+            <nz-form-label nzRequired>版本号</nz-form-label>
+            <nz-form-control nzErrorTip="请输入版本号">
+              <input nz-input formControlName="version" placeholder="v0.0.2" />
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>二进制文件</nz-form-label>
+            <nz-form-control>
+              <input #releaseFileInput class="release-file-input" type="file" (change)="onFileChange($event)" />
+              <div class="field-note">{{ file?.name || '尚未选择文件' }}</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>目标系统</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="os" nzAllowClear nzPlaceHolder="自动识别">
+                <nz-option nzValue="linux" nzLabel="linux" />
+                <nz-option nzValue="darwin" nzLabel="darwin" />
+                <nz-option nzValue="windows" nzLabel="windows" />
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>目标架构</nz-form-label>
+            <nz-form-control>
+              <nz-select formControlName="arch" nzAllowClear nzPlaceHolder="自动识别">
+                <nz-option nzValue="amd64" nzLabel="amd64" />
+                <nz-option nzValue="arm64" nzLabel="arm64" />
+              </nz-select>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
+
+        <nz-form-item>
+          <nz-form-label>自定义下载地址</nz-form-label>
+          <nz-form-control>
+            <input nz-input formControlName="downloadUrl" placeholder="留空则使用 /api/downloads/{fileName}" />
+            <div class="field-note">使用自建 CDN 时可填写；留空时服务端会按 client_download_base 或当前 API 域名生成下载地址。</div>
+          </nz-form-control>
+        </nz-form-item>
+
+        <div class="release-upload-actions">
+          <button type="submit" nz-button nzType="primary" [nzLoading]="uploading">
+            <nz-icon nzType="upload" />
+            上传发布
+          </button>
+        </div>
+      </form>
+    </nz-card>
+  </div>
+
+  <nz-card class="card-border release-table-card" [nzBordered]="false">
+    <div class="release-toolbar">
+      <h2>安装包列表 <span>{{ total }} 个</span></h2>
+      <div class="release-toolbar-actions">
+        <nz-select [(ngModel)]="q.os" nzAllowClear nzPlaceHolder="系统" (ngModelChange)="q.page = 1; load()">
+          <nz-option nzValue="linux" nzLabel="linux" />
+          <nz-option nzValue="darwin" nzLabel="darwin" />
+          <nz-option nzValue="windows" nzLabel="windows" />
+        </nz-select>
+        <nz-select [(ngModel)]="q.arch" nzAllowClear nzPlaceHolder="架构" (ngModelChange)="q.page = 1; load()">
+          <nz-option nzValue="amd64" nzLabel="amd64" />
+          <nz-option nzValue="arm64" nzLabel="arm64" />
+        </nz-select>
+        <button type="button" nz-button nzType="primary" (click)="q.page = 1; load()">查询</button>
+        <button type="button" nz-button (click)="resetSearch()">重置</button>
+      </div>
+    </div>
+
+    <nz-table
+      #releaseTable
+      [nzData]="releases"
+      [nzLoading]="loading"
+      [nzFrontPagination]="false"
+      [nzTotal]="total"
+      [nzPageIndex]="q.page"
+      [nzPageSize]="q.size"
+      (nzPageIndexChange)="q.page = $event; load()"
+      (nzPageSizeChange)="q.size = $event; q.page = 1; load()"
+    >
+      <thead>
+        <tr>
+          <th>文件</th>
+          <th>版本</th>
+          <th>平台</th>
+          <th>大小</th>
+          <th>状态</th>
+          <th>更新时间</th>
+          <th>下载</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of releaseTable.data; track item.guid) {
+          <tr>
+            <td>
+              <div class="release-file-cell">
+                <strong>{{ item.fileName }}</strong>
+                <span>{{ item.sha256 }}</span>
+              </div>
+            </td>
+            <td>{{ item.version || '-' }}</td>
+            <td><nz-tag>{{ item.os }}/{{ item.arch }}</nz-tag></td>
+            <td>{{ formatBytes(item.size) }}</td>
+            <td>
+              <nz-tag [nzColor]="item.status === 1 ? 'success' : 'default'">{{ statusText(item.status) }}</nz-tag>
+            </td>
+            <td>{{ updateTime(item) ? (updateTime(item) | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</td>
+            <td>
+              <a nz-button nzType="link" [href]="downloadHref(item)" target="_blank" rel="noopener">
+                <nz-icon nzType="download" />
+              </a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </nz-table>
+  </nz-card>
+</section>

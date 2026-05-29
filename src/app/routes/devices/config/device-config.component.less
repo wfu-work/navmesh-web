@@ -19,6 +19,11 @@
   line-height: 1.5;
 }
 
+.upgrade-current-version {
+  color: #445469 !important;
+  font-weight: 760 !important;
+}
+
 :host-context([data-theme='dark']) .detail-card-title p {
   color: rgba(255, 255, 255, 0.54);
 }
@@ -29,6 +34,51 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.upgrade-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  gap: 10px;
+  align-items: stretch;
+  justify-content: flex-end;
+  min-width: min(100%, 480px);
+}
+
+.upgrade-release-select {
+  flex: 1 1 340px;
+  width: 340px;
+  min-width: 260px;
+}
+
+.upgrade-actions button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .upgrade-release-select {
+  display: flex;
+  height: 44px;
+  align-items: stretch;
+}
+
+:host ::ng-deep .upgrade-release-select .ant-select-selector {
+  display: flex;
+  height: 44px !important;
+  min-height: 44px;
+  align-items: center;
+}
+
+:host ::ng-deep .upgrade-release-select .ant-select-selection-item,
+:host ::ng-deep .upgrade-release-select .ant-select-selection-placeholder {
+  display: flex;
+  align-items: center;
+  line-height: 1.2;
 }
 
 .access-list {
@@ -148,6 +198,18 @@
   .access-list-item,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .upgrade-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    min-width: 0;
+    justify-content: stretch;
+  }
+
+  .upgrade-release-select {
+    width: 100%;
+    min-width: 0;
   }
 
   .access-item-actions {

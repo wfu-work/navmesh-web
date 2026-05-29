@@ -108,11 +108,13 @@ import {
   FileSearchOutline,
   IdcardOutline,
   CloudSyncOutline,
+  DownloadOutline,
 } from '@ant-design/icons-angular/icons';
 
 export const ICONS_AUTO = [
   HomeOutline,
   IdcardOutline,
+  DownloadOutline,
   CloudSyncOutline,
   AndroidOutline,
   AppleOutline,

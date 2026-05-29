@@ -82,6 +82,9 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
               <li nz-menu-item nzMatchRouter routerLink="/settings/retention">
                 <span>数据保留</span>
               </li>
+              <li nz-menu-item nzMatchRouter routerLink="/settings/client-releases">
+                <span>客户端</span>
+              </li>
               <li nz-menu-item nzMatchRouter routerLink="/settings/account">
                 <span>账号安全</span>
               </li>

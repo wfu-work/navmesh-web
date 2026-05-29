@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { AccountSecurityComponent } from './account/account-security.component';
+import { ClientReleasesComponent } from './client-releases/client-releases.component';
 import { RetentionSettingsComponent } from './retention/retention-settings.component';
 import { SystemSettingsComponent } from './system/system-settings.component';
 
@@ -15,6 +16,11 @@ export const routes: Routes = [
     path: 'retention',
     component: RetentionSettingsComponent,
     data: { title: '数据保留' },
+  },
+  {
+    path: 'client-releases',
+    component: ClientReleasesComponent,
+    data: { title: '客户端发布' },
   },
   {
     path: 'account',

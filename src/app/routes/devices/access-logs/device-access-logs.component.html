@@ -30,7 +30,6 @@
           <nz-option nzValue="PATCH" nzLabel="PATCH" />
           <nz-option nzValue="DELETE" nzLabel="DELETE" />
         </nz-select>
-        <input nz-input [(ngModel)]="q.path" placeholder="路径包含" (keydown.enter)="search()" />
         <input nz-input [(ngModel)]="q.statusCode" placeholder="状态码" (keydown.enter)="search()" />
         <button nz-button nzType="primary" (click)="search()">查询</button>
         <button nz-button (click)="reset()">重置</button>

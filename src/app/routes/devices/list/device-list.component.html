@@ -87,7 +87,7 @@
                   </dd>
                 </div>
                 <div>
-                  <dt>系统</dt>
+                  <dt>系统版本</dt>
                   <dd [title]="systemLabel(item)">{{ systemLabel(item) }}</dd>
                 </div>
                 <div>
@@ -95,13 +95,13 @@
                   <dd>SSH {{ item.sshPort || '-' }} / HTTP {{ item.webPort || '-' }}</dd>
                 </div>
                 <div>
-                  <dt>外网 IP</dt>
+                  <dt>外网地址</dt>
                   <dd class="device-card-ip" [title]="externalIp(item) || '-'">
                     {{ externalIp(item) || '-' }}
                   </dd>
                 </div>
                 <div>
-                  <dt>地址</dt>
+                  <dt>网络位置</dt>
                   <dd class="device-card-location" [title]="locationLabel(item) || '-'">
                     <nz-icon nzType="environment" />
                     <span>{{ locationLabel(item) || '-' }}</span>
@@ -212,14 +212,23 @@
     </div>
   </nz-spin>
 
-  @if (totalCount > q.size) {
+  @if (totalCount > 0) {
     <div class="device-pagination">
       <nz-pagination
         [nzPageIndex]="q.page"
         [nzPageSize]="q.size"
         [nzTotal]="totalCount"
+        [nzShowSizeChanger]="true"
+        [nzShowQuickJumper]="true"
+        [nzPageSizeOptions]="[9, 12, 24, 48]"
+        [nzShowTotal]="deviceTotalTemplate"
         (nzPageIndexChange)="pageChange($event)"
+        (nzPageSizeChange)="pageSizeChange($event)"
       />
     </div>
   }
+
+  <ng-template #deviceTotalTemplate let-total let-range="range">
+    第 {{ range[0] }}-{{ range[1] }} 台，共 {{ total }} 台设备
+  </ng-template>
 </section>

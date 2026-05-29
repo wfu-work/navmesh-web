@@ -145,6 +145,22 @@
           </nz-form-item>
 
           <nz-form-item>
+            <nz-form-label>客户端下载基址</nz-form-label>
+            <nz-form-control>
+              <input nz-input formControlName="client_download_base" placeholder="https://navmesh.example.com/api/downloads" />
+              <div class="field-note">留空时按当前 API 域名生成，例如 <code>/api/downloads/navmesh-client-linux-amd64</code>。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>客户端升级</nz-form-label>
+            <nz-form-control>
+              <label nz-checkbox formControlName="client_upgrade_enabled">允许心跳下发升级任务</label>
+              <div class="field-note">关闭后已创建的升级任务会暂停下发，客户端不会自动替换二进制。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
             <nz-form-label nzRequired>会话空闲超时</nz-form-label>
             <nz-form-control nzErrorTip="请输入 Go duration，例如 30m">
               <input nz-input formControlName="session_idle_timeout" placeholder="30m" />

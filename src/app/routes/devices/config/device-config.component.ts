@@ -12,7 +12,7 @@ import {
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { NavMeshSetting, NavMeshSettingsService } from '../../settings/settings.service';
-import { DeviceStatus, DeviceToken, DeviceTypeDefault } from '../devices.service';
+import { ClientRelease, DeviceStatus, DeviceToken, DeviceTypeDefault, DeviceUpgradeTask } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 import { HttpMappingEditComponent } from '../mapping-edit/http-mapping-edit.component';
 import { HttpAccessService, PortMapping } from '../http-access.service';
@@ -38,6 +38,10 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected mappings: PortMapping[] = [];
   protected settings: NavMeshSetting[] = [];
   protected types: DeviceTypeDefault[] = [];
+  protected releases: ClientRelease[] = [];
+  protected upgradeTasks: DeviceUpgradeTask[] = [];
+  protected selectedReleaseGuid = '';
+  protected creatingUpgrade = false;
 
   protected readonly tokenStatusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -112,6 +116,8 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       mappings: this.httpAccessService.list({ page: 1, size: 100, deviceGuid: this.guid }),
       types: this.devicesService.typeDefaults().pipe(catchError(() => of([] as DeviceTypeDefault[]))),
       settings: this.settingsService.list().pipe(catchError(() => of([] as NavMeshSetting[]))),
+      releases: this.devicesService.clientReleases({ page: 1, size: 100, status: 1 }).pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 100 }))),
+      upgrades: this.devicesService.upgradeTasks(this.guid, { page: 1, size: 10 }).pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 10 }))),
     })
       .pipe(
         finalize(() => {
@@ -120,7 +126,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ detail, sshAliases, sshEntrypoints, mappings, types, settings }) => {
+        next: ({ detail, sshAliases, sshEntrypoints, mappings, types, settings, releases, upgrades }) => {
           this.device = this.normalizeDevice(detail.device);
           this.tokens = (detail.tokens ?? []).map((token) => this.normalizeToken(token));
           this.sshAliases = (sshAliases ?? [])
@@ -130,6 +136,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
           this.mappings = (mappings.data ?? []).map((item) => this.normalizeMapping(item));
           this.types = (types ?? []).map((item) => this.normalizeType(item));
           this.settings = settings ?? [];
+          this.releases = releases.data ?? [];
+          this.upgradeTasks = upgrades.data ?? [];
+          this.selectedReleaseGuid = this.compatibleReleases()[0]?.guid || '';
         },
         error: () => this.message.error('设备配置加载失败'),
       });
@@ -266,6 +275,81 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return this.sshAliases.filter((item) => item.status !== 0).length;
   }
 
+  protected createUpgradeTask(): void {
+    if (!this.guid || !this.selectedReleaseGuid) {
+      this.message.warning('请选择客户端发布版本');
+      return;
+    }
+    this.creatingUpgrade = true;
+    this.devicesService
+      .createUpgradeTask(this.guid, {
+        releaseGuid: this.selectedReleaseGuid,
+        message: '管理端下发客户端升级',
+      })
+      .pipe(
+        finalize(() => {
+          this.creatingUpgrade = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.message.success('升级任务已下发');
+          this.load();
+        },
+        error: () => this.message.error('升级任务下发失败'),
+      });
+  }
+
+  protected compatibleReleases(): ClientRelease[] {
+    const os = this.normalizePlatformValue(this.device?.os);
+    const arch = this.normalizePlatformValue(this.device?.arch);
+    return this.releases.filter((item) => {
+      const releaseOS = this.normalizePlatformValue(item.os);
+      const releaseArch = this.normalizePlatformValue(item.arch);
+      return (!os || !releaseOS || os === releaseOS) && (!arch || !releaseArch || arch === releaseArch);
+    });
+  }
+
+  protected devicePlatformText(): string {
+    const os = this.firstText(this.device?.os);
+    const arch = this.firstText(this.device?.arch);
+    return [os || '未知系统', arch || '未知架构'].join('/');
+  }
+
+  protected releaseNotFoundText(): string {
+    if (!this.releases.length) {
+      return '暂无已启用的客户端发布包';
+    }
+    return `暂无匹配 ${this.devicePlatformText()} 的发布包`;
+  }
+
+  protected upgradeStatusText(status: number): string {
+    const map: Record<number, string> = {
+      1: '待执行',
+      2: '执行中',
+      3: '成功',
+      4: '失败',
+      5: '已取消',
+    };
+    return map[status] || '未知';
+  }
+
+  protected upgradeStatusColor(status: number): string {
+    const map: Record<number, string> = {
+      1: 'gold',
+      2: 'blue',
+      3: 'success',
+      4: 'error',
+      5: 'default',
+    };
+    return map[status] || 'default';
+  }
+
+  protected taskTime(item: DeviceUpgradeTask): number {
+    return item.updateTime || item.update_time || item.createTime || item.create_time || 0;
+  }
+
   protected enabledMappingCount(): number {
     return this.mappings.filter((item) => item.status !== 0).length;
   }
@@ -353,6 +437,21 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       defaultWebPort: this.firstNumber(item.defaultWebPort, item.default_web_port),
       defaultDomain: this.firstText(item.defaultDomain, item.default_domain),
     };
+  }
+
+  private normalizePlatformValue(value: string | undefined): string {
+    const normalized = String(value || '').trim().toLowerCase();
+    const aliases: Record<string, string> = {
+      aarch64: 'arm64',
+      armv8: 'arm64',
+      x86_64: 'amd64',
+      x64: 'amd64',
+      macos: 'darwin',
+      osx: 'darwin',
+      win32: 'windows',
+      win64: 'windows',
+    };
+    return aliases[normalized] || normalized;
   }
 
   private normalizeToken(token: DeviceToken): DeviceToken {

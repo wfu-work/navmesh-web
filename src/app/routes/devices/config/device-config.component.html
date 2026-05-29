@@ -54,6 +54,58 @@
         <nz-card class="card-border access-card" [nzBordered]="false">
           <div class="detail-card-title">
             <div>
+              <h2>客户端升级</h2>
+              <p>选择与设备系统和架构匹配的 navmesh-client 发布版本，下发后客户端会在下一次心跳中执行。</p>
+              <p class="upgrade-current-version">
+                当前客户端版本：{{ item.clientVersion || '-' }} · 当前平台：{{ devicePlatformText() }}
+              </p>
+            </div>
+            <div class="upgrade-actions">
+              <nz-select
+                class="upgrade-release-select"
+                [(ngModel)]="selectedReleaseGuid"
+                nzPlaceHolder="选择发布版本"
+                [nzNotFoundContent]="releaseNotFoundText()"
+              >
+                @for (release of compatibleReleases(); track release.guid) {
+                  <nz-option
+                    [nzValue]="release.guid"
+                    [nzLabel]="(release.version || release.fileName) + ' · ' + release.os + '/' + release.arch"
+                  />
+                }
+              </nz-select>
+              @if (item.status === 2) {
+                <button nz-button nzType="primary" [nzLoading]="creatingUpgrade" (click)="createUpgradeTask()">
+                  <nz-icon nzType="cloud-upload" />
+                  下发升级
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="access-list">
+            @for (task of upgradeTasks; track task.guid) {
+              <article class="access-list-item">
+                <div>
+                  <strong>{{ task.version || task.fileName }}</strong>
+                  <span>{{ task.fileName }} · {{ task.os }}/{{ task.arch }} · {{ taskTime(task) ? (taskTime(task) | _date: 'MM-dd HH:mm') : '-' }}</span>
+                  @if (task.errorMessage) {
+                    <code class="ssh-command-inline">{{ task.errorMessage }}</code>
+                  }
+                </div>
+                <div class="access-item-actions">
+                  <nz-tag [nzColor]="upgradeStatusColor(task.status)">{{ upgradeStatusText(task.status) }}</nz-tag>
+                </div>
+              </article>
+            } @empty {
+              <nz-empty nzNotFoundContent="暂无升级任务" />
+            }
+          </div>
+        </nz-card>
+
+        <nz-card class="card-border access-card" [nzBordered]="false">
+          <div class="detail-card-title">
+            <div>
               <h2>SSH 接入</h2>
               <p>SSH 别名由设备注册自动创建，通过 HTTP CONNECT 代理网关连接到设备。</p>
             </div>

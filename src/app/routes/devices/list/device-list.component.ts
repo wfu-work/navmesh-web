@@ -259,6 +259,12 @@ export class DeviceListComponent implements OnInit {
     this.getData();
   }
 
+  protected pageSizeChange(size: number): void {
+    this.q.size = size;
+    this.q.page = 1;
+    this.getData();
+  }
+
   protected trackByGuid(_: number, item: Device): string {
     return item.guid;
   }

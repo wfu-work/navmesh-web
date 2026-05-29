@@ -101,8 +101,8 @@ export class HelpComponent {
   ].join('\n');
 
   protected readonly mirrorInstallCommand = [
-    'curl -fsSL https://navmesh.navfirst.com/download/install-client.sh | sudo sh -s -- \\',
-    '  --download-base https://navmesh.navfirst.com/download \\',
+    'curl -fsSL https://navmesh.navfirst.com/api/downloads/install-client.sh | sudo sh -s -- \\',
+    '  --download-base https://navmesh.navfirst.com/api/downloads \\',
     '  --server navmesh.navfirst.com \\',
     '  --api https://navmesh.navfirst.com \\',
     '  --port 3008 \\',

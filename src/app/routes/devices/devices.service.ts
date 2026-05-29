@@ -204,6 +204,60 @@ export interface DeviceGroup {
   update_time?: number;
 }
 
+export interface ClientReleaseQuery {
+  os?: string;
+  arch?: string;
+  status?: string | number;
+  page?: number;
+  size?: number;
+}
+
+export interface ClientRelease {
+  guid: string;
+  version?: string;
+  os: string;
+  arch: string;
+  fileName: string;
+  filePath?: string;
+  sha256: string;
+  size: number;
+  downloadUrl?: string;
+  status: number;
+  createTime: number;
+  create_time?: number;
+  updateTime: number;
+  update_time?: number;
+}
+
+export interface CreateDeviceUpgradePayload {
+  releaseGuid: string;
+  message?: string;
+}
+
+export interface DeviceUpgradeTask {
+  guid: string;
+  deviceGuid: string;
+  releaseGuid: string;
+  version?: string;
+  os: string;
+  arch: string;
+  fileName: string;
+  downloadUrl: string;
+  sha256: string;
+  size: number;
+  fromVersion?: string;
+  currentVersion?: string;
+  status: number;
+  message?: string;
+  errorMessage?: string;
+  startTime?: number;
+  finishTime?: number;
+  createTime: number;
+  create_time?: number;
+  updateTime: number;
+  update_time?: number;
+}
+
 export interface SaveDeviceGroupPayload {
   guid?: string;
   key?: string;
@@ -277,6 +331,26 @@ export class DevicesService {
 
   disableGroup(guid: string): Observable<boolean> {
     return this.http.delete<boolean>(`/device-groups/${guid}`);
+  }
+
+  clientReleases(params?: ClientReleaseQuery): Observable<PageEntity<ClientRelease>> {
+    return this.http.get<PageEntity<ClientRelease>>('/client-releases/list', {
+      params: this.cleanParams(params),
+    });
+  }
+
+  uploadClientRelease(payload: FormData): Observable<ClientRelease> {
+    return this.http.post<ClientRelease>('/client-releases/upload', payload);
+  }
+
+  upgradeTasks(deviceGuid: string, params?: { page?: number; size?: number; status?: string | number }): Observable<PageEntity<DeviceUpgradeTask>> {
+    return this.http.get<PageEntity<DeviceUpgradeTask>>(`/devices/${deviceGuid}/upgrades`, {
+      params: this.cleanParams(params),
+    });
+  }
+
+  createUpgradeTask(deviceGuid: string, payload: CreateDeviceUpgradePayload): Observable<DeviceUpgradeTask> {
+    return this.http.post<DeviceUpgradeTask>(`/devices/${deviceGuid}/upgrades`, payload);
   }
 
   assignGroup(deviceGuid: string, groupGuid: string): Observable<boolean> {
