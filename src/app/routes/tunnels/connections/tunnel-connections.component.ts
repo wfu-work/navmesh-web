@@ -1,9 +1,13 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { STColumn } from '@delon/abc/st';
+import { STChange, STColumn } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize, forkJoin } from 'rxjs';
+import {
+  MetricSummaryComponent,
+  MetricSummaryItem,
+} from 'src/app/shared/components/metric-summary/metric-summary.component';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { Device, DevicesService } from '../../devices/devices.service';
@@ -14,7 +18,7 @@ import { TunnelConnection, TunnelsService } from '../tunnels.service';
   templateUrl: './tunnel-connections.component.html',
   styleUrls: ['../tunnels.component.less'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [...SHARED_IMPORTS, TitleLabelComponent],
+  imports: [...SHARED_IMPORTS, TitleLabelComponent, MetricSummaryComponent],
 })
 export class TunnelConnectionsComponent implements OnInit {
   private readonly tunnelsService = inject(TunnelsService);
@@ -24,8 +28,15 @@ export class TunnelConnectionsComponent implements OnInit {
   private readonly router = inject(Router);
 
   protected data: TunnelConnection[] = [];
+  protected pagedData: TunnelConnection[] = [];
   protected devices: Device[] = [];
   protected loading = false;
+  protected total = 0;
+
+  protected q = {
+    page: 1,
+    size: 10,
+  };
 
   protected readonly columns: STColumn<TunnelConnection>[] = [
     { title: '设备', index: 'deviceGuid', render: 'deviceRender', fixed: 'left', width: 280 },
@@ -82,10 +93,27 @@ export class TunnelConnectionsComponent implements OnInit {
       .subscribe({
         next: ({ connections, devices }) => {
           this.data = connections ?? [];
+          this.total = this.data.length;
+          this.paginateData();
           this.devices = devices.data ?? [];
         },
         error: () => this.message.error('在线连接加载失败'),
       });
+  }
+
+  protected tableChange(event: STChange): void {
+    switch (event.type) {
+      case 'pi':
+      case 'ps':
+      case 'filter':
+      case 'sort':
+        this.q.page = event.pi;
+        this.q.size = event.ps;
+        this.paginateData();
+        break;
+      default:
+        break;
+    }
   }
 
   protected openSessions(deviceGuid: string): void {
@@ -106,6 +134,18 @@ export class TunnelConnectionsComponent implements OnInit {
     return device?.hostname || device?.sourceIp || device?.hostIp || item.sncode || item.deviceGuid;
   }
 
+  protected activeDeviceCount(): number {
+    return new Set(this.data.map((item) => item.deviceGuid).filter(Boolean)).size;
+  }
+
+  protected summaryItems(): MetricSummaryItem[] {
+    return [
+      { label: '在线连接', value: this.total, tone: this.total ? 'success' : 'muted' },
+      { label: '活跃设备', value: this.activeDeviceCount(), tone: this.activeDeviceCount() ? 'primary' : 'muted' },
+      { label: '协议', value: 'QUIC', tone: 'primary' },
+    ];
+  }
+
   protected activeAge(item: TunnelConnection): string {
     return this.formatDuration(Date.now() - Number(item.lastActiveTime || 0));
   }
@@ -124,5 +164,14 @@ export class TunnelConnectionsComponent implements OnInit {
     if (hours < 24) return `${hours} 小时 ${minutes % 60} 分钟`;
     const days = Math.floor(hours / 24);
     return `${days} 天 ${hours % 24} 小时`;
+  }
+
+  private paginateData(): void {
+    const totalPage = Math.max(1, Math.ceil(this.total / this.q.size));
+    if (this.q.page > totalPage) {
+      this.q.page = totalPage;
+    }
+    const start = (this.q.page - 1) * this.q.size;
+    this.pagedData = this.data.slice(start, start + this.q.size);
   }
 }

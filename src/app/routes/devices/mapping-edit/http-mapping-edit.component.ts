@@ -11,6 +11,9 @@ export interface HttpMappingEditData {
   deviceGuid: string;
   device?: Device;
   mapping?: PortMapping;
+  defaultPublicHost?: string;
+  defaultTargetPort?: number;
+  defaultIsCustomDomain?: boolean;
 }
 
 @Component({
@@ -28,14 +31,14 @@ export class HttpMappingEditComponent {
   protected readonly form = this.fb.group({
     guid: [this.data.mapping?.guid ?? ''],
     name: [this.data.mapping?.name || this.data.device?.alias || this.data.device?.hostname || '', [Validators.required]],
-    publicHost: [this.data.mapping?.publicHost || this.data.device?.webDomain || '', [Validators.required]],
+    publicHost: [this.data.mapping?.publicHost || this.data.defaultPublicHost || this.data.device?.webDomain || '', [Validators.required]],
     targetHost: [this.data.mapping?.targetHost || '127.0.0.1', [Validators.required]],
     targetPort: [
-      this.data.mapping?.targetPort || this.data.device?.webPort || 80,
+      this.data.mapping?.targetPort || this.data.defaultTargetPort || this.data.device?.webPort || 80,
       [Validators.required, Validators.min(1), Validators.max(65535)],
     ],
     protocol: [this.data.mapping?.protocol || 'http', [Validators.required]],
-    isCustomDomain: [this.data.mapping?.isCustomDomain ?? Boolean(this.data.device?.webDomain)],
+    isCustomDomain: [this.data.mapping?.isCustomDomain ?? this.data.defaultIsCustomDomain ?? Boolean(this.data.device?.webDomain)],
   });
 
   submit(): Observable<boolean> {

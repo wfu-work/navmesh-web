@@ -7,18 +7,290 @@
   gap: 24px;
   align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: 22px;
+  margin-bottom: 18px;
+}
+
+.account-note {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding: 15px 16px;
+  border: 1px solid rgb(var(--nm-primary-rgb) / 14%);
+  border-radius: 8px;
+  background:
+    linear-gradient(135deg, rgb(var(--nm-primary-rgb) / 8%) 0%, rgb(var(--nm-primary-rgb) / 0%) 42%),
+    #f7fbfc;
+
+  nz-icon {
+    margin-top: 3px;
+    color: var(--nm-primary);
+    font-size: 18px;
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    color: #223047;
+    font-weight: 850;
+  }
+
+  span {
+    margin-top: 4px;
+    color: #5d6f7f;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.7;
+  }
+
+}
+
+:host-context([data-theme='dark']) .account-note {
+  border-color: rgb(var(--nm-primary-rgb) / 24%);
+  background:
+    linear-gradient(135deg, rgb(var(--nm-primary-rgb) / 12%) 0%, rgb(var(--nm-primary-rgb) / 0%) 48%),
+    rgb(17 24 39 / 92%);
+}
+
+:host-context([data-theme='dark']) .account-note strong {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:host-context([data-theme='dark']) .account-note span {
+  color: rgba(255, 255, 255, 0.62);
 }
 
 .account-grid {
   display: grid;
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
   gap: 18px;
+}
+
+.account-section-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf1f4;
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+
+  p {
+    margin-top: 6px;
+    color: #667586;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.7;
+  }
+
+  nz-tag {
+    flex: 0 0 auto;
+    margin: 2px 0 0;
+    font-weight: 800;
+  }
+}
+
+.account-profile {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 8px 0 14px;
+  text-align: center;
+
+  strong,
+  span {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: #223047;
+    font-size: 22px;
+    font-weight: 850;
+    line-height: 1.25;
+  }
+
+  span {
+    margin-top: 3px;
+    color: #728295;
+    font-size: 14px;
+    font-weight: 650;
+  }
+}
+
+.account-avatar {
+  display: block;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 12px 28px rgb(var(--nm-primary-rgb) / 16%);
+}
+
+.account-profile-name {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+:host-context([data-theme='dark']) .account-profile strong {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+:host-context([data-theme='dark']) .account-profile span {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+:host-context([data-theme='dark']) .account-avatar {
+  box-shadow: 0 12px 28px rgb(0 0 0 / 28%);
+}
+
+.account-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+
+  article {
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #e4ebee;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  span,
+  strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: #7a8897;
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  strong {
+    margin-top: 5px;
+    color: #223047;
+    font-size: 16px;
+    font-weight: 850;
+  }
+}
+
+.account-status-enabled {
+  color: #0b8f61 !important;
+}
+
+.account-status-disabled {
+  color: #c23b3b !important;
+}
+
+.account-field-note {
+  margin-top: 8px;
+  color: #7a8897;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+.password-strength {
+  margin-top: 10px;
+
+  span {
+    display: block;
+    margin-bottom: 6px;
+    color: #7a8897;
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  i {
+    display: block;
+    width: 100%;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+    background: #edf1f4;
+
+    &::after {
+      display: block;
+      width: 20%;
+      height: 100%;
+      border-radius: inherit;
+      background: #a7b2bd;
+      content: '';
+      transition:
+        width 0.2s ease,
+        background 0.2s ease;
+    }
+  }
+
+  &.strength-weak i::after {
+    width: 34%;
+    background: #d65b5b;
+  }
+
+  &.strength-medium i::after {
+    width: 68%;
+    background: #d99a21;
+  }
+
+  &.strength-strong i::after {
+    width: 100%;
+    background: #0b8f61;
+  }
+}
+
+.password-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+
+  span {
+    color: #7a8897;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.6;
+  }
 }
 
 @media (max-width: 991px) {
   .account-grid,
-  .account-header {
+  .account-header,
+  .account-note,
+  .password-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 575px) {
+  .account-section-head,
+  .account-summary {
     display: grid;
     grid-template-columns: 1fr;
   }

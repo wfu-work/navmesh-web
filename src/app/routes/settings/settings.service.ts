@@ -4,10 +4,16 @@ import { Observable } from 'rxjs';
 
 export interface NavMeshProfile {
   id: number;
+  guid?: string;
   username: string;
   name?: string;
+  nickName?: string;
   avatar?: string;
+  email?: string;
+  phone?: string;
   status: number;
+  enable?: number;
+  roleCodeList?: string[];
   createTime: number;
   create_time?: number;
   updateTime: number;
@@ -53,10 +59,14 @@ export class NavMeshSettingsService {
   }
 
   profile(): Observable<NavMeshProfile> {
-    return this.http.get<NavMeshProfile>('/user');
+    return this.http.get<NavMeshProfile>('/user/token');
+  }
+
+  encryptSecret(value: string): Observable<string> {
+    return this.http.post<string>('/secret/encrypt', value);
   }
 
   changePassword(payload: ChangePasswordPayload): Observable<boolean> {
-    return this.http.put<boolean>('/navmesh-auth/password', payload);
+    return this.http.put<boolean>('/user/update/password', payload);
   }
 }

@@ -1,9 +1,17 @@
-import { ChangeDetectionStrategy, Component, Input } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { NzSelectModule } from 'ng-zorro-antd/select';
 
 export interface TrafficDistributionBucket {
   label: string;
   inbound: number;
   outbound: number;
+}
+
+export interface TrafficWindowOption {
+  value: string;
+  label: string;
+  hours: number;
 }
 
 interface TrafficDistributionBar extends TrafficDistributionBucket {
@@ -26,11 +34,21 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
         <div class="trend-meta">
           <span class="trend-legend trend-legend-in">入站</span>
           <span class="trend-legend trend-legend-out">出站</span>
-          <span class="trend-window">过去 1 小时</span>
+          <nz-select
+            class="trend-window-select"
+            [ngModel]="windowValue"
+            (ngModelChange)="changeWindow($event)"
+            [nzDropdownMatchSelectWidth]="false"
+            aria-label="流量统计时间段"
+          >
+            @for (option of windowOptions; track option.value) {
+              <nz-option [nzValue]="option.value" [nzLabel]="option.label" />
+            }
+          </nz-select>
         </div>
       </div>
 
-      <div class="trend-chart" aria-label="过去 1 小时流量统计分布柱状图">
+      <div class="trend-chart" [attr.aria-label]="windowLabel + '流量统计分布柱状图'">
         @for (item of bars; track item.label) {
           <div class="trend-bar-wrap">
             <div
@@ -38,12 +56,19 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
               [class.trend-bar-active]="item.active"
               [class.trend-bar-empty]="!item.total"
               [style.height.%]="item.height"
-              [title]="item.label + ' 入站 ' + formatBytes(item.inbound) + '，出站 ' + formatBytes(item.outbound)"
             >
-              @if (item.total) {
+              @if (item.outbound > 0) {
                 <span class="trend-bar-out" [style.height.%]="item.outboundShare"></span>
+              }
+              @if (item.inbound > 0) {
                 <span class="trend-bar-in" [style.height.%]="item.inboundShare"></span>
               }
+            </div>
+            <div class="trend-tooltip" role="tooltip" [style.bottom.%]="item.height">
+              <strong>{{ item.label }}</strong>
+              <span>总计 {{ formatBytes(item.total) }}</span>
+              <span>入站 {{ formatBytes(item.inbound) }}</span>
+              <span>出站 {{ formatBytes(item.outbound) }}</span>
             </div>
           </div>
         }
@@ -122,20 +147,27 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
       .trend-meta {
         display: flex;
         flex-wrap: wrap;
+        align-items: center;
         gap: 8px;
         justify-content: flex-end;
+        min-height: 34px;
       }
 
       .trend-legend,
-      .trend-window {
+      .trend-window-select {
         flex: 0 0 auto;
-        padding: 7px 14px;
-        border-radius: 999px;
         color: var(--nm-primary);
         font-size: 14px;
         font-weight: 800;
         line-height: 1;
-        background: rgb(var(--nm-primary-rgb) / 10%);
+      }
+
+      .trend-legend {
+        display: inline-flex;
+        align-items: center;
+        height: 34px;
+        padding: 0 2px;
+        white-space: nowrap;
       }
 
       .trend-legend::before {
@@ -151,18 +183,15 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
 
       .trend-legend-out {
         color: #65727f;
-        background: rgb(var(--nm-primary-rgb) / 6%);
       }
 
       :host-context([data-theme='dark']) .trend-legend,
-      :host-context([data-theme='dark']) .trend-window {
+      :host-context([data-theme='dark']) .trend-window-select {
         color: var(--nm-primary-hover);
-        background: rgb(var(--nm-primary-rgb) / 16%);
       }
 
       :host-context([data-theme='dark']) .trend-legend-out {
         color: rgba(255, 255, 255, 0.66);
-        background: rgb(var(--nm-primary-rgb) / 10%);
       }
 
       .trend-chart {
@@ -191,6 +220,7 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
       }
 
       .trend-bar-wrap {
+        position: relative;
         display: flex;
         align-items: end;
         justify-content: center;
@@ -224,6 +254,7 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
       .trend-bar-in,
       .trend-bar-out {
         display: block;
+        overflow: hidden;
         min-height: 8px;
       }
 
@@ -249,6 +280,106 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
         color: rgba(255, 255, 255, 0.42);
       }
 
+      .trend-tooltip {
+        position: absolute;
+        left: 50%;
+        z-index: 2;
+        display: grid;
+        gap: 4px;
+        min-width: 132px;
+        margin-bottom: 12px;
+        padding: 10px 12px;
+        border: 1px solid rgb(var(--nm-primary-rgb) / 14%);
+        border-radius: 10px;
+        color: #253044;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 1.35;
+        background: rgb(255 255 255 / 96%);
+        box-shadow: 0 14px 32px rgb(15 23 42 / 14%);
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, 8px);
+        transition:
+          opacity 0.16s ease,
+          transform 0.16s ease;
+      }
+
+      .trend-tooltip::after {
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        width: 10px;
+        height: 10px;
+        border-right: 1px solid rgb(var(--nm-primary-rgb) / 14%);
+        border-bottom: 1px solid rgb(var(--nm-primary-rgb) / 14%);
+        background: inherit;
+        content: '';
+        transform: translateX(-50%) rotate(45deg);
+      }
+
+      .trend-tooltip strong {
+        color: var(--nm-primary);
+        font-size: 13px;
+      }
+
+      .trend-tooltip span {
+        color: #65727f;
+        white-space: nowrap;
+      }
+
+      .trend-bar-wrap:hover .trend-tooltip,
+      .trend-bar-wrap:focus-within .trend-tooltip {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+
+      :host-context([data-theme='dark']) .trend-tooltip {
+        border-color: rgb(var(--nm-primary-rgb) / 24%);
+        color: rgba(255, 255, 255, 0.88);
+        background: rgb(20 29 44 / 98%);
+        box-shadow: 0 14px 32px rgb(0 0 0 / 30%);
+      }
+
+      :host-context([data-theme='dark']) .trend-tooltip span {
+        color: rgba(255, 255, 255, 0.62);
+      }
+
+      :host ::ng-deep .trend-window-select.ant-select {
+        min-width: 116px;
+        height: 34px;
+      }
+
+      :host ::ng-deep .trend-window-select .ant-select-selector {
+        height: 34px;
+        min-height: 34px;
+        padding: 0 12px;
+        border: 0;
+        border-radius: 999px;
+        background: rgb(var(--nm-primary-rgb) / 10%);
+        box-shadow: none;
+      }
+
+      :host ::ng-deep .trend-window-select .ant-select-selection-item {
+        color: var(--nm-primary);
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 34px;
+      }
+
+      :host ::ng-deep .trend-window-select .ant-select-arrow {
+        color: var(--nm-primary);
+      }
+
+      :host-context([data-theme='dark']) ::ng-deep .trend-window-select .ant-select-selector {
+        background: rgb(var(--nm-primary-rgb) / 16%);
+      }
+
+      :host-context([data-theme='dark']) ::ng-deep .trend-window-select .ant-select-selection-item,
+      :host-context([data-theme='dark']) ::ng-deep .trend-window-select .ant-select-arrow {
+        color: var(--nm-primary-hover);
+      }
+
       @media (max-width: 767px) {
         .trend-card {
           padding: 22px 20px;
@@ -267,13 +398,22 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
         .trend-meta {
           justify-content: flex-start;
         }
+
+        .trend-tooltip {
+          min-width: 124px;
+        }
       }
     `,
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [FormsModule, NzSelectModule],
 })
 export class DashboardTrafficTrendComponent {
   @Input() buckets: TrafficDistributionBucket[] = [];
+  @Input() windowLabel = '过去 1 小时';
+  @Input() windowValue = '1h';
+  @Input() windowOptions: TrafficWindowOption[] = [];
+  @Output() windowValueChange = new EventEmitter<string>();
 
   protected get bars(): TrafficDistributionBar[] {
     const buckets = this.buckets.length
@@ -309,6 +449,10 @@ export class DashboardTrafficTrendComponent {
   protected get totalLabel(): string {
     const total = this.buckets.reduce((sum, item) => sum + item.inbound + item.outbound, 0);
     return `累计 ${this.formatBytes(total)}`;
+  }
+
+  protected changeWindow(value: string): void {
+    this.windowValueChange.emit(value);
   }
 
   protected formatBytes(value: number): string {

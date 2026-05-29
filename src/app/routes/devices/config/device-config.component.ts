@@ -4,10 +4,15 @@ import { SHARED_IMPORTS } from '@shared';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzModalService } from 'ng-zorro-antd/modal';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
+import {
+  MetricSummaryComponent,
+  MetricSummaryItem,
+  MetricSummaryTone,
+} from 'src/app/shared/components/metric-summary/metric-summary.component';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { NavMeshSetting, NavMeshSettingsService } from '../../settings/settings.service';
-import { DeviceToken } from '../devices.service';
+import { DeviceStatus, DeviceToken, DeviceTypeDefault } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 import { HttpMappingEditComponent } from '../mapping-edit/http-mapping-edit.component';
 import { HttpAccessService, PortMapping } from '../http-access.service';
@@ -19,7 +24,7 @@ import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
   templateUrl: './device-config.component.html',
   styleUrls: ['../list/device-list.component.less', '../detail/device-detail.component.less', './device-config.component.less'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule],
+  imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule, MetricSummaryComponent],
 })
 export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   private readonly sshService = inject(SSHService);
@@ -32,6 +37,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected sshEntrypoints: SSHEntrypoint[] = [];
   protected mappings: PortMapping[] = [];
   protected settings: NavMeshSetting[] = [];
+  protected types: DeviceTypeDefault[] = [];
 
   protected readonly tokenStatusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -104,6 +110,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       sshAliases: this.sshService.listAliases(),
       sshEntrypoints: this.sshService.listEntrypoints(),
       mappings: this.httpAccessService.list({ page: 1, size: 100, deviceGuid: this.guid }),
+      types: this.devicesService.typeDefaults().pipe(catchError(() => of([] as DeviceTypeDefault[]))),
       settings: this.settingsService.list().pipe(catchError(() => of([] as NavMeshSetting[]))),
     })
       .pipe(
@@ -113,7 +120,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ detail, sshAliases, sshEntrypoints, mappings, settings }) => {
+        next: ({ detail, sshAliases, sshEntrypoints, mappings, types, settings }) => {
           this.device = this.normalizeDevice(detail.device);
           this.tokens = (detail.tokens ?? []).map((token) => this.normalizeToken(token));
           this.sshAliases = (sshAliases ?? [])
@@ -121,6 +128,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
             .filter((item) => item.deviceGuid === this.guid);
           this.sshEntrypoints = (sshEntrypoints ?? []).map((item) => this.normalizeEntrypoint(item));
           this.mappings = (mappings.data ?? []).map((item) => this.normalizeMapping(item));
+          this.types = (types ?? []).map((item) => this.normalizeType(item));
           this.settings = settings ?? [];
         },
         error: () => this.message.error('设备配置加载失败'),
@@ -221,6 +229,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         deviceGuid: this.guid,
         device: this.device,
         mapping,
+        defaultPublicHost: mapping ? undefined : this.defaultHttpPublicHost(),
+        defaultTargetPort: mapping ? undefined : this.defaultHttpTargetPort(),
+        defaultIsCustomDomain: mapping ? undefined : this.defaultHttpIsCustomDomain(),
       },
       nzOnOk: (componentInstance) => {
         componentInstance.submit().subscribe({
@@ -259,9 +270,28 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return this.mappings.filter((item) => item.status !== 0).length;
   }
 
+  protected summaryItems(item: { status?: DeviceStatus }): MetricSummaryItem[] {
+    return [
+      { label: '激活状态', value: this.statusText(item.status), tone: this.statusTone(item.status) },
+      { label: '启用凭证', value: `${this.enabledTokenCount()} / ${this.tokens.length}`, tone: this.enabledTokenCount() ? 'success' : 'muted' },
+      { label: 'SSH 接入', value: `${this.enabledSshCount()} / ${this.sshAliases.length}`, tone: this.enabledSshCount() ? 'primary' : 'muted' },
+      { label: 'HTTP 映射', value: `${this.enabledMappingCount()} / ${this.mappings.length}`, tone: this.enabledMappingCount() ? 'primary' : 'muted' },
+    ];
+  }
+
   protected entrypointHint(): string {
     if (this.availableSshEntrypoints().length > 0) return '未选择时后台会自动分配可用入口 IP';
     return '暂无可用入口 IP，保存后会先生成 SSH 域名，待配置入口后再自动绑定';
+  }
+
+  private statusTone(status: DeviceStatus | undefined): MetricSummaryTone {
+    const map: Record<string, MetricSummaryTone> = {
+      1: 'warning',
+      2: 'success',
+      3: 'danger',
+      4: 'muted',
+    };
+    return map[String(status)] ?? 'muted';
   }
 
   protected availableSshEntrypoints(): SSHEntrypoint[] {
@@ -316,6 +346,15 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     };
   }
 
+  private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {
+    return {
+      ...item,
+      key: this.firstText(item.key, item.group_key, item.guid, item.type),
+      defaultWebPort: this.firstNumber(item.defaultWebPort, item.default_web_port),
+      defaultDomain: this.firstText(item.defaultDomain, item.default_domain),
+    };
+  }
+
   private normalizeToken(token: DeviceToken): DeviceToken {
     return {
       ...token,
@@ -337,6 +376,30 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   private defaultSshDomain(): string {
     const sncode = this.device?.sncode || this.device?.alias || this.device?.hostname || '';
     return sncode ? `${sncode}.${this.sshGatewayDomain()}` : '';
+  }
+
+  private defaultHttpType(): DeviceTypeDefault | undefined {
+    const deviceType = this.firstText(this.device?.deviceType, this.device?.device_type);
+    return this.types.find((item) => this.firstText(item.key, item.group_key, item.guid, item.type) === deviceType);
+  }
+
+  private defaultHttpPublicHost(): string {
+    const domain = this.firstText(this.defaultHttpType()?.defaultDomain, this.device?.webDomain).replace(/^\.+|\.+$/g, '');
+    const sncode = this.firstText(this.device?.sncode, this.device?.alias, this.device?.hostname);
+    if (!domain) return '';
+    return sncode ? `${sncode}.${domain}` : domain;
+  }
+
+  private defaultHttpTargetPort(): number {
+    return this.firstPositiveNumber(this.defaultHttpType()?.defaultWebPort, this.device?.webPort, 80);
+  }
+
+  private defaultHttpIsCustomDomain(): boolean {
+    return false;
+  }
+
+  private firstPositiveNumber(...values: Array<number | undefined | null>): number {
+    return values.find((value) => Number(value) > 0) ?? 0;
   }
 
   private sshGatewayDomain(): string {

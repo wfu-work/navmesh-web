@@ -8,7 +8,7 @@ export const routes: Routes = [
   {
     path: 'list',
     component: EventListComponent,
-    data: { title: '事件告警' },
+    data: { title: '事件中心' },
   },
   {
     path: ':guid',

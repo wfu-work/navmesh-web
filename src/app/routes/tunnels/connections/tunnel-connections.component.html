@@ -10,28 +10,19 @@
     </button>
   </div>
 
-  <div class="tunnel-summary">
-    <article>
-      <span>在线连接</span>
-      <strong>{{ data.length }}</strong>
-    </article>
-    <article>
-      <span>活跃设备</span>
-      <strong>{{ data.length }}</strong>
-    </article>
-    <article>
-      <span>协议</span>
-      <strong>QUIC</strong>
-    </article>
-  </div>
+  <app-metric-summary class="tunnel-summary" [items]="summaryItems()" [columns]="3" />
 
   <nz-card class="card-border" [nzBordered]="false">
     <st
-      [data]="data"
+      [data]="pagedData"
       [columns]="columns"
       bordered="false"
       [loading]="loading"
-      [page]="{ show: false }"
+      (change)="tableChange($event)"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="total"
+      [page]="{ front: false }"
       [expand]="expand"
       [expandRowByClick]="true"
       [scroll]="{ x: '1200px' }"

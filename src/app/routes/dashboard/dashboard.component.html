@@ -1,5 +1,5 @@
 <section class="dashboard-page">
-  <title-label title="工作台" description="实时掌握设备在线、隧道连接、HTTP 映射、访问会话与运行事件。" />
+  <title-label title="工作台" description="实时掌握设备在线、流量统计、HTTP 映射、访问会话与运行事件。" />
 
   <div class="dashboard-actions">
     <button nz-button [nzLoading]="loading" (click)="load()">
@@ -17,10 +17,10 @@
       trendType="neutral"
     />
     <app-panel
-      icon="partition"
-      title="活跃隧道"
-      [value]="connections.length + ''"
-      [trend]="activeSessionCount() + ' 个会话中'"
+      icon="bar-chart"
+      title="流量统计"
+      [value]="formatBytes(trafficSummary().total)"
+      [trend]="'入 ' + formatBytes(trafficSummary().inbound) + ' / 出 ' + formatBytes(trafficSummary().outbound)"
       trendType="neutral"
     />
     <app-panel
@@ -40,11 +40,21 @@
   </div>
 
   <div class="dashboard-widgets">
-    <dashboard-traffic-trend [buckets]="trafficDistribution()" />
+    <dashboard-traffic-trend
+      [buckets]="trafficDistribution()"
+      [windowLabel]="trafficWindowLabel()"
+      [windowOptions]="trafficWindowOptions"
+      [(windowValue)]="trafficWindow"
+    />
     <dashboard-active-rules
       [offlineDevices]="devices.length - onlineDeviceCount()"
       [httpFailures]="recentFailureCount()"
       [openEvents]="openEventCount()"
     />
+  </div>
+
+  <div class="dashboard-guidance">
+    <dashboard-advice [insights]="dashboardInsights()" [windowLabel]="trafficWindowLabel()" />
+    <dashboard-shortcuts />
   </div>
 </section>

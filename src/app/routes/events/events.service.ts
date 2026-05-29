@@ -23,6 +23,8 @@ export interface EventItem {
   guid: string;
   deviceGuid: string;
   device_guid?: string;
+  deviceSncode?: string;
+  device_sncode?: string;
   source: string;
   eventType?: string;
   event_type?: string;
@@ -42,12 +44,57 @@ export interface EventItem {
   update_time?: number;
 }
 
+export function eventDisplayTitle(item: Partial<EventItem>): string {
+  const type = firstEventText(item.eventType, item.event_type, item.source).toLowerCase();
+  const title = firstEventText(item.title).toLowerCase();
+  const key = title || type;
+
+  if (type === 'device_offline' || key.includes('device tunnel offline')) return '设备离线提醒';
+  if (type === 'session_rejected' && key.includes('ssh')) return 'SSH 会话拒绝';
+  if (type === 'session_rejected' && key.includes('http')) return 'HTTP 会话拒绝';
+  if (type === 'session_rejected') return '访问会话拒绝';
+  if (type === 'open_tcp_failed' && key.includes('ssh')) return 'SSH 目标连接失败';
+  if (type === 'open_tcp_failed' && key.includes('http')) return 'HTTP 映射连接失败';
+  if (type === 'open_tcp_failed') return '目标服务连接失败';
+  if (type === 'auth') return '认证事件';
+  if (type === 'mapping') return 'HTTP 映射事件';
+  if (type === 'tunnel') return '隧道连接事件';
+  if (type === 'device') return '设备事件';
+
+  return firstEventText(item.title, item.eventType, item.event_type, item.source, '事件');
+}
+
+export function eventDisplayMessage(item: Partial<EventItem>): string {
+  const type = firstEventText(item.eventType, item.event_type, item.source).toLowerCase();
+  const title = firstEventText(item.title).toLowerCase();
+  const message = firstEventText(item.message);
+
+  if (type === 'device_offline' || title.includes('device tunnel offline')) {
+    return '设备隧道已断开，请检查设备网络或 navmesh-client 运行状态。';
+  }
+  if (type === 'open_tcp_failed' && title.includes('http')) {
+    return 'HTTP 映射无法连接目标服务，请检查设备在线状态和本地 Web 服务端口。';
+  }
+  if (type === 'open_tcp_failed' && title.includes('ssh')) {
+    return 'SSH 隧道无法连接目标端口，请检查设备在线状态和本机 SSH 服务。';
+  }
+  if (type === 'session_rejected') {
+    return message || '访问会话被策略或并发限制拒绝，请检查访问策略和会话限制。';
+  }
+
+  return message || firstEventText(item.title, item.eventType, item.event_type, '事件已记录。');
+}
+
 export function isOpenEventStatus(status: EventStatus | undefined): boolean {
   return String(status) === '1';
 }
 
 export function isClosedEventStatus(status: EventStatus | undefined): boolean {
   return String(status) === '0' || String(status) === '2';
+}
+
+function firstEventText(...values: Array<string | undefined>): string {
+  return values.find((value) => value !== undefined && value !== '') ?? '';
 }
 
 @Injectable({ providedIn: 'root' })

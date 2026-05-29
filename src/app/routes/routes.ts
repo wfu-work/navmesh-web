@@ -23,7 +23,7 @@ export const routes: Routes = [
       { path: 'policies', loadChildren: () => import('./policies/routes').then((m) => m.routes) },
       { path: 'audit', loadChildren: () => import('./audit/routes').then((m) => m.routes) },
       { path: 'settings', loadChildren: () => import('./settings/routes').then((m) => m.routes) },
-      { path: 'help', component: HelpComponent, data: { title: '帮助' } },
+      { path: 'help', component: HelpComponent, data: { title: '使用指南' } },
     ],
   },
   { path: '', loadChildren: () => import('./passport/routes').then((m) => m.routes) },

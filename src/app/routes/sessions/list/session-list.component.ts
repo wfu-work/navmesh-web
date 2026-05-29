@@ -76,7 +76,7 @@ export class SessionListComponent implements OnInit {
     {
       title: '操作',
       fixed: 'right',
-      width: 130,
+      width: 80,
       buttons: [
         {
           icon: 'close-circle',

@@ -12,7 +12,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { DeviceStatus, DevicesService } from '../devices.service';
+import { DeviceStatus, DeviceTypeDefault, DevicesService } from '../devices.service';
 
 @Component({
   selector: 'app-device-edit',
@@ -32,6 +32,7 @@ export class DeviceEditComponent implements OnInit {
   protected readonly guid = this.route.snapshot.paramMap.get('guid') ?? 'new';
   protected loading = false;
   protected saving = false;
+  protected types: DeviceTypeDefault[] = [];
 
   protected form = this.fb.group({
     sncode: ['', [Validators.required]],
@@ -41,9 +42,6 @@ export class DeviceEditComponent implements OnInit {
     hostname: ['', [Validators.required]],
     hostIp: [''],
     clientVersion: [''],
-    sshPort: [22],
-    webPort: [0],
-    webDomain: [''],
     status: [1],
   });
 
@@ -53,7 +51,18 @@ export class DeviceEditComponent implements OnInit {
       this.back();
       return;
     }
+    this.loadTypes();
     this.load();
+  }
+
+  protected loadTypes(): void {
+    this.devicesService.typeDefaults().subscribe({
+      next: (res) => {
+        this.types = (res ?? []).map((item) => this.normalizeType(item));
+        this.cdr.markForCheck();
+      },
+      error: () => this.message.error('设备类型加载失败'),
+    });
   }
 
   protected load(): void {
@@ -76,13 +85,12 @@ export class DeviceEditComponent implements OnInit {
             hostname: device.hostname,
             hostIp: device.hostIp || device.host_ip || device.privateIp || device.private_ip || '',
             clientVersion: device.clientVersion,
-            sshPort: device.sshPort || device.ssh_port || 22,
-            webPort: device.webPort || device.web_port || 0,
-            webDomain: device.webDomain || device.web_domain || '',
             status: this.normalizeStatus(device.status),
           });
           this.form.disable({ emitEvent: false });
+          this.form.controls.sncode.enable({ emitEvent: false });
           this.form.controls.alias.enable({ emitEvent: false });
+          this.form.controls.deviceType.enable({ emitEvent: false });
           this.form.controls.remark.enable({ emitEvent: false });
         },
         error: () => this.message.error('设备信息加载失败'),
@@ -90,9 +98,12 @@ export class DeviceEditComponent implements OnInit {
   }
 
   protected submit(): void {
-    if (this.form.controls.alias.invalid) {
-      this.form.controls.alias.markAsDirty();
-      this.form.controls.alias.updateValueAndValidity();
+    const editableControls = [this.form.controls.sncode, this.form.controls.alias, this.form.controls.deviceType];
+    if (editableControls.some((control) => control.invalid)) {
+      editableControls.forEach((control) => {
+        control.markAsDirty();
+        control.updateValueAndValidity();
+      });
       return;
     }
     const value = this.form.getRawValue();
@@ -100,6 +111,8 @@ export class DeviceEditComponent implements OnInit {
     this.devicesService
       .update(this.guid, {
         hostname: value.hostname,
+        sncode: value.sncode.trim(),
+        type: value.deviceType.trim(),
         alias: value.alias.trim(),
         remark: value.remark.trim(),
       })
@@ -111,7 +124,7 @@ export class DeviceEditComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          this.message.success('设备别名和备注已保存，客户端重启上线后会同步使用');
+          this.message.success('设备资料已保存，客户端重启上线后会同步使用');
           this.load();
         },
         error: () => this.message.error('设备信息保存失败'),
@@ -128,6 +141,18 @@ export class DeviceEditComponent implements OnInit {
 
   protected manageTokens(): void {
     this.router.navigate(['/devices/config', this.guid]);
+  }
+
+  protected typeValue(item: DeviceTypeDefault | undefined): string {
+    return this.firstText(item?.key, item?.group_key, item?.guid, item?.type);
+  }
+
+  protected typeLabel(item: DeviceTypeDefault): string {
+    return this.firstText(item.name, item.remark, this.typeValue(item));
+  }
+
+  protected typeIcon(item: DeviceTypeDefault): string {
+    return this.normalizeIcon(this.firstText(item.icon, this.defaultTypeIcon(this.typeValue(item))));
   }
 
   protected title(): string {
@@ -167,7 +192,37 @@ export class DeviceEditComponent implements OnInit {
     return status === 2 || status === 3 || status === 4 ? status : 1;
   }
 
+  private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {
+    const key = this.firstText(item.key, item.group_key, item.guid, item.type);
+    return {
+      ...item,
+      key,
+      guid: this.firstText(item.guid, key),
+      type: this.firstText(item.type, key),
+      name: this.firstText(item.name, key),
+      icon: this.normalizeIcon(this.firstText(item.icon, this.defaultTypeIcon(key))),
+      remark: this.firstText(item.remark),
+    };
+  }
+
   private firstText(...values: Array<string | undefined>): string {
     return values.find((value) => value !== undefined && value !== '') ?? '';
+  }
+
+  private defaultTypeIcon(type: string | undefined): string {
+    const value = String(type || '').toLowerCase();
+    if (value.includes('ssh')) return 'code';
+    if (value.includes('radar')) return 'radar-chart';
+    if (value.includes('rain')) return 'cloud';
+    if (value.includes('data')) return 'database';
+    if (value.includes('dic')) return 'experiment';
+    if (value.includes('ppp')) return 'deployment-unit';
+    if (value.includes('sag')) return 'control';
+    return 'appstore';
+  }
+
+  private normalizeIcon(icon: string | undefined): string {
+    if (icon === 'terminal') return 'code';
+    return icon || 'appstore';
   }
 }

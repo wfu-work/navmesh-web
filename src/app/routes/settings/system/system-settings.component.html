@@ -1,6 +1,9 @@
 <section class="settings-page">
   <div class="settings-header">
-    <title-label title="系统配置" description="维护公网域名、网关监听地址、隧道连接和运行限制。" />
+    <title-label
+      title="系统配置"
+      description="配置网关入口、设备在线判定和运行保护。部分监听地址调整后，需要重启相关服务才会生效。"
+    />
     <div class="header-actions">
       <button nz-button [nzLoading]="loading" (click)="load()">
         <nz-icon nzType="reload" />
@@ -8,101 +11,136 @@
       </button>
       <button nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
         <nz-icon nzType="save" />
-        保存
+        保存配置
       </button>
     </div>
   </div>
 
+  <div class="settings-note">
+    <nz-icon nzType="info-circle" />
+    <div>
+      <strong>配置会写入服务端 settings 表</strong>
+      <span>域名、监听地址和限制策略会影响设备接入、SSH 连接和 HTTP 映射。保存前请确认反向代理、防火墙和客户端配置已经同步。</span>
+    </div>
+  </div>
+
   <div class="settings-grid">
-    <nz-card class="card-border" [nzBordered]="false" nzTitle="域名与入口">
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="settings-section-head">
+        <div>
+          <h2>接入域名</h2>
+          <p>用于生成设备的 SSH 连接地址。HTTP 映射域名已移动到设备类型和设备配置中维护。</p>
+        </div>
+        <nz-tag nzColor="blue">Gateway</nz-tag>
+      </div>
+
       <form nz-form [formGroup]="form" nzLayout="vertical">
         <div class="form-grid">
           <nz-form-item>
-            <nz-form-label nzRequired>公网根域名</nz-form-label>
-            <nz-form-control nzErrorTip="请输入公网根域名">
-              <input nz-input formControlName="public_domain" placeholder="navfirst.com" />
-            </nz-form-control>
-          </nz-form-item>
-
-          <nz-form-item>
             <nz-form-label nzRequired>SSH 网关域名</nz-form-label>
             <nz-form-control nzErrorTip="请输入 SSH 网关域名">
-              <input nz-input formControlName="ssh_gateway_domain" placeholder="ssh.navfirst.com" />
-            </nz-form-control>
-          </nz-form-item>
-
-          <nz-form-item>
-            <nz-form-label nzRequired>HTTP 映射默认域</nz-form-label>
-            <nz-form-control nzErrorTip="请输入 HTTP 映射默认域">
-              <input nz-input formControlName="http_mapping_domain" placeholder="qx.navfirst.com" />
+              <input nz-input formControlName="ssh_gateway_domain" placeholder="sshd.navfirst.com" />
+              <div class="field-note">设备配置页会基于这个域名生成 SSH 登录示例，例如 <code>device.sshd.navfirst.com</code>。</div>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
             <nz-form-label nzRequired>设备注册 Token</nz-form-label>
             <nz-form-control nzErrorTip="请输入设备注册 Token">
-              <input nz-input formControlName="device_register_token" />
+              <input nz-input formControlName="device_register_token" autocomplete="off" placeholder="首次注册使用的共享 Token" />
+              <div class="field-note">只用于设备首次注册。设备注册成功后会使用独立 Token，建议定期轮换这个值。</div>
             </nz-form-control>
           </nz-form-item>
         </div>
       </form>
     </nz-card>
 
-    <nz-card class="card-border" [nzBordered]="false" nzTitle="网关监听">
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="settings-section-head">
+        <div>
+          <h2>网关监听</h2>
+          <p>控制服务端对外开放的 SSH、HTTP 和 QUIC 隧道入口。监听地址通常由部署环境决定。</p>
+        </div>
+        <nz-tag nzColor="green">Entrypoint</nz-tag>
+      </div>
+
       <form nz-form [formGroup]="form" nzLayout="vertical">
         <div class="form-grid">
           <nz-form-item>
-            <nz-form-label nzRequired>SSH 监听</nz-form-label>
+            <nz-form-label nzRequired>SSH 监听地址</nz-form-label>
             <nz-form-control nzErrorTip="请输入 SSH 监听地址">
-              <input nz-input formControlName="ssh_listen" placeholder=":22" />
+              <input nz-input formControlName="ssh_listen" placeholder=":3010" />
+              <div class="field-note">用于 SSH Gateway 接入。填写 <code>:3010</code> 表示监听所有网卡的 3010 端口。</div>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label>启用 SSH 网关</nz-form-label>
+            <nz-form-label>SSH 网关</nz-form-label>
             <nz-form-control>
-              <label nz-checkbox formControlName="ssh_enabled">允许 SSH 接入</label>
+              <label nz-checkbox formControlName="ssh_enabled">启用 SSH 远程接入</label>
+              <div class="field-note">关闭后新 SSH 连接将无法进入网关，已有连接是否断开取决于服务端运行状态。</div>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label nzRequired>HTTP 监听</nz-form-label>
+            <nz-form-label nzRequired>HTTP 监听地址</nz-form-label>
             <nz-form-control nzErrorTip="请输入 HTTP 监听地址">
-              <input nz-input formControlName="http_listen" placeholder=":8080" />
+              <input nz-input formControlName="http_listen" placeholder=":3009" />
+              <div class="field-note">用于接收 Caddy 或其他反向代理转发过来的 HTTP 映射请求。</div>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label>启用 HTTP 映射</nz-form-label>
+            <nz-form-label>HTTP 映射网关</nz-form-label>
             <nz-form-control>
-              <label nz-checkbox formControlName="http_mapping_enabled">允许 HTTP 映射转发</label>
+              <label nz-checkbox formControlName="http_mapping_enabled">启用 HTTP 映射转发</label>
+              <div class="field-note">关闭后自定义域名和默认映射域名都不会继续转发到设备。</div>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label nzRequired>隧道监听</nz-form-label>
+            <nz-form-label nzRequired>隧道监听地址</nz-form-label>
             <nz-form-control nzErrorTip="请输入隧道监听地址">
               <input nz-input formControlName="tunnel_listen" placeholder=":3008" />
+              <div class="field-note">设备通过 QUIC 隧道连接到这里。请确保 UDP 端口已放行。</div>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label>启用隧道</nz-form-label>
+            <nz-form-label>设备隧道</nz-form-label>
             <nz-form-control>
-              <label nz-checkbox formControlName="tunnel_enabled">允许设备隧道接入</label>
+              <label nz-checkbox formControlName="tunnel_enabled">允许设备建立隧道</label>
+              <div class="field-note">关闭后设备将无法建立新的隧道，SSH 和 HTTP 映射也会失去在线通道。</div>
             </nz-form-control>
           </nz-form-item>
         </div>
       </form>
     </nz-card>
 
-    <nz-card class="card-border settings-wide" [nzBordered]="false" nzTitle="运行限制">
+    <nz-card class="card-border settings-wide" [nzBordered]="false">
+      <div class="settings-section-head">
+        <div>
+          <h2>在线判定与运行限制</h2>
+          <p>用于控制设备离线判断、会话回收和连接保护。数值为 0 表示不限制。</p>
+        </div>
+        <nz-tag nzColor="gold">Runtime</nz-tag>
+      </div>
+
       <form nz-form [formGroup]="form" nzLayout="vertical">
         <div class="form-grid form-grid-four">
           <nz-form-item>
-            <nz-form-label nzRequired>默认 SSH 端口</nz-form-label>
-            <nz-form-control nzErrorTip="端口范围 1-65535">
-              <nz-input-number class="w-100" formControlName="default_ssh_port" [nzMin]="1" [nzMax]="65535" />
+            <nz-form-label nzRequired>设备心跳超时</nz-form-label>
+            <nz-form-control nzErrorTip="请输入 Go duration，例如 90s">
+              <input nz-input formControlName="device_heartbeat_timeout" placeholder="90s" />
+              <div class="field-note">超过这个时间没有心跳或隧道活动后，设备会被标记为离线。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>离线扫描间隔</nz-form-label>
+            <nz-form-control nzErrorTip="请输入 Go duration，例如 30s">
+              <input nz-input formControlName="device_offline_check_interval" placeholder="30s" />
+              <div class="field-note">后台按这个间隔检查设备在线状态。间隔越短，状态更新越及时。</div>
             </nz-form-control>
           </nz-form-item>
 
@@ -110,6 +148,7 @@
             <nz-form-label nzRequired>会话空闲超时</nz-form-label>
             <nz-form-control nzErrorTip="请输入 Go duration，例如 30m">
               <input nz-input formControlName="session_idle_timeout" placeholder="30m" />
+              <div class="field-note">连接长时间无数据传输时自动回收，避免空闲会话占用资源。</div>
             </nz-form-control>
           </nz-form-item>
 
@@ -117,6 +156,7 @@
             <nz-form-label>最大并发会话</nz-form-label>
             <nz-form-control>
               <nz-input-number class="w-100" formControlName="max_concurrent_sessions" [nzMin]="0" />
+              <div class="field-note">限制全局同时在线的 SSH/HTTP 会话数量，0 表示不限制。</div>
             </nz-form-control>
           </nz-form-item>
 
@@ -124,20 +164,15 @@
             <nz-form-label>单设备最大会话</nz-form-label>
             <nz-form-control>
               <nz-input-number class="w-100" formControlName="max_device_sessions" [nzMin]="0" />
+              <div class="field-note">限制单台设备同时承载的会话数量，适合保护低性能设备。</div>
             </nz-form-control>
           </nz-form-item>
 
           <nz-form-item>
-            <nz-form-label>每分钟限流</nz-form-label>
+            <nz-form-label>来源 IP 每分钟新建会话</nz-form-label>
             <nz-form-control>
               <nz-input-number class="w-100" formControlName="rate_limit_per_minute" [nzMin]="0" />
-            </nz-form-control>
-          </nz-form-item>
-
-          <nz-form-item>
-            <nz-form-label>自定义域名</nz-form-label>
-            <nz-form-control>
-              <label nz-checkbox formControlName="allow_custom_domain">允许绑定自定义域名</label>
+              <div class="field-note">限制同一来源 IP 每分钟新建会话数量，降低异常请求冲击。</div>
             </nz-form-control>
           </nz-form-item>
         </div>
@@ -146,7 +181,7 @@
   </div>
 
   <nz-card class="card-border settings-meta" [nzBordered]="false">
-    <span>配置项 {{ settings.length }}</span>
+    <span>当前可配置 {{ settingCount() }} 项</span>
     <span>最近更新 {{ updatedAt() ? (updatedAt() | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</span>
   </nz-card>
 </section>

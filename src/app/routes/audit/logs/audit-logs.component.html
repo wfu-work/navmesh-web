@@ -1,6 +1,6 @@
 <section class="audit-page">
   <div class="audit-header">
-    <title-label title="操作审计" description="查询登录、配置保存、禁用资源和密码修改等管理操作记录。" />
+    <title-label title="审计日志" description="查询登录、设备、映射、事件和系统维护等管理操作记录。" />
     <button nz-button [nzLoading]="loading" (click)="load()">
       <nz-icon nzType="reload" />
       刷新
@@ -14,11 +14,9 @@
         <input nz-input [(ngModel)]="q.actor" placeholder="操作者" (keydown.enter)="search()" />
         <nz-select nzAllowClear nzPlaceHolder="动作" [(ngModel)]="q.action" (ngModelChange)="search()">
           <nz-option nzValue="" nzLabel="全部动作" />
-          <nz-option nzValue="login" nzLabel="登录" />
-          <nz-option nzValue="login_failed" nzLabel="登录失败" />
-          <nz-option nzValue="save" nzLabel="保存" />
-          <nz-option nzValue="disable" nzLabel="禁用" />
-          <nz-option nzValue="change_password" nzLabel="改密" />
+          @for (option of actionOptions; track option.value) {
+            <nz-option [nzValue]="option.value" [nzLabel]="option.label" />
+          }
         </nz-select>
         <input nz-input [(ngModel)]="q.resource" placeholder="资源" (keydown.enter)="search()" />
         <input nz-input [(ngModel)]="q.resourceId" placeholder="资源 ID" (keydown.enter)="search()" />
@@ -42,6 +40,10 @@
     >
       <ng-template st-row="actorRender" let-item>
         <strong class="audit-actor">{{ item.actor || '-' }}</strong>
+      </ng-template>
+
+      <ng-template st-row="actionRender" let-item>
+        <nz-tag [nzColor]="actionColor(item.action)">{{ actionText(item.action) }}</nz-tag>
       </ng-template>
 
       <ng-template st-row="resourceRender" let-item>

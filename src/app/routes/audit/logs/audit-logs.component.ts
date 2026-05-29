@@ -1,5 +1,5 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
-import { STChange, STColumn, STColumnTag } from '@delon/abc/st';
+import { STChange, STColumn } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize } from 'rxjs';
@@ -32,17 +32,29 @@ export class AuditLogsComponent implements OnInit {
   protected totalCount = 0;
   protected loading = false;
 
-  protected readonly actionTag: STColumnTag = {
-    login: { text: '登录', color: 'green' },
-    login_failed: { text: '登录失败', color: 'red' },
-    save: { text: '保存', color: 'blue' },
-    disable: { text: '禁用', color: 'gold' },
-    change_password: { text: '改密', color: 'purple' },
-  };
+  protected readonly actionOptions = [
+    { value: 'login', label: '登录', color: 'green' },
+    { value: 'login_failed', label: '登录失败', color: 'red' },
+    { value: 'save', label: '保存', color: 'blue' },
+    { value: 'update', label: '更新', color: 'cyan' },
+    { value: 'create', label: '创建', color: 'green' },
+    { value: 'delete', label: '删除', color: 'red' },
+    { value: 'disable', label: '禁用', color: 'gold' },
+    { value: 'enable', label: '启用', color: 'green' },
+    { value: 'rotate', label: '轮换', color: 'purple' },
+    { value: 'assign', label: '分配', color: 'geekblue' },
+    { value: 'ack', label: '确认', color: 'cyan' },
+    { value: 'close', label: '关闭', color: 'orange' },
+    { value: 'verify', label: '验证', color: 'lime' },
+    { value: 'cleanup_retention', label: '清理留存', color: 'magenta' },
+    { value: 'change_password', label: '修改密码', color: 'purple' },
+  ];
+
+  private readonly actionMap = new Map(this.actionOptions.map((item) => [item.value, item]));
 
   protected readonly columns: STColumn<AuditLog>[] = [
     { title: '操作者', index: 'actor', render: 'actorRender', fixed: 'left', width: 160 },
-    { title: '动作', index: 'action', type: 'tag', tag: this.actionTag, width: 120 },
+    { title: '动作', index: 'action', render: 'actionRender', width: 120 },
     { title: '资源', index: 'resource', width: 160, default: '-' },
     { title: '资源 ID', index: 'resourceId', render: 'resourceRender', width: 240 },
     { title: '来源 IP', index: 'sourceIp', width: 150, default: '-' },
@@ -104,20 +116,20 @@ export class AuditLogsComponent implements OnInit {
     this.load();
   }
 
-  protected actionText(value: string): string {
-    const map: Record<string, string> = {
-      login: '登录',
-      login_failed: '登录失败',
-      save: '保存',
-      disable: '禁用',
-      change_password: '修改密码',
-    };
-    return map[value] ?? value;
+  protected actionText(value: string | undefined): string {
+    if (!value) return '-';
+    return this.actionMap.get(value)?.label ?? value;
+  }
+
+  protected actionColor(value: string | undefined): string {
+    if (!value) return 'default';
+    return this.actionMap.get(value)?.color ?? 'default';
   }
 
   private normalizeLog(item: AuditLog): AuditLog {
     return {
       ...item,
+      action: this.firstText(item.action),
       resourceId: this.firstText(item.resourceId, item.resource_id),
       sourceIp: this.firstText(item.sourceIp, item.source_ip),
       createTime: this.firstNumber(item.createTime, item.create_time),

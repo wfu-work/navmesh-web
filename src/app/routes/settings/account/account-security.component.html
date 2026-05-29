@@ -1,51 +1,103 @@
 <section class="account-page">
   <div class="account-header">
-    <title-label title="账号安全" description="查看当前管理员资料，并维护登录密码。" />
-    <button nz-button [nzLoading]="loading" (click)="load()">
+    <title-label title="账号安全" description="查看当前管理员资料，并维护控制台登录密码。" />
+    <button nz-button type="button" [nzLoading]="loading" (click)="load()">
       <nz-icon nzType="reload" />
       刷新
     </button>
   </div>
 
+  <div class="account-note">
+    <nz-icon nzType="safety-certificate" />
+    <div>
+      <strong>密码修改会经过安全校验</strong>
+      <span>提交前会先验证当前密码，并对密码内容做加密处理。保存成功后，下一次登录请使用新密码。</span>
+    </div>
+  </div>
+
   <div class="account-grid">
-    <nz-card class="card-border" [nzBordered]="false" nzTitle="管理员资料">
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="account-section-head">
+        <div>
+          <h2>管理员资料</h2>
+          <p>这里显示当前 Token 对应的系统用户信息，用于确认正在维护的是哪个管理员账号。</p>
+        </div>
+        <nz-tag [nzColor]="statusColor(profile?.status)">{{ statusText(profile?.status) }}</nz-tag>
+      </div>
+
       <nz-spin [nzSpinning]="loading">
+        <div class="account-profile">
+          <img class="account-avatar" [src]="avatarSrc()" [alt]="displayName()" />
+          <div class="account-profile-name">
+            <strong>{{ displayName() }}</strong>
+          </div>
+        </div>
+
+        <div class="account-summary">
+          <article>
+            <span>账号状态</span>
+            <strong [class]="statusClass(profile?.status)">{{ statusText(profile?.status) }}</strong>
+          </article>
+          <article>
+            <span>角色</span>
+            <strong>{{ roleText() }}</strong>
+          </article>
+        </div>
+
         <sv-container col="1">
-          <sv label="账号">{{ profile?.username || '-' }}</sv>
-          <sv label="状态">{{ statusText(profile?.status) }}</sv>
+          <sv label="用户标识">{{ profile?.guid || '-' }}</sv>
+          <sv label="邮箱">{{ profile?.email || '-' }}</sv>
+          <sv label="手机号">{{ profile?.phone || '-' }}</sv>
           <sv label="创建时间">{{ profile?.createTime ? (timestamp(profile?.createTime) | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
           <sv label="更新时间">{{ profile?.updateTime ? (timestamp(profile?.updateTime) | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</sv>
         </sv-container>
       </nz-spin>
     </nz-card>
 
-    <nz-card class="card-border" [nzBordered]="false" nzTitle="修改密码">
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="account-section-head">
+        <div>
+          <h2>修改密码</h2>
+          <p>建议使用 8 位以上密码，并混合大小写字母、数字和符号。请避免复用设备注册 Token 或服务器登录密码。</p>
+        </div>
+        <nz-tag nzColor="blue">Password</nz-tag>
+      </div>
+
       <form nz-form [formGroup]="form" nzLayout="vertical">
         <nz-form-item>
           <nz-form-label nzRequired>当前密码</nz-form-label>
           <nz-form-control nzErrorTip="请输入当前密码">
-            <password-input formControlName="oldPassword" placeholder="当前密码" />
+            <app-password-input formControlName="oldPassword" placeholder="输入当前登录密码" autocomplete="current-password" />
+            <div class="account-field-note">用于验证当前管理员身份，服务端会校验旧密码是否正确。</div>
           </nz-form-control>
         </nz-form-item>
 
         <nz-form-item>
           <nz-form-label nzRequired>新密码</nz-form-label>
           <nz-form-control nzErrorTip="新密码至少 8 位">
-            <password-input formControlName="newPassword" placeholder="至少 8 位" />
+            <app-password-input formControlName="newPassword" placeholder="至少 8 位" autocomplete="new-password" />
+            <div class="password-strength" [class]="passwordStrengthClass()">
+              <span>强度：{{ passwordStrengthText() }}</span>
+              <i></i>
+            </div>
           </nz-form-control>
         </nz-form-item>
 
         <nz-form-item>
           <nz-form-label nzRequired>确认新密码</nz-form-label>
           <nz-form-control nzErrorTip="请再次输入新密码">
-            <password-input formControlName="confirmPassword" placeholder="再次输入新密码" />
+            <app-password-input formControlName="confirmPassword" placeholder="再次输入新密码" autocomplete="new-password" />
+            <div class="account-field-note">两次输入一致后再保存，避免把账号锁在不可预期的密码上。</div>
           </nz-form-control>
         </nz-form-item>
 
-        <button nz-button nzType="primary" [nzLoading]="saving" (click)="savePassword()">
-          <nz-icon nzType="save" />
-          保存密码
-        </button>
+        <div class="password-actions">
+          <button nz-button nzType="primary" type="button" [nzLoading]="saving" (click)="savePassword()">
+            <nz-icon nzType="save" />
+            保存密码
+          </button>
+          <span>保存后当前会话仍可继续使用；下次登录需要输入新密码。</span>
+        </div>
       </form>
     </nz-card>
   </div>

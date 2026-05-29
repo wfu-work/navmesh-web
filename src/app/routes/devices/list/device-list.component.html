@@ -1,33 +1,42 @@
 <section class="device-page">
   <div class="device-header">
-      <title-label
-        title="设备列表"
+    <title-label
+      title="设备列表"
       description="按设备类型查看接入设备、在线状态、设备号和最近心跳。"
     />
   </div>
 
   <nz-card class="card-border device-filter-card" [nzBordered]="false">
     <div class="device-toolbar">
-      <nz-form-item class="device-group-filter">
-        <nz-form-label>设备分组</nz-form-label>
-        <nz-form-control>
-          <nz-select
-            nzShowSearch
-            nzAllowClear
-            nzPlaceHolder="全部分组"
-            [(ngModel)]="q.type"
-            (ngModelChange)="q.page = 1; getData()"
-          >
-            <nz-option nzValue="" nzLabel="全部分组" />
-            @for (type of types; track typeValue(type)) {
-              <nz-option [nzValue]="typeValue(type)" [nzLabel]="type.name || typeValue(type)" />
-            }
-          </nz-select>
-        </nz-form-control>
-      </nz-form-item>
-
-      <div class="device-search">
-        <nz-input-wrapper>
+      <div class="device-filter-actions">
+        <nz-select
+          nzShowSearch
+          nzAllowClear
+          nzPlaceHolder="全部分组"
+          [(ngModel)]="q.type"
+          (ngModelChange)="q.page = 1; getData()"
+          class="device-filter-type"
+        >
+          <nz-option nzCustomContent nzValue="" nzLabel="全部分组">
+            <span class="device-type-option">
+              <nz-icon nzType="appstore" />
+              <span>全部分组</span>
+            </span>
+          </nz-option>
+          @for (type of types; track typeValue(type)) {
+            <nz-option
+              nzCustomContent
+              [nzValue]="typeValue(type)"
+              [nzLabel]="type.name || typeValue(type)"
+            >
+              <span class="device-type-option">
+                <nz-icon [nzType]="productIcon(typeValue(type))" />
+                <span>{{ type.name || typeValue(type) }}</span>
+              </span>
+            </nz-option>
+          }
+        </nz-select>
+        <nz-input-wrapper class="device-filter-search">
           <nz-icon nzInputPrefix nzType="search" />
           <input
             nz-input
@@ -36,7 +45,9 @@
             (keydown.enter)="q.page = 1; getData()"
           />
         </nz-input-wrapper>
-        <button nz-button nzType="primary" (click)="q.page = 1; getData()">查询</button>
+        <button nz-button nzType="primary" (click)="q.page = 1; getData()">
+          查询
+        </button>
         <button nz-button (click)="reset()">重置</button>
       </div>
     </div>
@@ -48,13 +59,13 @@
         <nz-card
           class="device-card {{ deviceStateClass(item.status) }}"
           [nzBordered]="false"
-          [nzActions]="[configAction, detailAction, editAction, deleteAction]"
+          [nzActions]="[editAction, detailAction, configAction, deleteAction]"
         >
           <div class="device-card-main">
             <div class="device-card-copy">
               <div class="device-card-title">
-                <div class="device-os-badge {{ osClass(item.os) }}">
-                  <nz-icon [nzType]="osIcon(item.os)" />
+                <div class="device-os-badge {{ osClass(item) }}" [title]="osLabel(item)">
+                  <img [src]="osIconSrc(item)" [alt]="osLabel(item)" />
                 </div>
                 <div class="device-title-text">
                   <strong>{{ item.name || item.sncode || item.hostname || item.guid }}</strong>
@@ -66,18 +77,45 @@
                 <div>
                   <dt>所属产品</dt>
                   <dd>
-                    <button type="button" class="product-link" (click)="productLink(item.deviceType)">
+                    <button
+                      type="button"
+                      class="product-link"
+                      (click)="productLink(item.deviceType)"
+                    >
                       {{ productName(item.deviceType) }}
                     </button>
                   </dd>
+                </div>
+                <div>
+                  <dt>系统</dt>
+                  <dd [title]="systemLabel(item)">{{ systemLabel(item) }}</dd>
                 </div>
                 <div>
                   <dt>本机端口</dt>
                   <dd>SSH {{ item.sshPort || '-' }} / HTTP {{ item.webPort || '-' }}</dd>
                 </div>
                 <div>
+                  <dt>外网 IP</dt>
+                  <dd class="device-card-ip" [title]="externalIp(item) || '-'">
+                    {{ externalIp(item) || '-' }}
+                  </dd>
+                </div>
+                <div>
+                  <dt>地址</dt>
+                  <dd class="device-card-location" [title]="locationLabel(item) || '-'">
+                    <nz-icon nzType="environment" />
+                    <span>{{ locationLabel(item) || '-' }}</span>
+                  </dd>
+                </div>
+                <div>
                   <dt>最近连接</dt>
-                  <dd>{{ item.lastHeartbeatAt ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</dd>
+                  <dd>
+                    {{
+                      item.lastHeartbeatAt
+                        ? (item.lastHeartbeatAt | _date: 'yyyy-MM-dd HH:mm:ss')
+                        : '-'
+                    }}
+                  </dd>
                 </div>
                 <div>
                   <dt>{{ item.status === 1 ? '设备激活' : '设备开关' }}</dt>

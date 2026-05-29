@@ -25,18 +25,16 @@ export class SystemSettingsComponent implements OnInit {
   protected settings: NavMeshSetting[] = [];
 
   protected readonly form = this.fb.group({
-    public_domain: ['', [Validators.required]],
     ssh_gateway_domain: ['', [Validators.required]],
-    http_mapping_domain: ['', [Validators.required]],
     ssh_listen: ['', [Validators.required]],
     ssh_enabled: [true],
     http_listen: ['', [Validators.required]],
     http_mapping_enabled: [true],
     tunnel_listen: ['', [Validators.required]],
     tunnel_enabled: [true],
-    allow_custom_domain: [true],
-    default_ssh_port: [22, [Validators.required, Validators.min(1), Validators.max(65535)]],
     device_register_token: ['', [Validators.required]],
+    device_heartbeat_timeout: ['90s', [Validators.required]],
+    device_offline_check_interval: ['30s', [Validators.required]],
     session_idle_timeout: ['30m', [Validators.required]],
     max_concurrent_sessions: [0, [Validators.min(0)]],
     max_device_sessions: [0, [Validators.min(0)]],
@@ -99,20 +97,22 @@ export class SystemSettingsComponent implements OnInit {
     return Math.max(...this.settings.map((item) => this.firstNumber(item.updateTime, item.update_time)), 0);
   }
 
+  protected settingCount(): number {
+    return Object.keys(this.form.controls).length;
+  }
+
   private patchForm(): void {
     this.form.patchValue({
-      public_domain: this.setting('public_domain', 'navfirst.com'),
-      ssh_gateway_domain: this.setting('ssh_gateway_domain', 'ssh.navfirst.com'),
-      http_mapping_domain: this.setting('http_mapping_domain', 'qx.navfirst.com'),
-      ssh_listen: this.setting('ssh_listen', ':22'),
+      ssh_gateway_domain: this.setting('ssh_gateway_domain', 'sshd.navfirst.com'),
+      ssh_listen: this.setting('ssh_listen', ':3010'),
       ssh_enabled: this.boolSetting('ssh_enabled', true),
-      http_listen: this.setting('http_listen', ':8080'),
+      http_listen: this.setting('http_listen', ':3009'),
       http_mapping_enabled: this.boolSetting('http_mapping_enabled', true),
       tunnel_listen: this.setting('tunnel_listen', ':3008'),
       tunnel_enabled: this.boolSetting('tunnel_enabled', true),
-      allow_custom_domain: this.boolSetting('allow_custom_domain', true),
-      default_ssh_port: this.numberSetting('default_ssh_port', 22),
       device_register_token: this.setting('device_register_token', ''),
+      device_heartbeat_timeout: this.setting('device_heartbeat_timeout', '90s'),
+      device_offline_check_interval: this.setting('device_offline_check_interval', '30s'),
       session_idle_timeout: this.setting('session_idle_timeout', '30m'),
       max_concurrent_sessions: this.numberSetting('max_concurrent_sessions', 0),
       max_device_sessions: this.numberSetting('max_device_sessions', 0),

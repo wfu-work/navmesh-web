@@ -15,13 +15,13 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
             <logo class="logo" />
             <span class="title">NavMesh</span>
           </div>
-          <div class="desc">边缘设备远程接入控制台</div>
+          <div class="desc">边缘设备远程接入网关系统</div>
         </div>
         <router-outlet />
         <global-footer [links]="links">
           Copyright
           <i class="anticon anticon-copyright"></i> 2020-{{ year }}
-          <a href="//www.github.com" target="_blank">武汉小兮科技</a>
+          <a href="//www.github.com" target="_blank">武汉守明科技有限公司</a>
         </global-footer>
       </div>
     </div>

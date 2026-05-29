@@ -11,8 +11,8 @@
     @if (device; as item) {
       <section class="device-profile {{ deviceStateClass(item.status) }}">
         <div class="detail-device-title">
-          <span class="device-os-icon {{ osClass(item.os) }}">
-            <nz-icon [nzType]="osIcon(item.os)" />
+          <span class="device-os-icon {{ osClass(item) }}" [title]="osLabel(item)">
+            <img [src]="osIconSrc(item)" [alt]="osLabel(item)" />
           </span>
           <div>
             <strong>{{ item.name || item.hostname || item.guid }}</strong>
@@ -32,24 +32,7 @@
         </div>
       </section>
 
-      <div class="detail-summary detail-summary-metrics">
-        <article class="summary-item {{ deviceStateClass(item.status) }}">
-          <span>在线状态</span>
-          <strong [class]="statusClass(item.status)">{{ statusText(item.status) }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>当前连接</span>
-          <strong>{{ activeConnectionCount() }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>进行中会话</span>
-          <strong>{{ activeSessionCount() }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>累计流量</span>
-          <strong>{{ formatBytes(totalTraffic()) }}</strong>
-        </article>
-      </div>
+      <app-metric-summary class="detail-summary-metrics" [items]="summaryItems(item)" />
 
       <div class="detail-grid">
         <nz-card class="card-border" [nzBordered]="false" nzTitle="设备信息">
@@ -95,8 +78,17 @@
           <div class="detail-card-title">
             <div>
               <h2>流量统计</h2>
-              <p>基于最近会话记录汇总输入、输出和错误访问。</p>
+              <p>基于 {{ trafficWindowLabel() }} 的隧道会话和 HTTP 访问日志汇总入站、出站、峰值和错误请求。</p>
             </div>
+            <nz-select
+              class="traffic-window-select"
+              [(ngModel)]="trafficWindow"
+              aria-label="流量统计时间范围"
+            >
+              @for (option of trafficWindowOptions; track option.value) {
+                <nz-option [nzValue]="option.value" [nzLabel]="option.label" />
+              }
+            </nz-select>
           </div>
           <div class="traffic-stats">
             <article>
@@ -108,18 +100,61 @@
               <strong>{{ formatBytes(outboundTraffic()) }}</strong>
             </article>
             <article>
-              <span>HTTP 错误</span>
+              <span>总流量</span>
+              <strong>{{ formatBytes(trafficTotal()) }}</strong>
+            </article>
+            <article>
+              <span>错误请求</span>
               <strong>{{ errorLogCount() }}</strong>
             </article>
+            <article>
+              <span>统计记录</span>
+              <strong>{{ trafficRecordCount() }}</strong>
+            </article>
+            <article>
+              <span>峰值时段</span>
+              <strong>{{ peakTrafficBucket()?.label || '-' }}</strong>
+            </article>
           </div>
-          <div class="traffic-bars">
-            @for (bar of trafficBars(); track bar.label) {
-              <div class="traffic-bar-wrap">
-                <div class="traffic-bar" [style.height.%]="bar.height"></div>
-                <span>{{ bar.label }}</span>
-              </div>
-            }
+          <div class="traffic-chart-head">
+            <div class="traffic-legend">
+              <span class="traffic-legend-in">入站</span>
+              <span class="traffic-legend-out">出站</span>
+            </div>
+            <span>{{ trafficWindowLabel() }}</span>
           </div>
+          @if (hasTrafficData()) {
+            <div class="traffic-bars" [style.--traffic-columns]="trafficBars().length">
+              @for (bar of trafficBars(); track bar.label) {
+                <div class="traffic-bar-wrap">
+                  <div class="traffic-bar-pair">
+                    <div
+                      class="traffic-bar traffic-bar-in"
+                      [style.height.%]="bar.inboundHeight"
+                      [class.traffic-bar-empty]="!bar.inbound"
+                    ></div>
+                    <div
+                      class="traffic-bar traffic-bar-out"
+                      [style.height.%]="bar.outboundHeight"
+                      [class.traffic-bar-empty]="!bar.outbound"
+                    ></div>
+                  </div>
+                  <span>{{ bar.label }}</span>
+                  <div class="traffic-tooltip">
+                    <strong>{{ bar.label }}</strong>
+                    <span>入站 {{ formatBytes(bar.inbound) }}</span>
+                    <span>出站 {{ formatBytes(bar.outbound) }}</span>
+                    <span>合计 {{ formatBytes(bar.total) }}</span>
+                    <span>记录 {{ bar.count }} 条</span>
+                  </div>
+                </div>
+              }
+            </div>
+          } @else {
+            <div class="traffic-empty">
+              <nz-empty nzNotFoundContent="当前时间范围暂无流量数据" />
+            </div>
+          }
         </nz-card>
 
         <nz-card class="card-border traffic-card" [nzBordered]="false">

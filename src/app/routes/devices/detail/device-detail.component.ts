@@ -2,6 +2,11 @@ import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/cor
 import { SHARED_IMPORTS } from '@shared';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { finalize, forkJoin } from 'rxjs';
+import {
+  MetricSummaryComponent,
+  MetricSummaryItem,
+  MetricSummaryTone,
+} from 'src/app/shared/components/metric-summary/metric-summary.component';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { SessionsService, TunnelSession } from '../../sessions/sessions.service';
@@ -10,12 +15,35 @@ import { DeviceStatus } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 import { HTTPAccessLog, HttpAccessService } from '../http-access.service';
 
+interface TrafficWindowOption {
+  label: string;
+  value: string;
+  duration: number;
+  buckets: number;
+}
+
+interface TrafficBucket {
+  label: string;
+  inbound: number;
+  outbound: number;
+  total: number;
+  count: number;
+  inboundHeight: number;
+  outboundHeight: number;
+}
+
+interface TrafficPoint {
+  time: number;
+  inbound: number;
+  outbound: number;
+}
+
 @Component({
   selector: 'app-device-detail',
   templateUrl: './device-detail.component.html',
   styleUrls: ['../list/device-list.component.less', './device-detail.component.less'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule],
+  imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule, MetricSummaryComponent],
 })
 export class DeviceDetailComponent extends DevicePageBase implements OnInit {
   private readonly httpAccessService = inject(HttpAccessService);
@@ -25,6 +53,14 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
   protected sessions: TunnelSession[] = [];
   protected accessLogs: HTTPAccessLog[] = [];
   protected connections: TunnelConnection[] = [];
+  protected trafficWindow = '24h';
+
+  protected readonly trafficWindowOptions: TrafficWindowOption[] = [
+    { label: '过去 1 小时', value: '1h', duration: 60 * 60 * 1000, buckets: 6 },
+    { label: '过去 6 小时', value: '6h', duration: 6 * 60 * 60 * 1000, buckets: 6 },
+    { label: '过去 24 小时', value: '24h', duration: 24 * 60 * 60 * 1000, buckets: 8 },
+    { label: '过去 7 天', value: '7d', duration: 7 * 24 * 60 * 60 * 1000, buckets: 7 },
+  ];
 
   ngOnInit(): void {
     this.load();
@@ -82,40 +118,85 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     return this.sessions.reduce((sum, item) => sum + item.bytesIn + item.bytesOut, 0);
   }
 
+  protected summaryItems(item: { status?: DeviceStatus }): MetricSummaryItem[] {
+    return [
+      { label: '在线状态', value: this.statusText(item.status), tone: this.statusTone(item.status) },
+      { label: '当前连接', value: this.activeConnectionCount(), tone: this.activeConnectionCount() ? 'primary' : 'muted' },
+      { label: '进行中会话', value: this.activeSessionCount(), tone: this.activeSessionCount() ? 'success' : 'muted' },
+      { label: '累计流量', value: this.formatBytes(this.totalTraffic()), tone: this.totalTraffic() ? 'primary' : 'muted' },
+    ];
+  }
+
   protected inboundTraffic(): number {
-    return this.sessions.reduce((sum, item) => sum + item.bytesIn, 0);
+    return this.trafficPoints().reduce((sum, item) => sum + item.inbound, 0);
   }
 
   protected outboundTraffic(): number {
-    return this.sessions.reduce((sum, item) => sum + item.bytesOut, 0);
+    return this.trafficPoints().reduce((sum, item) => sum + item.outbound, 0);
   }
 
   protected errorLogCount(): number {
-    return this.accessLogs.filter((item) => item.statusCode >= 500 || item.errorMessage).length;
+    const minTime = Date.now() - this.trafficWindowOption().duration;
+    return this.accessLogs.filter((item) => {
+      const time = this.logTime(item);
+      return time >= minTime && (item.statusCode >= 500 || item.errorMessage);
+    }).length;
   }
 
   protected recentSessions(): TunnelSession[] {
     return this.sessions.slice(0, 6);
   }
 
-  protected trafficBars(): Array<{ label: string; value: number; height: number }> {
-    const buckets = Array.from({ length: 8 }, () => 0);
+  protected trafficTotal(): number {
+    return this.inboundTraffic() + this.outboundTraffic();
+  }
+
+  protected trafficRecordCount(): number {
+    return this.trafficPoints().length;
+  }
+
+  protected trafficWindowLabel(): string {
+    return this.trafficWindowOption().label;
+  }
+
+  protected peakTrafficBucket(): TrafficBucket | undefined {
+    return this.trafficBars().filter((item) => item.total > 0).reduce<TrafficBucket | undefined>((peak, item) => {
+      if (!peak || item.total > peak.total) return item;
+      return peak;
+    }, undefined);
+  }
+
+  protected hasTrafficData(): boolean {
+    return this.trafficBars().some((item) => item.total > 0);
+  }
+
+  protected trafficBars(): TrafficBucket[] {
+    const option = this.trafficWindowOption();
+    const buckets = Array.from({ length: option.buckets }, () => ({ inbound: 0, outbound: 0, count: 0 }));
     const now = Date.now();
-    const dayMs = 24 * 60 * 60 * 1000;
-    const bucketMs = dayMs / buckets.length;
-    this.sessions.forEach((item) => {
-      const time = item.startTime || item.createTime || 0;
-      const age = now - time;
-      if (age < 0 || age > dayMs) return;
-      const index = Math.min(buckets.length - 1, Math.floor((dayMs - age) / bucketMs));
-      buckets[index] += item.bytesIn + item.bytesOut;
+    const bucketMs = option.duration / buckets.length;
+    this.trafficPoints().forEach((item) => {
+      const age = now - item.time;
+      if (age < 0 || age > option.duration) return;
+      const index = Math.min(buckets.length - 1, Math.floor((option.duration - age) / bucketMs));
+      buckets[index].inbound += item.inbound;
+      buckets[index].outbound += item.outbound;
+      buckets[index].count += 1;
     });
-    const max = Math.max(...buckets, 1);
-    return buckets.map((value, index) => ({
-      label: `${index * 3}h`,
-      value,
-      height: value > 0 ? Math.max(12, Math.round((value / max) * 100)) : 6,
-    }));
+    const max = Math.max(...buckets.flatMap((item) => [item.inbound, item.outbound]), 1);
+    return buckets.map((item, index) => {
+      const inboundHeight = item.inbound > 0 ? Math.max(6, Math.round((item.inbound / max) * 100)) : 0;
+      const outboundHeight = item.outbound > 0 ? Math.max(6, Math.round((item.outbound / max) * 100)) : 0;
+      return {
+        label: this.trafficBucketLabel(index, option, now, bucketMs),
+        inbound: item.inbound,
+        outbound: item.outbound,
+        total: item.inbound + item.outbound,
+        count: item.count,
+        inboundHeight,
+        outboundHeight,
+      };
+    });
   }
 
   protected activationText(status: DeviceStatus | undefined): string {
@@ -126,6 +207,16 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
       4: '设备已禁用',
     };
     return status ? map[status] : '未知';
+  }
+
+  private statusTone(status: DeviceStatus | undefined): MetricSummaryTone {
+    const map: Record<string, MetricSummaryTone> = {
+      1: 'warning',
+      2: 'success',
+      3: 'danger',
+      4: 'muted',
+    };
+    return map[String(status)] ?? 'muted';
   }
 
   private normalizeSession(item: TunnelSession): TunnelSession {
@@ -160,5 +251,61 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
       errorMessage: this.firstText(item.errorMessage, item.error_message),
       createTime: this.firstNumber(item.createTime, item.create_time),
     };
+  }
+
+  private trafficSessions(): TunnelSession[] {
+    const minTime = Date.now() - this.trafficWindowOption().duration;
+    return this.sessions.filter((item) => {
+      const time = this.sessionTime(item);
+      return time >= minTime;
+    });
+  }
+
+  private trafficLogs(): HTTPAccessLog[] {
+    const minTime = Date.now() - this.trafficWindowOption().duration;
+    return this.accessLogs.filter((item) => this.logTime(item) >= minTime);
+  }
+
+  private trafficPoints(): TrafficPoint[] {
+    return [
+      ...this.trafficSessions().map((item) => ({
+        time: this.sessionTime(item),
+        inbound: item.bytesIn,
+        outbound: item.bytesOut,
+      })),
+      ...this.trafficLogs().map((item) => ({
+        time: this.logTime(item),
+        inbound: item.bytesIn,
+        outbound: item.bytesOut,
+      })),
+    ];
+  }
+
+  private trafficWindowOption(): TrafficWindowOption {
+    return this.trafficWindowOptions.find((item) => item.value === this.trafficWindow) ?? this.trafficWindowOptions[2];
+  }
+
+  private sessionTime(item: TunnelSession): number {
+    return this.normalizeTimestamp(item.startTime || item.createTime || 0);
+  }
+
+  private logTime(item: HTTPAccessLog): number {
+    return this.normalizeTimestamp(item.createTime || 0);
+  }
+
+  private normalizeTimestamp(time: number): number {
+    return time > 0 && time < 1000000000000 ? time * 1000 : time;
+  }
+
+  private trafficBucketLabel(index: number, option: TrafficWindowOption, now: number, bucketMs: number): string {
+    const bucketStart = now - option.duration + index * bucketMs;
+    const date = new Date(bucketStart);
+    if (option.value === '7d') {
+      return `${date.getMonth() + 1}/${date.getDate()}`;
+    }
+    if (option.value === '1h') {
+      return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
+    }
+    return `${date.getHours()}h`;
   }
 }

@@ -20,20 +20,23 @@ export abstract class DevicePageBase {
     return this.device?.name || this.device?.hostname || this.guid || '设备详情';
   }
 
-  protected osIcon(os: string | undefined): string {
-    const value = String(os || '').toLowerCase();
-    if (value.includes('darwin') || value.includes('mac')) return 'apple';
-    if (value.includes('win')) return 'windows';
-    if (value.includes('linux') || value.includes('ubuntu') || value.includes('debian') || value.includes('centos')) return 'code';
-    return 'desktop';
+  protected osIconSrc(item: Device): string {
+    return `assets/icons/${this.osKind(item)}.svg`;
   }
 
-  protected osClass(os: string | undefined): string {
-    const value = String(os || '').toLowerCase();
-    if (value.includes('darwin') || value.includes('mac')) return 'os-macos';
-    if (value.includes('win')) return 'os-windows';
-    if (value.includes('linux') || value.includes('ubuntu') || value.includes('debian') || value.includes('centos')) return 'os-linux';
-    return 'os-unknown';
+  protected osLabel(item: Device): string {
+    const value = this.osText(item);
+    if (value.includes('ubuntu')) return 'Ubuntu';
+    if (value.includes('centos')) return 'CentOS';
+    if (value.includes('darwin') || value.includes('mac')) return 'Mac';
+    if (value.includes('win')) return 'Windows';
+    if (value.includes('debian')) return 'Debian';
+    if (value.includes('linux')) return 'Linux';
+    return item.os || '未知系统';
+  }
+
+  protected osClass(item: Device): string {
+    return `os-${this.osKind(item)}`;
   }
 
   protected statusText(status: DeviceStatus | undefined): string {
@@ -141,5 +144,21 @@ export abstract class DevicePageBase {
 
   protected guidPrefix(guid: string | undefined): string {
     return guid ? `${guid.slice(0, 8)}...` : '';
+  }
+
+  private osKind(item: Device): 'linux' | 'ubuntu' | 'centos' | 'windows' | 'macos' {
+    const value = this.osText(item);
+    if (value.includes('ubuntu')) return 'ubuntu';
+    if (value.includes('centos')) return 'centos';
+    if (value.includes('darwin') || value.includes('mac')) return 'macos';
+    if (value.includes('win')) return 'windows';
+    return 'linux';
+  }
+
+  private osText(item: Device): string {
+    return [item.os, item.osVersion, item.kernel, item.arch]
+      .map((value) => String(value || '').trim().toLowerCase())
+      .filter(Boolean)
+      .join(' ');
   }
 }

@@ -11,39 +11,7 @@
 }
 
 .tunnel-summary {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
   margin-bottom: 18px;
-
-  article {
-    min-width: 0;
-    padding: 18px 20px;
-    border: 1px solid #dde7e3;
-    border-radius: 8px;
-    background: #fff;
-  }
-
-  span,
-  strong {
-    display: block;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  span {
-    color: #6a7785;
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  strong {
-    margin-top: 8px;
-    color: #0d8f5d;
-    font-size: 22px;
-    font-weight: 850;
-  }
 }
 
 .tunnel-code {
@@ -88,9 +56,7 @@
 }
 
 @media (max-width: 767px) {
-  .tunnel-header,
-  .tunnel-summary {
+  .tunnel-header {
     display: grid;
-    grid-template-columns: 1fr;
   }
 }

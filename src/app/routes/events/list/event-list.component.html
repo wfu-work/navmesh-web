@@ -1,42 +1,25 @@
 <section class="event-page">
   <div class="event-header">
     <title-label
-      title="事件告警"
+      title="事件中心"
       description="筛选、确认和关闭设备离线、SSH 接入、HTTP 映射、隧道连接和认证事件。"
     />
   </div>
 
-  <div class="event-summary">
-    <article class="summary-item">
-      <span>未处理</span>
-      <strong class="danger">{{ openCount() }}</strong>
-    </article>
-    <article class="summary-item">
-      <span>已处理</span>
-      <strong class="warning">{{ ackedCount() }}</strong>
-    </article>
-    <article class="summary-item">
-      <span>已关闭</span>
-      <strong>{{ closedCount() }}</strong>
-    </article>
-    <article class="summary-item">
-      <span>严重事件</span>
-      <strong class="danger">{{ severeCount() }}</strong>
-    </article>
-  </div>
+  <app-metric-summary class="event-summary" [items]="summaryItems()" />
 
   <nz-card class="card-border" [nzBordered]="false">
     <div class="event-toolbar">
-      <h2>事件列表</h2>
+      <h2>事件列表 <span>{{ total }} 条</span></h2>
       <div class="toolbar-actions">
-        <nz-select nzShowSearch nzPlaceHolder="设备" [(ngModel)]="q.deviceGuid" (ngModelChange)="load()">
+        <nz-select nzShowSearch nzPlaceHolder="设备" [(ngModel)]="q.deviceGuid" (ngModelChange)="search()">
           <nz-option nzValue="" nzLabel="全部设备" />
           @for (device of devices; track device.guid) {
-            <nz-option [nzValue]="device.guid" [nzLabel]="device.name || device.hostname || device.guid" />
+            <nz-option [nzValue]="device.guid" [nzLabel]="deviceLabel(device)" />
           }
         </nz-select>
 
-        <nz-select nzPlaceHolder="等级" [(ngModel)]="q.level" (ngModelChange)="load()">
+        <nz-select nzPlaceHolder="等级" [(ngModel)]="q.level" (ngModelChange)="search()">
           <nz-option nzValue="" nzLabel="全部等级" />
           <nz-option nzValue="critical" nzLabel="严重" />
           <nz-option nzValue="error" nzLabel="错误" />
@@ -47,7 +30,7 @@
           <nz-option nzValue="info" nzLabel="信息" />
         </nz-select>
 
-        <nz-select nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="load()">
+        <nz-select nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="search()">
           <nz-option nzValue="" nzLabel="全部状态" />
           <nz-option nzValue="1" nzLabel="未处理" />
           <nz-option nzValue="0" nzLabel="已处理" />
@@ -66,7 +49,10 @@
       [columns]="columns"
       bordered="false"
       [loading]="loading"
-      [page]="{ show: false }"
+      (change)="tableChange($event)"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="total"
       [expand]="expand"
       [expandRowByClick]="true"
       [scroll]="{ x: '1720px' }"

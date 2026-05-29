@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject }
 import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin, switchMap } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { NavMeshProfile, NavMeshSettingsService } from '../settings.service';
@@ -48,7 +48,8 @@ export class AccountSecurityComponent implements OnInit {
         next: (profile) => {
           this.profile = {
             ...profile,
-            username: profile.username || profile.name || '-',
+            username: profile.username || profile.name || profile.nickName || '-',
+            status: this.firstNumber(profile.status, profile.enable),
             createTime: this.timestamp(profile.createTime || profile.create_time),
             updateTime: this.timestamp(profile.updateTime || profile.update_time),
           };
@@ -71,12 +72,12 @@ export class AccountSecurityComponent implements OnInit {
       return;
     }
     this.saving = true;
-    this.settingsService
-      .changePassword({
-        oldPassword: value.oldPassword,
-        newPassword: value.newPassword,
-      })
+    forkJoin({
+      oldPassword: this.settingsService.encryptSecret(value.oldPassword),
+      newPassword: this.settingsService.encryptSecret(value.newPassword),
+    })
       .pipe(
+        switchMap((payload) => this.settingsService.changePassword(payload)),
         finalize(() => {
           this.saving = false;
           this.cdr.markForCheck();
@@ -84,19 +85,73 @@ export class AccountSecurityComponent implements OnInit {
       )
       .subscribe({
         next: () => {
-          this.message.success('密码已更新');
+          this.message.success('密码已更新，请使用新密码登录');
           this.form.reset();
           this.load();
         },
-        error: () => this.message.error('密码更新接口暂未开放或当前账号无权限'),
+        error: (e) => this.message.error(e?.message || '密码更新失败，请检查当前密码是否正确'),
       });
   }
 
   protected statusText(status: number | undefined): string {
+    if (status === undefined) return '-';
     return status === 1 ? '启用' : '禁用';
+  }
+
+  protected statusClass(status: number | undefined): string {
+    if (status === undefined) return '';
+    return status === 1 ? 'account-status-enabled' : 'account-status-disabled';
+  }
+
+  protected statusColor(status: number | undefined): string {
+    if (status === undefined) return 'default';
+    return status === 1 ? 'green' : 'red';
+  }
+
+  protected displayName(): string {
+    return this.profile?.nickName || this.profile?.name || this.profile?.username || '-';
+  }
+
+  protected avatarSrc(): string {
+    return this.profile?.avatar || 'assets/avatar.gif';
+  }
+
+  protected roleText(): string {
+    const roles = this.profile?.roleCodeList ?? [];
+    return roles.length ? roles.join(' / ') : '管理员';
+  }
+
+  protected passwordStrength(): number {
+    const value = this.form.controls.newPassword.value;
+    let score = 0;
+    if (value.length >= 8) score += 1;
+    if (/[A-Z]/.test(value) && /[a-z]/.test(value)) score += 1;
+    if (/\d/.test(value)) score += 1;
+    if (/[^A-Za-z0-9]/.test(value)) score += 1;
+    return score;
+  }
+
+  protected passwordStrengthText(): string {
+    const score = this.passwordStrength();
+    if (!this.form.controls.newPassword.value) return '等待输入';
+    if (score <= 1) return '偏弱';
+    if (score <= 3) return '中等';
+    return '较强';
+  }
+
+  protected passwordStrengthClass(): string {
+    const score = this.passwordStrength();
+    if (!this.form.controls.newPassword.value) return '';
+    if (score <= 1) return 'strength-weak';
+    if (score <= 3) return 'strength-medium';
+    return 'strength-strong';
   }
 
   protected timestamp(value: number | undefined): number {
     return value || 0;
+  }
+
+  private firstNumber(...values: Array<number | undefined>): number {
+    return values.find((value) => value !== undefined && value !== null) ?? 0;
   }
 }

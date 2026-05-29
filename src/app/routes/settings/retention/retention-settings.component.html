@@ -1,6 +1,9 @@
 <section class="settings-page">
   <div class="settings-header">
-    <title-label title="数据保留" description="配置审计、访问日志、会话和设备心跳历史的保留周期。" />
+    <title-label
+      title="数据保留"
+      description="控制审计日志、访问日志、隧道会话和设备活动历史的保存时间，避免长期运行后数据表持续膨胀。"
+    />
     <div class="header-actions">
       <button nz-button [nzLoading]="loading" (click)="load()">
         <nz-icon nzType="reload" />
@@ -8,33 +11,81 @@
       </button>
       <button nz-button nzType="primary" [nzLoading]="saving" (click)="save()">
         <nz-icon nzType="save" />
-        保存
+        保存策略
       </button>
     </div>
   </div>
 
-  <div class="settings-grid">
-    <nz-card class="card-border" [nzBordered]="false" nzTitle="自动清理">
-      <form nz-form [formGroup]="form" nzLayout="vertical">
-        <nz-form-item>
-          <nz-form-label>启用清理任务</nz-form-label>
-          <nz-form-control>
-            <label nz-checkbox formControlName="retention_cleanup_enabled">按固定周期自动清理过期数据</label>
-          </nz-form-control>
-        </nz-form-item>
+  <div class="settings-note">
+    <nz-icon nzType="info-circle" />
+    <div>
+      <strong>保留周期只影响历史数据</strong>
+      <span>自动清理和手动清理都会按下面的天数删除过期记录。填写 0 表示不清理该类数据；执行清理前建议确认审计和问题追踪所需的最短保留时间。</span>
+    </div>
+  </div>
 
-        <nz-form-item>
-          <nz-form-label nzRequired>清理间隔</nz-form-label>
-          <nz-form-control nzErrorTip="请输入 Go duration，例如 24h">
-            <input nz-input formControlName="retention_cleanup_interval" placeholder="24h" />
-          </nz-form-control>
-        </nz-form-item>
+  <div class="retention-strip">
+    <article>
+      <span>清理状态</span>
+      <strong>{{ cleanupEnabledText() }}</strong>
+    </article>
+    <article>
+      <span>执行间隔</span>
+      <strong>{{ form.controls.retention_cleanup_interval.value || '-' }}</strong>
+    </article>
+    <article>
+      <span>策略项目</span>
+      <strong>{{ settingCount() }} 项</strong>
+    </article>
+  </div>
+
+  <div class="settings-grid">
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="settings-section-head">
+        <div>
+          <h2>自动清理</h2>
+          <p>服务启动后会按固定间隔执行一次清理任务，后续继续按间隔循环执行。</p>
+        </div>
+        <nz-tag [nzColor]="form.controls.retention_cleanup_enabled.value ? 'green' : 'default'">
+          {{ form.controls.retention_cleanup_enabled.value ? 'Enabled' : 'Paused' }}
+        </nz-tag>
+      </div>
+
+      <form nz-form [formGroup]="form" nzLayout="vertical">
+        <div class="form-grid">
+          <nz-form-item>
+            <nz-form-label>自动清理任务</nz-form-label>
+            <nz-form-control>
+              <label nz-checkbox formControlName="retention_cleanup_enabled">按固定周期自动清理过期数据</label>
+              <div class="field-note">关闭后系统不会定时清理，但仍可以在右侧手动执行一次清理。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>清理间隔</nz-form-label>
+            <nz-form-control nzErrorTip="请输入 Go duration，例如 24h">
+              <input nz-input formControlName="retention_cleanup_interval" placeholder="24h" />
+              <div class="field-note">使用 Go duration 格式，例如 <code>12h</code>、<code>24h</code>。服务端最小按 1 分钟执行。</div>
+            </nz-form-control>
+          </nz-form-item>
+        </div>
       </form>
     </nz-card>
 
-    <nz-card class="card-border" [nzBordered]="false" nzTitle="手动清理">
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="settings-section-head">
+        <div>
+          <h2>手动清理</h2>
+          <p>立即按当前保留周期删除过期数据，并记录到审计日志，适合调整策略后立刻回收空间。</p>
+        </div>
+        <nz-tag nzColor="red">Manual</nz-tag>
+      </div>
+
       <div class="cleanup-panel">
-        <p>立即按当前保留天数删除过期数据，并写入审计日志。</p>
+        <div>
+          <h3>执行一次过期数据清理</h3>
+          <p>清理动作不可撤销，只会删除超过保留天数的历史记录，不会影响当前在线设备和正在进行的连接。</p>
+        </div>
         <button
           nz-button
           nzDanger
@@ -60,13 +111,22 @@
       }
     </nz-card>
 
-    <nz-card class="card-border settings-wide" [nzBordered]="false" nzTitle="保留周期">
+    <nz-card class="card-border settings-wide" [nzBordered]="false">
+      <div class="settings-section-head">
+        <div>
+          <h2>保留周期</h2>
+          <p>这些天数决定每类历史数据保留多久。值越小，存储增长越慢；值越大，排查历史问题时上下文越完整。</p>
+        </div>
+        <nz-tag nzColor="blue">Days</nz-tag>
+      </div>
+
       <form nz-form [formGroup]="form" nzLayout="vertical">
         <div class="form-grid form-grid-five">
           <nz-form-item>
             <nz-form-label nzRequired>审计日志</nz-form-label>
             <nz-form-control nzErrorTip="请输入不小于 0 的天数">
               <nz-input-number class="w-100" formControlName="audit_retention_days" [nzMin]="0" />
+              <div class="field-note">保留登录、配置修改、设备操作和清理动作记录，建议不少于合规审计周期。</div>
             </nz-form-control>
           </nz-form-item>
 
@@ -74,6 +134,7 @@
             <nz-form-label nzRequired>HTTP 访问日志</nz-form-label>
             <nz-form-control nzErrorTip="请输入不小于 0 的天数">
               <nz-input-number class="w-100" formControlName="http_access_retention_days" [nzMin]="0" />
+              <div class="field-note">保留 HTTP 映射访问明细，用于排查来源 IP、状态码和请求路径问题。</div>
             </nz-form-control>
           </nz-form-item>
 
@@ -81,6 +142,7 @@
             <nz-form-label nzRequired>隧道会话</nz-form-label>
             <nz-form-control nzErrorTip="请输入不小于 0 的天数">
               <nz-input-number class="w-100" formControlName="session_retention_days" [nzMin]="0" />
+              <div class="field-note">保留 SSH/HTTP 隧道会话历史，用于回溯连接来源、持续时间和流量。</div>
             </nz-form-control>
           </nz-form-item>
 
@@ -88,6 +150,7 @@
             <nz-form-label nzRequired>设备心跳</nz-form-label>
             <nz-form-control nzErrorTip="请输入不小于 0 的天数">
               <nz-input-number class="w-100" formControlName="heartbeat_retention_days" [nzMin]="0" />
+              <div class="field-note">心跳记录产生频率高，保留周期通常短一些，适合观察近期在线稳定性。</div>
             </nz-form-control>
           </nz-form-item>
 
@@ -95,10 +158,16 @@
             <nz-form-label nzRequired>设备连接历史</nz-form-label>
             <nz-form-control nzErrorTip="请输入不小于 0 的天数">
               <nz-input-number class="w-100" formControlName="device_connection_retention_days" [nzMin]="0" />
+              <div class="field-note">保留设备隧道连接、断开和远端地址变化记录，用于排查异常上下线。</div>
             </nz-form-control>
           </nz-form-item>
         </div>
       </form>
     </nz-card>
   </div>
+
+  <nz-card class="card-border settings-meta" [nzBordered]="false">
+    <span>当前可配置 {{ settingCount() }} 项</span>
+    <span>最近更新 {{ updatedAt() ? (updatedAt() | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</span>
+  </nz-card>
 </section>

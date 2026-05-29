@@ -25,6 +25,13 @@
     gap: 22px;
     margin-top: 22px;
   }
+
+  .dashboard-guidance {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.9fr);
+    gap: 22px;
+    margin-top: 22px;
+  }
 }
 
 @media (max-width: 1199px) {
@@ -33,7 +40,8 @@
   }
 
   :host ::ng-deep {
-    .dashboard-widgets {
+    .dashboard-widgets,
+    .dashboard-guidance {
       grid-template-columns: 1fr;
     }
   }
@@ -54,9 +62,11 @@
   }
 
   :host ::ng-deep {
-    .dashboard-widgets {
+    .dashboard-widgets,
+    .dashboard-guidance {
       gap: 16px;
       margin-top: 16px;
     }
+
   }
 }

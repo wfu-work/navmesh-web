@@ -12,28 +12,44 @@
 
 .device-toolbar {
   display: flex;
-  gap: 18px;
-  align-items: flex-end;
-  justify-content: space-between;
-}
-
-.device-group-filter {
-  min-width: 220px;
-  margin-bottom: 0;
-
-  nz-select {
-    width: 240px;
-  }
-}
-
-.device-search {
-  display: flex;
-  flex: 0 0 auto;
-  gap: 10px;
   align-items: center;
+  justify-content: flex-end;
+  width: 100%;
+}
 
-  nz-input-wrapper {
-    width: 300px;
+.device-filter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  max-width: 100%;
+}
+
+.device-filter-type {
+  width: 180px;
+}
+
+.device-filter-search {
+  width: min(360px, 38vw);
+}
+
+.device-type-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+
+  nz-icon {
+    flex: 0 0 auto;
+    color: var(--nm-primary);
+    font-size: 18px;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
 
@@ -46,6 +62,9 @@
 :host ::ng-deep {
   .device-card {
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     border: 1px solid #dfe8ee;
     border-radius: 8px;
     background: #fff;
@@ -56,11 +75,14 @@
       transform 0.18s ease;
 
     .ant-card-body {
-      min-height: 254px;
+      display: flex;
+      flex: 1 1 auto;
+      min-height: 314px;
       padding: 0;
     }
 
     .ant-card-actions {
+      flex: 0 0 auto;
       border-top-color: #e4edf2;
       background: #fbfdff;
 
@@ -141,9 +163,11 @@
 .device-card-main {
   position: relative;
   display: grid;
+  flex: 1 1 auto;
+  width: 100%;
   grid-template-columns: minmax(0, 1fr) 132px;
   gap: 20px;
-  min-height: 254px;
+  min-height: 314px;
   padding: 24px;
   background: linear-gradient(135deg, rgb(250 253 255 / 96%) 0%, rgb(244 250 253 / 96%) 100%), #fff;
 }
@@ -193,24 +217,40 @@
   align-items: center;
   justify-content: center;
   border: 1px solid rgb(var(--nm-primary-rgb) / 12%);
-  border-radius: 50%;
-  color: #314154;
-  background: rgb(var(--nm-primary-rgb) / 7%);
-  font-size: 25px;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 78%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 88%);
+
+  img {
+    display: block;
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+  }
 }
 
 .device-os-badge.os-macos {
-  color: #2f74e8;
-  background: #eef5ff;
+  border-color: #d6dce6;
+  background: #f6f8fb;
 }
 
 .device-os-badge.os-windows {
-  color: #1877d3;
+  border-color: #cce8ff;
   background: #ecf7ff;
 }
 
+.device-os-badge.os-ubuntu {
+  border-color: #ffd8c8;
+  background: #fff4ef;
+}
+
+.device-os-badge.os-centos {
+  border-color: #e4d6ff;
+  background: #f8f3ff;
+}
+
 .device-os-badge.os-linux {
-  color: #344054;
+  border-color: #e3e8ef;
   background: #f2f4f7;
 }
 
@@ -268,6 +308,28 @@
     text-overflow: ellipsis;
     white-space: nowrap;
   }
+}
+
+.device-card-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  nz-icon {
+    flex: 0 0 auto;
+    color: var(--nm-primary);
+    font-size: 14px;
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.device-card-ip {
+  font-variant-numeric: tabular-nums;
 }
 
 .product-link {
@@ -447,22 +509,20 @@
 }
 
 @media (max-width: 900px) {
-  .device-toolbar {
-    display: grid;
-    align-items: stretch;
+  .device-toolbar,
+  .device-filter-actions {
+    justify-content: stretch;
   }
 
-  .device-group-filter,
-  .device-group-filter nz-select {
+  .device-filter-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     width: 100%;
   }
 
-  .device-search {
-    flex-wrap: wrap;
-
-    nz-input-wrapper {
-      width: min(100%, 360px);
-    }
+  .device-filter-type,
+  .device-filter-search {
+    width: 100%;
   }
 
   .device-card-grid {
@@ -471,6 +531,10 @@
 }
 
 @media (max-width: 560px) {
+  .device-filter-actions {
+    grid-template-columns: 1fr;
+  }
+
   .device-card-main {
     grid-template-columns: 1fr;
     padding: 20px;

@@ -119,6 +119,18 @@ export class RetentionSettingsComponent implements OnInit {
     );
   }
 
+  protected settingCount(): number {
+    return Object.keys(this.form.controls).length;
+  }
+
+  protected cleanupEnabledText(): string {
+    return this.form.controls.retention_cleanup_enabled.value ? '自动清理已启用' : '自动清理已暂停';
+  }
+
+  protected updatedAt(): number {
+    return Math.max(...this.settings.map((item) => this.firstNumber(item.updateTime, item.update_time)), 0);
+  }
+
   private patchForm(): void {
     this.form.patchValue({
       retention_cleanup_enabled: this.boolSetting('retention_cleanup_enabled', true),
@@ -147,5 +159,9 @@ export class RetentionSettingsComponent implements OnInit {
 
   private stringifyValue(value: string | number | boolean): string {
     return typeof value === 'boolean' ? String(value) : String(value).trim();
+  }
+
+  private firstNumber(...values: Array<number | undefined>): number {
+    return values.find((value) => value !== undefined && value !== null) ?? 0;
   }
 }

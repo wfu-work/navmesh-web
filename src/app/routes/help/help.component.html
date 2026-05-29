@@ -1,30 +1,112 @@
 <section class="help-page">
-  <title-label title="帮助" description="快速找到 NavMesh 常用接入步骤、配置入口和排查路径。" />
+  <title-label
+    title="使用指南"
+    description="从安装 navmesh-client 到设备上线、隧道确认、SSH/HTTP 访问配置和故障排查的常用路径。"
+  />
 
-  <div class="help-grid">
-    <nz-card class="card-border help-wide" [nzBordered]="false" nzTitle="设备接入命令">
-      <p class="help-copy">客户端启动后会注册设备、维持心跳，并建立 QUIC 隧道。</p>
-      <code class="help-command">{{ command }}</code>
+  <div class="guide-note">
+    <nz-icon nzType="compass" />
+    <div>
+      <strong>推荐先完成客户端接入，再配置远程访问</strong>
+      <span>navmesh-client 负责注册设备、维持心跳、建立 QUIC 隧道，并把中心网关的新连接转发到设备本机 SSH 或 Web 服务。</span>
+    </div>
+  </div>
+
+  <div class="guide-grid">
+    <nz-card class="card-border guide-wide" [nzBordered]="false">
+      <div class="guide-section-head">
+        <div>
+          <h2>navmesh-client 在线安装</h2>
+          <p>Linux 设备推荐使用在线安装脚本。脚本会下载对应平台的客户端二进制，安装到系统目录，并创建 systemd 服务。</p>
+        </div>
+        <nz-tag nzColor="green">Recommended</nz-tag>
+      </div>
+
+      <pre class="guide-command"><code class="command-code">{{ installCommand }}</code></pre>
+
+      <div class="guide-install-meta">
+        @for (path of installPaths; track path) {
+          <span class="path-pill">{{ path }}</span>
+        }
+      </div>
     </nz-card>
 
-    <nz-card class="card-border" [nzBordered]="false" nzTitle="常用入口">
-      <div class="help-links">
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="guide-section-head">
+        <div>
+          <h2>手动下载</h2>
+          <p>无法在线执行脚本时，可以下载对应平台的裸二进制，放到设备后手动启动或写入自己的服务管理脚本。</p>
+        </div>
+        <nz-tag nzColor="blue">Download</nz-tag>
+      </div>
+
+      <div class="download-list">
+        @for (item of downloadLinks; track item.href) {
+          <a class="download-item" [href]="item.href" target="_blank" rel="noopener">
+            <nz-icon nzType="download" />
+            <span>{{ item.label }}</span>
+          </a>
+        }
+      </div>
+
+      <p class="guide-copy">Release 资源名称按系统和 CPU 架构区分，例如 <span class="inline-code">navmesh-client-linux-amd64</span>。</p>
+    </nz-card>
+
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="guide-section-head">
+        <div>
+          <h2>手动启动示例</h2>
+          <p>边缘客户端不使用 YAML 配置文件，启动参数会写入 systemd ExecStart 或命令行。</p>
+        </div>
+        <nz-tag nzColor="gold">CLI</nz-tag>
+      </div>
+
+      <pre class="guide-command guide-command-inline"><code class="command-code">{{ manualCommand }}</code></pre>
+
+      <div class="guide-hints">
+        <span><b class="inline-code">-server</b> 隧道服务地址</span>
+        <span><b class="inline-code">-api</b> 管理 API 地址</span>
+        <span><b class="inline-code">-token</b> 首次注册令牌</span>
+        <span><b class="inline-code">-sncode</b> 设备号，可后续在线修改</span>
+      </div>
+    </nz-card>
+
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="guide-section-head">
+        <div>
+          <h2>常用入口</h2>
+          <p>接入和排查时最常访问的控制台页面。</p>
+        </div>
+      </div>
+
+      <div class="guide-links">
         @for (item of links; track item.link) {
           <a [routerLink]="item.link">
-            <strong>{{ item.title }}</strong>
-            <span>{{ item.description }}</span>
+            <nz-icon [nzType]="item.icon" />
+            <div>
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.description }}</span>
+            </div>
           </a>
         }
       </div>
     </nz-card>
 
-    <nz-card class="card-border" [nzBordered]="false" nzTitle="排查顺序">
-      <ol class="help-steps">
-        <li>先确认设备列表中状态为在线。</li>
-        <li>再检查在线连接是否存在该设备隧道。</li>
-        <li>SSH 问题查看入口地址和别名绑定。</li>
-        <li>HTTP 问题查看映射列表、访问日志和自定义域名验证状态。</li>
-        <li>权限问题查看访问策略是否限制了设备、分组或映射。</li>
+    <nz-card class="card-border" [nzBordered]="false">
+      <div class="guide-section-head">
+        <div>
+          <h2>接入流程</h2>
+          <p>第一次接入设备时，按这个顺序检查最省时间。</p>
+        </div>
+      </div>
+
+      <ol class="guide-steps">
+        @for (item of steps; track item.title) {
+          <li>
+            <strong>{{ item.title }}</strong>
+            <span>{{ item.description }}</span>
+          </li>
+        }
       </ol>
     </nz-card>
   </div>

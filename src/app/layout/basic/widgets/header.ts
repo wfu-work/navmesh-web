@@ -12,10 +12,17 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { LayoutDefaultModule } from '@delon/theme/layout-default';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { filter } from 'rxjs';
+import { filter, forkJoin } from 'rxjs';
 
+import {
+  EventItem,
+  EventsService,
+  eventDisplayMessage,
+  eventDisplayTitle,
+  isOpenEventStatus,
+} from '../../../routes/events/events.service';
 import { AvatarComponent } from './avatar';
-import { HeaderMessage } from './message';
+import { HeaderMessage, HeaderMessageItem } from './message';
 import { ThemeColorComponent } from './theme-color';
 
 @Component({
@@ -37,7 +44,12 @@ import { ThemeColorComponent } from './theme-color';
       </div>
       <div class="header-actions">
         <theme-color />
-        <header-message class="mr-md" />
+        <header-message
+          class="mr-md"
+          [items]="messageItems"
+          (itemClick)="openMessage($event)"
+          (markAllReadClick)="markMessagesRead($event)"
+        />
         <header-avatar />
       </div>
     </div>
@@ -192,6 +204,7 @@ export class BasicHeaderComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly eventsService = inject(EventsService);
 
   @Output() public readonly collapsClick = new EventEmitter<boolean>();
 
@@ -199,9 +212,11 @@ export class BasicHeaderComponent implements OnInit {
 
   protected pageTitle = 'NavMesh';
   protected hasScrolled = false;
+  protected messageItems: HeaderMessageItem[] = [];
 
   ngOnInit(): void {
     this.updatePageTitle();
+    this.loadMessages();
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -209,6 +224,7 @@ export class BasicHeaderComponent implements OnInit {
       )
       .subscribe(() => {
         this.updatePageTitle();
+        this.loadMessages();
       });
   }
 
@@ -222,11 +238,75 @@ export class BasicHeaderComponent implements OnInit {
     this.collapsClick.emit(this.isCollapsed);
   }
 
+  protected openMessage(item: HeaderMessageItem): void {
+    if (item.eventGuid) {
+      this.router.navigate(['/events', item.eventGuid]);
+    }
+  }
+
+  protected markMessagesRead(items: HeaderMessageItem[]): void {
+    const guids = items.map((item) => item.eventGuid).filter((guid): guid is string => !!guid);
+    if (!guids.length) return;
+    forkJoin(guids.map((guid) => this.eventsService.ack(guid)))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.loadMessages(),
+        error: () => this.loadMessages(),
+      });
+  }
+
   private updatePageTitle(): void {
     let route = this.route;
     while (route.firstChild) {
       route = route.firstChild;
     }
     this.pageTitle = route.snapshot.data['title'] || 'NavMesh';
+  }
+
+  private loadMessages(): void {
+    this.eventsService
+      .list({ page: 1, size: 5, status: '1' })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.messageItems = (res.data ?? []).map((item) => this.toMessageItem(item));
+        },
+        error: () => {
+          this.messageItems = [];
+        },
+      });
+  }
+
+  private toMessageItem(item: EventItem): HeaderMessageItem {
+    const eventType = this.firstText(item.eventType, item.event_type);
+    const occurredAt = this.firstNumber(item.occurredAt, item.occurred_at, item.createTime, item.create_time);
+    return {
+      id: item.guid,
+      eventGuid: item.guid,
+      title: eventDisplayTitle({ ...item, eventType }),
+      content: eventDisplayMessage({ ...item, eventType }),
+      time: new Date(this.normalizeTimestamp(occurredAt) || Date.now()).toISOString(),
+      read: !isOpenEventStatus(item.status),
+      level: this.messageLevel(item.level),
+    };
+  }
+
+  private messageLevel(level: string | undefined): HeaderMessageItem['level'] {
+    const value = String(level || '').toLowerCase();
+    if (['critical', 'error', 'high'].includes(value)) return 'error';
+    if (['warn', 'warning', 'medium'].includes(value)) return 'warning';
+    return 'info';
+  }
+
+  private normalizeTimestamp(time: number): number {
+    return time > 0 && time < 1000000000000 ? time * 1000 : time;
+  }
+
+  private firstText(...values: Array<string | undefined>): string {
+    return values.find((value) => value !== undefined && value !== '') ?? '';
+  }
+
+  private firstNumber(...values: Array<number | undefined>): number {
+    return values.find((value) => value !== undefined && value !== null) ?? 0;
   }
 }

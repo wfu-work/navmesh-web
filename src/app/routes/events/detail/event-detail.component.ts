@@ -12,7 +12,15 @@ import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { Device, DevicesService } from '../../devices/devices.service';
-import { EventItem, EventStatus, EventsService, isClosedEventStatus, isOpenEventStatus } from '../events.service';
+import {
+  EventItem,
+  EventStatus,
+  EventsService,
+  eventDisplayMessage,
+  eventDisplayTitle,
+  isClosedEventStatus,
+  isOpenEventStatus,
+} from '../events.service';
 
 @Component({
   selector: 'app-event-detail',
@@ -175,7 +183,7 @@ export class EventDetailComponent implements OnInit {
   private normalizeEvent(item: EventItem): EventItem {
     const eventType = this.firstText(item.eventType, item.event_type);
     const deviceGuid = this.firstText(item.deviceGuid, item.device_guid);
-    const title = this.firstText(item.title, eventType, '事件');
+    const title = eventDisplayTitle({ ...item, eventType });
     return {
       ...item,
       deviceGuid,
@@ -183,7 +191,7 @@ export class EventDetailComponent implements OnInit {
       source: this.firstText(item.source, eventType),
       level: this.normalizeLevel(item.level),
       title,
-      message: this.firstText(item.message, title, eventType),
+      message: eventDisplayMessage({ ...item, eventType, title }),
       payload: this.firstText(item.payload, item.payload_json),
       occurredAt: this.firstNumber(item.occurredAt, item.occurred_at, item.createTime, item.create_time),
       closedAt: this.firstNumber(item.closedAt, item.closed_at),

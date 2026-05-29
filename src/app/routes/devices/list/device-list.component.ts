@@ -183,31 +183,29 @@ export class DeviceListComponent implements OnInit {
     return status ? map[status] : 'device-unknown';
   }
 
-  protected osIcon(os: string | undefined): string {
-    const value = String(os || '').toLowerCase();
-    if (value.includes('darwin') || value.includes('mac')) return 'apple';
-    if (value.includes('win')) return 'windows';
-    if (value.includes('linux') || value.includes('ubuntu') || value.includes('debian') || value.includes('centos')) return 'code';
-    return 'desktop';
+  protected osIconSrc(item: Device): string {
+    return `assets/icons/${this.osKind(item)}.svg`;
   }
 
-  protected osLabel(os: string | undefined): string {
-    const value = String(os || '').toLowerCase();
+  protected osLabel(item: Device): string {
+    const value = this.osText(item);
+    if (value.includes('ubuntu')) return 'Ubuntu';
+    if (value.includes('centos')) return 'CentOS';
     if (value.includes('darwin') || value.includes('mac')) return 'Mac';
     if (value.includes('win')) return 'Windows';
-    if (value.includes('ubuntu')) return 'Ubuntu';
     if (value.includes('debian')) return 'Debian';
-    if (value.includes('centos')) return 'CentOS';
     if (value.includes('linux')) return 'Linux';
-    return os || '未知系统';
+    return item.os || '未知系统';
   }
 
-  protected osClass(os: string | undefined): string {
-    const value = String(os || '').toLowerCase();
-    if (value.includes('darwin') || value.includes('mac')) return 'os-macos';
-    if (value.includes('win')) return 'os-windows';
-    if (value.includes('linux') || value.includes('ubuntu') || value.includes('debian') || value.includes('centos')) return 'os-linux';
-    return 'os-unknown';
+  protected osClass(item: Device): string {
+    return `os-${this.osKind(item)}`;
+  }
+
+  protected systemLabel(item: Device): string {
+    const os = this.firstText(item.os, this.osLabel(item));
+    const version = this.firstText(item.osVersion);
+    return [os, version].filter(Boolean).join(' ') || '-';
   }
 
   protected typeName(type: string | undefined): string {
@@ -280,14 +278,27 @@ export class DeviceListComponent implements OnInit {
     return mapping.publicHost || mapping.name || '-';
   }
 
+  protected externalIp(item: Device): string {
+    return this.firstText(item.wanIp);
+  }
+
+  protected locationLabel(item: Device): string {
+    const location = this.firstText(item.location);
+    if (location) return location;
+    const parts = [item.country, item.province, item.city].map((value) => String(value || '').trim()).filter(Boolean);
+    return Array.from(new Set(parts)).join(' ');
+  }
+
   private normalizeDevice(item: Device): Device {
     return {
       ...item,
       name: this.firstText(item.alias, item.name, item.sncode, item.hostname, item.guid),
       hostname: this.firstText(item.hostname, item.remark),
-      ip: this.firstText(item.sourceIp, item.source_ip, item.ip),
+      ip: this.firstText(item.wanIp, item.ip),
       sourceIp: this.firstText(item.sourceIp, item.source_ip, item.ip),
+      wanIp: this.firstText(item.wanIp),
       hostIp: this.firstText(item.hostIp, item.host_ip, item.privateIp, item.private_ip),
+      location: this.firstText(item.location),
       deviceType: this.firstText(item.deviceType, item.device_type),
       sshPort: this.firstNumber(item.sshPort, item.ssh_port),
       webPort: this.firstNumber(item.webPort, item.web_port),
@@ -364,6 +375,22 @@ export class DeviceListComponent implements OnInit {
 
   private firstBoolean(...values: Array<boolean | undefined>): boolean {
     return values.find((value) => value !== undefined && value !== null) ?? false;
+  }
+
+  private osKind(item: Device): 'linux' | 'ubuntu' | 'centos' | 'windows' | 'macos' {
+    const value = this.osText(item);
+    if (value.includes('ubuntu')) return 'ubuntu';
+    if (value.includes('centos')) return 'centos';
+    if (value.includes('darwin') || value.includes('mac')) return 'macos';
+    if (value.includes('win')) return 'windows';
+    return 'linux';
+  }
+
+  private osText(item: Device): string {
+    return [item.os, item.osVersion, item.kernel, item.arch]
+      .map((value) => String(value || '').trim().toLowerCase())
+      .filter(Boolean)
+      .join(' ');
   }
 
   private defaultProductIcon(type: string | undefined): string {

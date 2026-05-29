@@ -23,7 +23,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
           }
         </a>
         @if (!isCollapsed) {
-          <p class="text-center mb-sm text-grey-dark">远程接入控制台</p>
+          <p class="text-center mb-sm text-grey-dark">边缘设备网关服务</p>
         }
       </div>
 
@@ -94,7 +94,7 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
         <a class="sidebar-bottom-item" routerLink="/help">
           <i nz-icon nzType="question-circle"></i>
           @if (!isCollapsed) {
-            <span>帮助</span>
+            <span>使用指南</span>
           }
         </a>
         <button

@@ -9,24 +9,7 @@
 
   <nz-spin [nzSpinning]="loading">
     @if (device; as item) {
-      <div class="detail-summary">
-        <article class="summary-item {{ deviceStateClass(item.status) }}">
-          <span>激活状态</span>
-          <strong [class]="statusClass(item.status)">{{ statusText(item.status) }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>启用凭证</span>
-          <strong>{{ enabledTokenCount() }} / {{ tokens.length }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>SSH 接入</span>
-          <strong>{{ enabledSshCount() }} / {{ sshAliases.length }}</strong>
-        </article>
-        <article class="summary-item">
-          <span>HTTP 映射</span>
-          <strong>{{ enabledMappingCount() }} / {{ mappings.length }}</strong>
-        </article>
-      </div>
+      <app-metric-summary class="detail-summary-metrics" [items]="summaryItems(item)" />
 
       <div class="access-section-grid">
         <nz-card class="card-border access-card" [nzBordered]="false">

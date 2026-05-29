@@ -6,14 +6,26 @@ import {
   inject,
 } from '@angular/core';
 import { Router } from '@angular/router';
-import { STColumn, STColumnTag } from '@delon/abc/st';
+import { STChange, STColumn, STColumnTag } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize, forkJoin } from 'rxjs';
+import {
+  MetricSummaryComponent,
+  MetricSummaryItem,
+} from 'src/app/shared/components/metric-summary/metric-summary.component';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { Device, DevicesService } from '../../devices/devices.service';
-import { EventItem, EventStatus, EventsService, isClosedEventStatus, isOpenEventStatus } from '../events.service';
+import {
+  EventItem,
+  EventStatus,
+  EventsService,
+  eventDisplayMessage,
+  eventDisplayTitle,
+  isClosedEventStatus,
+  isOpenEventStatus,
+} from '../events.service';
 
 interface EventRow extends EventItem {
   deviceName: string;
@@ -24,7 +36,7 @@ interface EventRow extends EventItem {
   templateUrl: './event-list.component.html',
   styleUrls: ['./event-list.component.less'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [...SHARED_IMPORTS, TitleLabelComponent],
+  imports: [...SHARED_IMPORTS, TitleLabelComponent, MetricSummaryComponent],
 })
 export class EventListComponent implements OnInit {
   private readonly eventsService = inject(EventsService);
@@ -39,10 +51,11 @@ export class EventListComponent implements OnInit {
   protected total = 0;
 
   protected q = {
+    page: 1,
+    size: 10,
     deviceGuid: '',
     level: '',
     status: '',
-    limit: 100,
   };
 
   protected readonly statusTag: STColumnTag = {
@@ -77,8 +90,8 @@ export class EventListComponent implements OnInit {
   protected readonly columns: STColumn<EventRow>[] = [
     { title: '事件', index: 'title', render: 'titleRender', fixed: 'left', width: 280 },
     { title: '等级', index: 'level', type: 'tag', tag: this.levelTag, width: 100 },
-    { title: '来源', index: 'source', type: 'tag', tag: this.sourceTag, width: 100 },
-    { title: '设备', index: 'deviceName', width: 180, default: '-' },
+    { title: '来源', index: 'source', type: 'tag', tag: this.sourceTag, width: 120 },
+    { title: '设备', index: 'deviceName', width: 120, default: '-' },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 110 },
     { title: '消息', index: 'message', render: 'messageRender', width: 360 },
     { title: '发生时间', index: 'occurredAt', render: 'timeRender', width: 180 },
@@ -86,7 +99,7 @@ export class EventListComponent implements OnInit {
     {
       title: '操作',
       fixed: 'right',
-      width: 160,
+      width: 140,
       buttons: [
         {
           icon: 'folder-view',
@@ -121,8 +134,8 @@ export class EventListComponent implements OnInit {
     forkJoin({
       devices: this.devicesService.list({ page: 1, size: 200 }),
       events: this.eventsService.list({
-        page: 1,
-        size: this.q.limit,
+        page: this.q.page,
+        size: this.q.size,
         deviceGuid: this.q.deviceGuid || undefined,
         level: this.q.level || undefined,
         status: this.q.status || undefined,
@@ -140,12 +153,32 @@ export class EventListComponent implements OnInit {
           this.total = events.total ?? 0;
           this.rows = this.toRows(events.data ?? []);
         },
-        error: () => this.message.error('事件告警加载失败'),
+        error: () => this.message.error('事件中心加载失败'),
       });
   }
 
+  protected tableChange(event: STChange): void {
+    switch (event.type) {
+      case 'pi':
+      case 'ps':
+      case 'filter':
+      case 'sort':
+        this.q.page = event.pi;
+        this.q.size = event.ps;
+        this.load();
+        break;
+      default:
+        break;
+    }
+  }
+
+  protected search(): void {
+    this.q.page = 1;
+    this.load();
+  }
+
   protected reset(): void {
-    this.q = { deviceGuid: '', level: '', status: '', limit: this.q.limit };
+    this.q = { page: 1, size: this.q.size, deviceGuid: '', level: '', status: '' };
     this.load();
   }
 
@@ -189,6 +222,15 @@ export class EventListComponent implements OnInit {
     return this.rows.filter((item) => ['critical', 'error', 'high'].includes(item.level)).length;
   }
 
+  protected summaryItems(): MetricSummaryItem[] {
+    return [
+      { label: '本页未处理', value: this.openCount(), tone: this.openCount() ? 'danger' : 'muted' },
+      { label: '本页已处理', value: this.ackedCount(), tone: this.ackedCount() ? 'warning' : 'muted' },
+      { label: '本页已关闭', value: this.closedCount(), tone: this.closedCount() ? 'success' : 'muted' },
+      { label: '本页严重', value: this.severeCount(), tone: this.severeCount() ? 'danger' : 'muted' },
+    ];
+  }
+
   protected statusText(status: EventStatus): string {
     const map: Record<string, string> = {
       0: '已关闭',
@@ -223,26 +265,32 @@ export class EventListComponent implements OnInit {
     return item.occurredAt;
   }
 
+  protected deviceLabel(device: Device): string {
+    return this.firstText(device.sncode, device.alias, device.name, device.hostname, device.guid);
+  }
+
   private toRows(items: EventItem[]): EventRow[] {
-    const deviceMap = new Map(this.devices.map((device) => [device.guid, device.name || device.hostname || device.guid]));
+    const deviceMap = new Map(this.devices.map((device) => [device.guid, this.deviceLabel(device)]));
     return items.map((item) => {
       const eventType = this.firstText(item.eventType, item.event_type);
       const deviceGuid = this.firstText(item.deviceGuid, item.device_guid);
-      const title = this.firstText(item.title, eventType, '事件');
+      const deviceSncode = this.firstText(item.deviceSncode, item.device_sncode);
+      const title = eventDisplayTitle({ ...item, eventType });
       return {
         ...item,
         deviceGuid,
+        deviceSncode,
         eventType,
         source: this.firstText(item.source, eventType),
         level: this.normalizeLevel(item.level),
         title,
-        message: this.firstText(item.message, title, eventType),
+        message: eventDisplayMessage({ ...item, eventType, title }),
         payload: this.firstText(item.payload, item.payload_json),
         occurredAt: this.firstNumber(item.occurredAt, item.occurred_at, item.createTime, item.create_time),
         closedAt: this.firstNumber(item.closedAt, item.closed_at),
         createTime: this.firstNumber(item.createTime, item.create_time),
         updateTime: this.firstNumber(item.updateTime, item.update_time),
-        deviceName: deviceMap.get(deviceGuid) ?? deviceGuid,
+        deviceName: this.firstText(deviceSncode, deviceMap.get(deviceGuid), deviceGuid),
       };
     });
   }

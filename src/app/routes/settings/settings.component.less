@@ -23,14 +23,123 @@
   gap: 18px;
 }
 
+.settings-note {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border: 1px solid #dbe9e4;
+  border-radius: 8px;
+  color: #34515f;
+  background: #f6fbf8;
+
+  nz-icon {
+    margin-top: 3px;
+    color: #0b8f61;
+    font-size: 18px;
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    color: #223047;
+    font-weight: 850;
+  }
+
+  span {
+    margin-top: 4px;
+    color: #5d6f7f;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.7;
+  }
+}
+
 .settings-wide {
   grid-column: 1 / -1;
+}
+
+.retention-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+
+  article {
+    min-width: 0;
+    padding: 14px 16px;
+    border: 1px solid #e0e8e5;
+    border-radius: 8px;
+    background: #fbfcfc;
+  }
+
+  span,
+  strong {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  span {
+    color: #7a8897;
+    font-size: 12px;
+    font-weight: 750;
+  }
+
+  strong {
+    margin-top: 6px;
+    color: #203044;
+    font-size: 18px;
+    font-weight: 850;
+  }
+}
+
+.settings-section-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf1f4;
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+
+  p {
+    max-width: 680px;
+    margin-top: 6px;
+    color: #667586;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.7;
+  }
+
+  nz-tag {
+    flex: 0 0 auto;
+    margin: 2px 0 0;
+    font-weight: 800;
+  }
 }
 
 .form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .form-grid-four {
@@ -43,6 +152,22 @@
 
 .w-100 {
   width: 100%;
+}
+
+.field-note {
+  margin-top: 8px;
+  color: #7a8897;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.6;
+
+  code {
+    padding: 1px 5px;
+    border-radius: 5px;
+    color: #2f4f61;
+    background: #eef4f2;
+    font-size: 12px;
+  }
 }
 
 .settings-meta {
@@ -60,6 +185,14 @@
   gap: 16px;
   align-items: center;
   justify-content: space-between;
+
+  h3 {
+    margin: 0 0 6px;
+    color: #223047;
+    font-size: 15px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
 
   p {
     margin: 0;
@@ -101,6 +234,9 @@
 @media (max-width: 767px) {
   .settings-header,
   .settings-grid,
+  .settings-note,
+  .retention-strip,
+  .settings-section-head,
   .form-grid,
   .form-grid-four,
   .form-grid-five,

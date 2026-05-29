@@ -17,7 +17,8 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 type HeaderMessageLevel = 'info' | 'warning' | 'error';
 
 export interface HeaderMessageItem {
-  id: number;
+  id: string | number;
+  eventGuid?: string;
   title: string;
   content: string;
   time: string;
@@ -315,52 +316,28 @@ export class HeaderMessage {
   @Input() title = '消息通知';
   @Input() emptyText = '暂无消息';
   @Input() set items(value: HeaderMessageItem[] | null | undefined) {
-    if (value) {
-      this.messages.set(value);
-    }
+    this.messages.set(value ?? []);
   }
 
   @Output() readonly itemClick = new EventEmitter<HeaderMessageItem>();
+  @Output() readonly markAllReadClick = new EventEmitter<HeaderMessageItem[]>();
 
-  protected readonly messages = signal<HeaderMessageItem[]>([
-    {
-      id: 1,
-      title: '设备离线提醒',
-      content: '有 1 台设备超过 10 分钟未上报心跳，请检查设备网络或隧道客户端状态。',
-      time: '2026-05-07T14:10:00',
-      read: false,
-      level: 'error',
-    },
-    {
-      id: 2,
-      title: 'HTTP 映射恢复',
-      content: 'HTTP 映射最近一次访问已恢复正常，可以在访问日志中查看历史记录。',
-      time: '2026-05-07T11:35:00',
-      read: false,
-      level: 'info',
-    },
-    {
-      id: 3,
-      title: '访问策略提示',
-      content: '发现有映射未配置访问策略，建议在权限策略页面确认 SSH/HTTP 访问范围。',
-      time: '2026-05-06T20:18:00',
-      read: true,
-      level: 'warning',
-    },
-  ]);
+  protected readonly messages = signal<HeaderMessageItem[]>([]);
 
   protected readonly unreadCount = computed(
     () => this.messages().filter((item) => !item.read).length,
   );
 
-  protected markRead(id: number): void {
+  protected markRead(id: string | number): void {
     this.messages.update((list) =>
       list.map((item) => (item.id === id ? { ...item, read: true } : item)),
     );
   }
 
   protected markAllRead(): void {
+    const unreadItems = this.messages().filter((item) => !item.read);
     this.messages.update((list) => list.map((item) => ({ ...item, read: true })));
+    this.markAllReadClick.emit(unreadItems);
   }
 
   protected handleItemClick(item: HeaderMessageItem): void {

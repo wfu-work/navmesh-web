@@ -30,6 +30,7 @@ export interface DevicePayload {
   type?: string;
   hostIp?: string;
   sourceIp?: string;
+  wanIp?: string;
   sshPort?: number;
   webPort?: number;
   webDomain?: string;
@@ -68,6 +69,7 @@ export interface Device {
   host_ip?: string;
   sourceIp?: string;
   source_ip?: string;
+  wanIp?: string;
   sshPort?: number;
   ssh_port?: number;
   webPort?: number;
