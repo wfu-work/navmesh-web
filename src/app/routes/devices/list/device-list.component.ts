@@ -32,7 +32,7 @@ export class DeviceListComponent implements OnInit {
 
   q = {
     page: 1,
-    size: 10,
+    size: 9,
     status: '',
     content: '',
     type: '',
