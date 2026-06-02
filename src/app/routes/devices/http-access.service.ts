@@ -47,11 +47,18 @@ export interface SavePortMappingPayload {
 }
 
 export interface AccessLogQuery {
+  mappingGuid?: string;
   host?: string;
   deviceGuid?: string;
   method?: string;
   path?: string;
   statusCode?: string | number;
+  minDurationMs?: string | number;
+  minTunnelOpenMs?: string | number;
+  minUpstreamMs?: string | number;
+  minFirstByteMs?: string | number;
+  reusedConn?: string | boolean;
+  hasError?: string | boolean;
   page?: number;
   size?: number;
 }
@@ -71,6 +78,14 @@ export interface HTTPAccessLog {
   status_code?: number;
   durationMs: number;
   duration_ms?: number;
+  tunnelOpenMs: number;
+  tunnel_open_ms?: number;
+  upstreamMs: number;
+  upstream_ms?: number;
+  firstByteMs: number;
+  first_byte_ms?: number;
+  reusedConn: boolean;
+  reused_conn?: boolean;
   bytesIn: number;
   bytes_in?: number;
   bytesOut: number;

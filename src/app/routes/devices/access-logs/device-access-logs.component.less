@@ -47,15 +47,16 @@
 }
 
 .logs-actions {
-  flex-wrap: wrap;
-  max-width: 980px;
+  display: grid;
+  grid-template-columns: repeat(5, minmax(132px, 1fr)) auto auto;
+  max-width: min(1180px, 100%);
 
   input[nz-input] {
-    width: 160px;
+    width: 100%;
   }
 
   nz-select {
-    width: 170px;
+    width: 100%;
   }
 }
 
@@ -134,6 +135,51 @@
   font-weight: 700;
 }
 
+.latency-cell {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.latency-total {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+
+  strong {
+    color: #223047;
+    font-weight: 850;
+  }
+}
+
+.latency-parts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  color: #6f7c8d;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.reuse-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  color: #7b5b13;
+  background: #fff5da;
+  font-size: 12px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.reuse-badge-active {
+  color: #0b7d55;
+  background: #e7f5ef;
+}
+
 :host ::ng-deep {
   .ant-table-thead > tr > th {
     border-bottom-color: rgb(var(--nm-primary-rgb) / 12%);
@@ -187,5 +233,9 @@
     nz-select {
       width: 100%;
     }
+  }
+
+  .logs-actions {
+    grid-template-columns: 1fr;
   }
 }

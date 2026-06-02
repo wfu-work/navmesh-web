@@ -30,7 +30,21 @@
           <nz-option nzValue="PATCH" nzLabel="PATCH" />
           <nz-option nzValue="DELETE" nzLabel="DELETE" />
         </nz-select>
+        <input nz-input [(ngModel)]="q.path" placeholder="路径关键字" (keydown.enter)="search()" />
         <input nz-input [(ngModel)]="q.statusCode" placeholder="状态码" (keydown.enter)="search()" />
+        <input nz-input [(ngModel)]="q.minDurationMs" placeholder="总耗时≥ms" (keydown.enter)="search()" />
+        <input nz-input [(ngModel)]="q.minTunnelOpenMs" placeholder="隧道≥ms" (keydown.enter)="search()" />
+        <input nz-input [(ngModel)]="q.minUpstreamMs" placeholder="上游≥ms" (keydown.enter)="search()" />
+        <nz-select nzAllowClear nzPlaceHolder="连接复用" [(ngModel)]="q.reusedConn" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部连接" />
+          <nz-option nzValue="true" nzLabel="复用连接" />
+          <nz-option nzValue="false" nzLabel="新建连接" />
+        </nz-select>
+        <nz-select nzAllowClear nzPlaceHolder="错误状态" [(ngModel)]="q.hasError" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option nzValue="true" nzLabel="仅错误" />
+          <nz-option nzValue="false" nzLabel="仅成功" />
+        </nz-select>
         <button nz-button nzType="primary" (click)="search()">查询</button>
         <button nz-button (click)="reset()">重置</button>
       </div>
@@ -47,7 +61,7 @@
       [total]="totalCount"
       [expand]="expand"
       [expandRowByClick]="true"
-      [scroll]="{ x: '1900px' }"
+      [scroll]="{ x: '2200px' }"
     >
       <ng-template st-row="hostRender" let-item>
         <code class="mapping-code">{{ item.host || '-' }}</code>
@@ -61,8 +75,18 @@
         <span class="http-status" [class]="statusClass(item.statusCode)">{{ item.statusCode || '-' }}</span>
       </ng-template>
 
-      <ng-template st-row="durationRender" let-item>
-        <span>{{ item.durationMs }} ms</span>
+      <ng-template st-row="latencyRender" let-item>
+        <div class="latency-cell">
+          <div class="latency-total">
+            <strong>{{ formatMs(item.durationMs) }}</strong>
+            <span class="reuse-badge" [class.reuse-badge-active]="item.reusedConn">{{ reusedText(item) }}</span>
+          </div>
+          <div class="latency-parts">
+            <span>隧道 {{ formatMs(item.tunnelOpenMs) }}</span>
+            <span>上游 {{ formatMs(item.upstreamMs) }}</span>
+            <span>首字节 {{ formatMs(item.firstByteMs) }}</span>
+          </div>
+        </div>
       </ng-template>
 
       <ng-template st-row="trafficRender" let-item>
@@ -93,7 +117,11 @@
           <sv label="绑定设备">{{ deviceName(item.deviceGuid) }}</sv>
           <sv label="设备标识">{{ item.deviceGuid || '-' }}</sv>
           <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>
-          <sv label="耗时">{{ item.durationMs }} ms</sv>
+          <sv label="总耗时">{{ formatMs(item.durationMs) }}</sv>
+          <sv label="隧道打开">{{ formatMs(item.tunnelOpenMs) }}</sv>
+          <sv label="上游响应">{{ formatMs(item.upstreamMs) }}</sv>
+          <sv label="首字节">{{ formatMs(item.firstByteMs) }}</sv>
+          <sv label="连接复用">{{ reusedText(item) }}</sv>
           <sv label="入站流量">{{ formatBytes(item.bytesIn) }}</sv>
           <sv label="出站流量">{{ formatBytes(item.bytesOut) }}</sv>
           <sv label="访问时间">{{ item.createTime | _date: 'yyyy-MM-dd HH:mm:ss' }}</sv>

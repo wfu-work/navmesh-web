@@ -24,7 +24,7 @@
         </nz-form-control>
       </nz-form-item>
     </nz-tab>
-    <nz-tab [nzTitle]="'邮箱验证码'">
+    <nz-tab *ngIf="false" [nzTitle]="'邮箱验证码'">
       <nz-form-item>
         <nz-form-control [nzErrorTip]="emailErrorTip">
           <nz-input-wrapper>
@@ -53,12 +53,7 @@
             <nz-col [nzSpan]="16">
               <nz-input-wrapper>
                 <nz-icon nzInputPrefix nzType="mail" />
-                <input
-                  nz-input
-                  nzSize="large"
-                  formControlName="captcha"
-                  placeholder="邮箱验证码"
-                />
+                <input nz-input nzSize="large" formControlName="captcha" placeholder="邮箱验证码" />
               </nz-input-wrapper>
             </nz-col>
             <nz-col [nzSpan]="8">
@@ -93,14 +88,16 @@
     </button>
   </nz-form-item>
 </form>
-<div class="other">
-  第三方登录
-  <nz-icon
-    nzType="wechat"
-    nz-tooltip
-    nzTooltipTitle="使用微信登录"
-    (click)="open('auth0', 'window')"
-    class="icon"
-  />
-  <a class="register" routerLink="/passport/register">创建管理员账号</a>
-</div>
+@if (false) {
+  <div class="other">
+    第三方登录
+    <nz-icon
+      nzType="wechat"
+      nz-tooltip
+      nzTooltipTitle="使用微信登录"
+      (click)="open('auth0', 'window')"
+      class="icon"
+    />
+    <a class="register" routerLink="/passport/register">创建管理员账号</a>
+  </div>
+}

@@ -31,6 +31,12 @@ export class DeviceAccessLogsComponent implements OnInit {
     method: '',
     path: '',
     statusCode: '',
+    minDurationMs: '',
+    minTunnelOpenMs: '',
+    minUpstreamMs: '',
+    minFirstByteMs: '',
+    reusedConn: '',
+    hasError: '',
   };
 
   protected data: HTTPAccessLog[] = [];
@@ -51,7 +57,7 @@ export class DeviceAccessLogsComponent implements OnInit {
     { title: '方法', index: 'method', type: 'tag', tag: this.methodTag, width: 100 },
     { title: '路径', index: 'path', render: 'pathRender', width: 300 },
     { title: '状态码', index: 'statusCode', render: 'statusRender', width: 100 },
-    { title: '耗时', index: 'durationMs', render: 'durationRender', width: 100 },
+    { title: '链路耗时', index: 'durationMs', render: 'latencyRender', width: 230 },
     { title: '流量', index: 'bytesIn', render: 'trafficRender', width: 150 },
     { title: '来源 IP', index: 'sourceIp', width: 150, default: '-' },
     { title: '绑定设备', index: 'deviceGuid', render: 'deviceRender', width: 240 },
@@ -120,7 +126,21 @@ export class DeviceAccessLogsComponent implements OnInit {
   }
 
   protected reset(): void {
-    this.q = { page: 1, size: this.q.size, host: '', deviceGuid: '', method: '', path: '', statusCode: '' };
+    this.q = {
+      page: 1,
+      size: this.q.size,
+      host: '',
+      deviceGuid: '',
+      method: '',
+      path: '',
+      statusCode: '',
+      minDurationMs: '',
+      minTunnelOpenMs: '',
+      minUpstreamMs: '',
+      minFirstByteMs: '',
+      reusedConn: '',
+      hasError: '',
+    };
     this.load();
   }
 
@@ -144,6 +164,14 @@ export class DeviceAccessLogsComponent implements OnInit {
     return `${(value / 1024 / 1024).toFixed(1)} MB`;
   }
 
+  protected formatMs(value: number | undefined): string {
+    return `${Number(value ?? 0)} ms`;
+  }
+
+  protected reusedText(item: HTTPAccessLog): string {
+    return item.reusedConn ? '复用连接' : '新建连接';
+  }
+
   private normalizeLog(item: HTTPAccessLog): HTTPAccessLog {
     return {
       ...item,
@@ -152,6 +180,10 @@ export class DeviceAccessLogsComponent implements OnInit {
       sourceIp: this.firstText(item.sourceIp, item.source_ip),
       statusCode: this.firstNumber(item.statusCode, item.status_code),
       durationMs: this.firstNumber(item.durationMs, item.duration_ms),
+      tunnelOpenMs: this.firstNumber(item.tunnelOpenMs, item.tunnel_open_ms),
+      upstreamMs: this.firstNumber(item.upstreamMs, item.upstream_ms),
+      firstByteMs: this.firstNumber(item.firstByteMs, item.first_byte_ms),
+      reusedConn: this.firstBool(item.reusedConn, item.reused_conn),
       bytesIn: this.firstNumber(item.bytesIn, item.bytes_in),
       bytesOut: this.firstNumber(item.bytesOut, item.bytes_out),
       errorMessage: this.firstText(item.errorMessage, item.error_message),
@@ -165,5 +197,9 @@ export class DeviceAccessLogsComponent implements OnInit {
 
   private firstNumber(...values: Array<number | undefined>): number {
     return values.find((value) => value !== undefined && value !== null) ?? 0;
+  }
+
+  private firstBool(...values: Array<boolean | undefined>): boolean {
+    return values.find((value) => value !== undefined && value !== null) ?? false;
   }
 }
