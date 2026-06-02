@@ -21,6 +21,7 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  align-items: start;
 }
 
 .settings-note {
@@ -180,23 +181,54 @@
   }
 }
 
-.release-file-input {
-  display: block;
-  width: 100%;
-  padding: 7px 10px;
-  border: 1px solid #d9e1e8;
-  border-radius: 6px;
-  color: #405165;
-  background: #fff;
+.settings-domain-hints {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 4px;
+
+  article {
+    min-width: 0;
+    padding: 12px 14px;
+    border: 1px solid #e0e8e5;
+    border-radius: 8px;
+    background: #fbfcfc;
+  }
+
+  strong,
+  span {
+    display: block;
+  }
+
+  strong {
+    color: #223047;
+    font-size: 13px;
+    font-weight: 850;
+  }
+
+  span {
+    margin-top: 4px;
+    color: #667586;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.7;
+  }
+
+  code {
+    padding: 1px 5px;
+    border-radius: 5px;
+    color: #2f4f61;
+    background: #eef4f2;
+    font-size: 12px;
+  }
 }
 
 .release-table-card {
   margin-top: 18px;
 }
 
-.release-upload-actions {
-  display: flex;
-  justify-content: flex-end;
+.version-tabs {
+  margin-bottom: 18px;
 }
 
 .release-toolbar {
@@ -232,6 +264,10 @@
   nz-select {
     width: 150px;
   }
+
+  input {
+    width: 150px;
+  }
 }
 
 .release-file-cell {
@@ -257,6 +293,31 @@
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 12px;
   }
+}
+
+.release-actions {
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+
+  a,
+  button {
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .text-error {
+    color: #c23b3b;
+  }
+}
+
+.release-changelog {
+  display: inline-block;
+  max-width: 220px;
+  overflow: hidden;
+  color: #516174;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .cleanup-panel {
@@ -316,6 +377,7 @@
   .settings-note,
   .retention-strip,
   .settings-section-head,
+  .settings-domain-hints,
   .release-toolbar,
   .form-grid,
   .form-grid-four,
@@ -329,17 +391,10 @@
     justify-content: flex-start;
   }
 
-  .release-upload-actions {
-    justify-content: stretch;
-
-    button {
-      width: 100%;
-    }
-  }
-
   .release-toolbar-actions {
     justify-content: flex-start;
 
+    input,
     nz-select {
       width: 100%;
     }

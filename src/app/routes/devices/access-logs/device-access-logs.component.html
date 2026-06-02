@@ -32,9 +32,6 @@
         </nz-select>
         <input nz-input [(ngModel)]="q.path" placeholder="路径关键字" (keydown.enter)="search()" />
         <input nz-input [(ngModel)]="q.statusCode" placeholder="状态码" (keydown.enter)="search()" />
-        <input nz-input [(ngModel)]="q.minDurationMs" placeholder="总耗时≥ms" (keydown.enter)="search()" />
-        <input nz-input [(ngModel)]="q.minTunnelOpenMs" placeholder="隧道≥ms" (keydown.enter)="search()" />
-        <input nz-input [(ngModel)]="q.minUpstreamMs" placeholder="上游≥ms" (keydown.enter)="search()" />
         <nz-select nzAllowClear nzPlaceHolder="连接复用" [(ngModel)]="q.reusedConn" (ngModelChange)="search()">
           <nz-option nzValue="" nzLabel="全部连接" />
           <nz-option nzValue="true" nzLabel="复用连接" />
@@ -45,8 +42,10 @@
           <nz-option nzValue="true" nzLabel="仅错误" />
           <nz-option nzValue="false" nzLabel="仅成功" />
         </nz-select>
-        <button nz-button nzType="primary" (click)="search()">查询</button>
-        <button nz-button (click)="reset()">重置</button>
+        <div class="logs-action-buttons">
+          <button nz-button nzType="primary" (click)="search()">查询</button>
+          <button nz-button (click)="reset()">重置</button>
+        </div>
       </div>
     </div>
 

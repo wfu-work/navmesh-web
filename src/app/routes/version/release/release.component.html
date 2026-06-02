@@ -1,0 +1,100 @@
+<section class="settings-page">
+  <div class="settings-header">
+    <title-label
+      title="版本管理"
+      description="统一维护北斗降雨水位、单机版、视觉位移和边缘客户端版本，历史安装包可按版本独立下载。"
+    />
+    <div class="header-actions">
+      <a nz-button nzType="primary" [routerLink]="['/version/release/create']" [queryParams]="{ releaseType: activeReleaseType }">
+        <nz-icon nzType="plus" />
+        新建
+      </a>
+      <button nz-button [nzLoading]="loading" (click)="load()">
+        <nz-icon nzType="reload" />
+        刷新
+      </button>
+    </div>
+  </div>
+
+  <nz-tabs [nzAnimated]="false" [nzSelectedIndex]="activeTabIndex" (nzSelectedIndexChange)="switchReleaseType($event)" class="version-tabs">
+    @for (tab of releaseTabs; track tab.value) {
+      <nz-tab [nzTitle]="tab.label"></nz-tab>
+    }
+  </nz-tabs>
+
+  <nz-card class="card-border release-table-card" [nzBordered]="false">
+    <div class="release-toolbar">
+      <h2>{{ currentTab().label }} <span>{{ total }} 个</span></h2>
+      <div class="release-toolbar-actions">
+        <input nz-input [(ngModel)]="q.version" placeholder="版本号" (keyup.enter)="q.page = 1; load()" />
+        <nz-select [(ngModel)]="q.deviceType" nzAllowClear nzPlaceHolder="设备类型" (ngModelChange)="q.page = 1; load()">
+          <nz-option nzValue="all" nzLabel="全部设备" />
+          @for (type of deviceTypes; track type.guid || type.key) {
+            <nz-option [nzValue]="type.key || type.guid" [nzLabel]="type.name" />
+          }
+        </nz-select>
+        <nz-select [(ngModel)]="q.os" nzAllowClear nzPlaceHolder="系统" (ngModelChange)="q.page = 1; load()">
+          <nz-option nzValue="linux" nzLabel="linux" />
+          <nz-option nzValue="darwin" nzLabel="darwin" />
+          <nz-option nzValue="windows" nzLabel="windows" />
+        </nz-select>
+        <nz-select [(ngModel)]="q.arch" nzAllowClear nzPlaceHolder="架构" (ngModelChange)="q.page = 1; load()">
+          <nz-option nzValue="amd64" nzLabel="amd64" />
+          <nz-option nzValue="arm64" nzLabel="arm64" />
+        </nz-select>
+        <nz-select [(ngModel)]="q.status" nzAllowClear nzPlaceHolder="状态" (ngModelChange)="q.page = 1; load()">
+          <nz-option nzValue="1" nzLabel="启用" />
+          <nz-option nzValue="0" nzLabel="禁用" />
+        </nz-select>
+        <button type="button" nz-button nzType="primary" (click)="q.page = 1; load()">查询</button>
+        <button type="button" nz-button (click)="resetSearch()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="releases"
+      [columns]="columns"
+      bordered="false"
+      [loading]="loading"
+      (change)="tableChange($event)"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="total"
+      [scroll]="{ x: '1540px' }"
+    >
+      <ng-template st-row="fileRender" let-item>
+        <div class="release-file-cell">
+          <strong>{{ item.fileName }}</strong>
+          <span>{{ item.sha256 }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="typeRender" let-item>
+        {{ releaseTypeText(item) }}
+      </ng-template>
+
+      <ng-template st-row="deviceTypeRender" let-item>
+        <nz-tag>{{ deviceTypeText(item.deviceType || item.device_type) }}</nz-tag>
+      </ng-template>
+
+      <ng-template st-row="platformRender" let-item>
+        <nz-tag>{{ platformText(item) }}</nz-tag>
+      </ng-template>
+
+      <ng-template st-row="changeLogRender" let-item>
+        <span class="release-changelog" [nzTooltipTitle]="releaseChangeLog(item) || null" nz-tooltip>
+          {{ releaseChangeLog(item) || '-' }}
+        </span>
+      </ng-template>
+
+      <ng-template st-row="sizeRender" let-item>
+        {{ formatBytes(item.size) }}
+      </ng-template>
+
+      <ng-template st-row="timeRender" let-item>
+        {{ updateTime(item) ? (updateTime(item) | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+      </ng-template>
+
+    </st>
+  </nz-card>
+</section>

@@ -204,7 +204,10 @@ export interface DeviceGroup {
   update_time?: number;
 }
 
-export interface ClientReleaseQuery {
+export interface ReleaseQuery {
+  releaseType?: string;
+  deviceType?: string;
+  version?: string;
   os?: string;
   arch?: string;
   status?: string | number;
@@ -212,8 +215,12 @@ export interface ClientReleaseQuery {
   size?: number;
 }
 
-export interface ClientRelease {
+export interface Release {
   guid: string;
+  releaseType?: string;
+  release_type?: string;
+  deviceType?: string;
+  device_type?: string;
   version?: string;
   os: string;
   arch: string;
@@ -222,6 +229,8 @@ export interface ClientRelease {
   sha256: string;
   size: number;
   downloadUrl?: string;
+  changeLog?: string;
+  change_log?: string;
   status: number;
   createTime: number;
   create_time?: number;
@@ -333,14 +342,38 @@ export class DevicesService {
     return this.http.delete<boolean>(`/device-groups/${guid}`);
   }
 
-  clientReleases(params?: ClientReleaseQuery): Observable<PageEntity<ClientRelease>> {
-    return this.http.get<PageEntity<ClientRelease>>('/client-releases/list', {
+  deleteGroup(guid: string): Observable<boolean> {
+    return this.http.delete<boolean>(`/device-groups/${guid}/delete`);
+  }
+
+  releases(params?: ReleaseQuery): Observable<PageEntity<Release>> {
+    return this.http.get<PageEntity<Release>>('/releases/list', {
       params: this.cleanParams(params),
     });
   }
 
-  uploadClientRelease(payload: FormData): Observable<ClientRelease> {
-    return this.http.post<ClientRelease>('/client-releases/upload', payload);
+  release(guid: string): Observable<Release> {
+    return this.http.get<Release>(`/releases/${guid}`);
+  }
+
+  uploadRelease(payload: FormData): Observable<Release> {
+    return this.http.post<Release>('/releases/upload', payload);
+  }
+
+  updateRelease(guid: string, payload: FormData): Observable<Release> {
+    return this.http.put<Release>(`/releases/${guid}`, payload);
+  }
+
+  enableRelease(guid: string): Observable<boolean> {
+    return this.http.post<boolean>(`/releases/${guid}/enable`, {});
+  }
+
+  disableRelease(guid: string): Observable<boolean> {
+    return this.http.post<boolean>(`/releases/${guid}/disable`, {});
+  }
+
+  deleteRelease(guid: string): Observable<boolean> {
+    return this.http.delete<boolean>(`/releases/${guid}/delete`);
   }
 
   upgradeTasks(deviceGuid: string, params?: { page?: number; size?: number; status?: string | number }): Observable<PageEntity<DeviceUpgradeTask>> {

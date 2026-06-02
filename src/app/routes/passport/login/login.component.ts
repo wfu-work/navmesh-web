@@ -5,6 +5,7 @@ import {
   OnDestroy,
   inject,
 } from '@angular/core';
+import { NgIf } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { StartupService } from '@core';
@@ -32,6 +33,7 @@ import { finalize } from 'rxjs';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     RouterLink,
+    NgIf,
     ReactiveFormsModule,
     NzCheckboxModule,
     NzTabsModule,

@@ -1,0 +1,100 @@
+<section class="release-create-page">
+  <div class="release-create-header">
+    <title-label
+      [title]="pageTitle()"
+      [description]="pageDescription()"
+      [showBack]="true"
+    />
+  </div>
+
+  <div class="release-create-grid">
+    <nz-card class="card-border release-create-card" [nzBordered]="false">
+      <nz-spin [nzSpinning]="loading">
+        <div class="release-create-section-head">
+          <div>
+            <h2>{{ currentType().uploadTitle }}</h2>
+            <p>{{ currentType().uploadHint }}</p>
+          </div>
+          <nz-tag nzColor="blue">{{ currentType().tag }}</nz-tag>
+        </div>
+
+        <form nz-form [formGroup]="form" (ngSubmit)="upload()">
+          <se-container col="2" nzLayout="vertical">
+          <se label="版本类型" required error="请选择版本类型">
+            <nz-select formControlName="releaseType">
+              @for (item of releaseTypes; track item.value) {
+                <nz-option [nzValue]="item.value" [nzLabel]="item.label" />
+              }
+            </nz-select>
+          </se>
+
+          <se label="版本号" required error="请输入版本号">
+            <input nz-input formControlName="version" placeholder="v0.0.2" />
+          </se>
+
+          <se label="设备类型">
+            <nz-select formControlName="deviceType" nzPlaceHolder="全部设备类型">
+              <nz-option nzValue="all" nzLabel="全部设备" />
+              @for (type of deviceTypes; track type.guid || type.key) {
+                <nz-option [nzValue]="type.key || type.guid" [nzLabel]="type.name" />
+              }
+            </nz-select>
+          </se>
+
+          <se label="软件包文件">
+            <nz-upload
+              class="release-create-upload"
+              [(nzFileList)]="fileList"
+              [nzBeforeUpload]="beforeUpload"
+              [nzRemove]="removeFile"
+              [nzMultiple]="false"
+              [nzLimit]="1"
+              [nzDisabled]="uploading"
+            >
+              <button nz-button type="button" [disabled]="uploading">
+                <nz-icon nzType="upload" />
+                选择软件包
+              </button>
+            </nz-upload>
+            <div class="release-create-field-note">{{ file?.name || existingFileName || '尚未选择文件' }}</div>
+          </se>
+
+          <se label="目标系统">
+            <nz-select formControlName="os" nzAllowClear nzPlaceHolder="自动识别">
+              <nz-option nzValue="all" nzLabel="全部系统" />
+              <nz-option nzValue="linux" nzLabel="linux" />
+              <nz-option nzValue="darwin" nzLabel="darwin" />
+              <nz-option nzValue="windows" nzLabel="windows" />
+            </nz-select>
+          </se>
+
+          <se label="目标架构">
+            <nz-select formControlName="arch" nzAllowClear nzPlaceHolder="自动识别">
+              <nz-option nzValue="all" nzLabel="全部架构" />
+              <nz-option nzValue="amd64" nzLabel="amd64" />
+              <nz-option nzValue="arm64" nzLabel="arm64" />
+            </nz-select>
+          </se>
+
+          <se label="自定义下载地址" col="1">
+            <input nz-input formControlName="downloadUrl" placeholder="留空则使用 /api/downloads/releases/{guid}" />
+            <div class="release-create-field-note">留空时服务端会生成按版本 GUID 下载的地址，历史版本不会被最新包覆盖。</div>
+          </se>
+
+          <se label="更新内容" col="1">
+            <textarea nz-input rows="4" formControlName="changeLog" placeholder="记录本次修复、功能或兼容性变更"></textarea>
+          </se>
+          </se-container>
+
+          <div class="release-create-actions">
+            <button type="button" nz-button (click)="cancel()">取消</button>
+            <button type="submit" nz-button nzType="primary" [nzLoading]="uploading">
+              <nz-icon [nzType]="editingGuid ? 'save' : 'upload'" />
+              {{ editingGuid ? '保存修改' : '上传发布' }}
+            </button>
+          </div>
+        </form>
+      </nz-spin>
+    </nz-card>
+  </div>
+</section>

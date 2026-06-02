@@ -25,7 +25,7 @@
 
         <div class="profile-meta-grid">
           <span>标识 {{ item.guid }}</span>
-          <span>类型 {{ item.deviceType || '-' }}</span>
+          <span>类型 {{ typeName(item.deviceType) }}</span>
           <span>来源 {{ item.sourceIp || '-' }}</span>
           <span>版本 {{ item.clientVersion || '-' }}</span>
           <span>系统 {{ item.os || '-' }}</span>
@@ -40,7 +40,7 @@
             <sv label="设备名称">{{ item.name || '-' }}</sv>
             <sv label="设备别名">{{ item.alias || '-' }}</sv>
             <sv label="设备号">{{ item.sncode || '-' }}</sv>
-            <sv label="设备类型">{{ item.deviceType || '-' }}</sv>
+            <sv label="设备类型">{{ typeName(item.deviceType) }}</sv>
             <sv label="主机名">{{ item.hostname || '-' }}</sv>
             <sv label="本机 IP">{{ item.hostIp || '-' }}</sv>
             <sv label="来源 IP">{{ item.sourceIp || '-' }}</sv>

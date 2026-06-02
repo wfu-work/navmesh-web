@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { SHARED_IMPORTS } from '@shared';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
-import { finalize, forkJoin } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import {
   MetricSummaryComponent,
   MetricSummaryItem,
@@ -11,7 +11,7 @@ import { TitleLabelComponent } from 'src/app/shared/components/title-label/title
 
 import { SessionsService, TunnelSession } from '../../sessions/sessions.service';
 import { TunnelConnection, TunnelsService } from '../../tunnels/tunnels.service';
-import { DeviceStatus } from '../devices.service';
+import { DeviceStatus, DeviceTypeDefault } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 import { HTTPAccessLog, HttpAccessService } from '../http-access.service';
 
@@ -53,6 +53,7 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
   protected sessions: TunnelSession[] = [];
   protected accessLogs: HTTPAccessLog[] = [];
   protected connections: TunnelConnection[] = [];
+  protected types: DeviceTypeDefault[] = [];
   protected trafficWindow = '24h';
 
   protected readonly trafficWindowOptions: TrafficWindowOption[] = [
@@ -78,6 +79,7 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
       sessions: this.sessionsService.list({ page: 1, size: 100, deviceGuid: this.guid }),
       accessLogs: this.httpAccessService.accessLogs({ page: 1, size: 100, deviceGuid: this.guid }),
       connections: this.tunnelsService.connections(),
+      types: this.devicesService.typeDefaults().pipe(catchError(() => of([] as DeviceTypeDefault[]))),
     })
       .pipe(
         finalize(() => {
@@ -86,8 +88,9 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ detail, sessions, accessLogs, connections }) => {
+        next: ({ detail, sessions, accessLogs, connections, types }) => {
           this.device = this.normalizeDevice(detail.device);
+          this.types = (types ?? []).map((item) => this.normalizeType(item));
           this.sessions = (sessions.data ?? []).map((item) => this.normalizeSession(item));
           this.accessLogs = (accessLogs.data ?? []).map((item) => this.normalizeLog(item));
           this.connections = (connections ?? []).filter((item) => item.deviceGuid === this.guid);
@@ -209,6 +212,13 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     return status ? map[status] : '未知';
   }
 
+  protected typeName(type: string | undefined): string {
+    const value = this.firstText(type);
+    if (!value) return '-';
+    const item = this.types.find((row) => this.typeValue(row) === value);
+    return item?.name || this.fallbackTypeName(value);
+  }
+
   private statusTone(status: DeviceStatus | undefined): MetricSummaryTone {
     const map: Record<string, MetricSummaryTone> = {
       1: 'warning',
@@ -255,6 +265,31 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
       errorMessage: this.firstText(item.errorMessage, item.error_message),
       createTime: this.firstNumber(item.createTime, item.create_time),
     };
+  }
+
+  private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {
+    return {
+      ...item,
+      key: this.firstText(item.key, item.group_key, item.guid, item.type),
+    };
+  }
+
+  private typeValue(item: DeviceTypeDefault | undefined): string {
+    return this.firstText(item?.key, item?.group_key, item?.guid, item?.type);
+  }
+
+  private fallbackTypeName(value: string): string {
+    const map: Record<string, string> = {
+      rain: '北斗降雨水位',
+      hipnames: '单机版',
+      dic: '视觉位移',
+      navmesh: '边缘客户端',
+      device_software: '北斗降雨水位',
+      standalone: '单机版',
+      visual_displacement: '视觉位移',
+      navmesh_client: '边缘客户端',
+    };
+    return map[value] || value;
   }
 
   private trafficSessions(): TunnelSession[] {

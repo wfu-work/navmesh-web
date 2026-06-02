@@ -63,33 +63,26 @@
         <nz-tag nzColor="blue">Password</nz-tag>
       </div>
 
-      <form nz-form [formGroup]="form" nzLayout="vertical">
-        <nz-form-item>
-          <nz-form-label nzRequired>当前密码</nz-form-label>
-          <nz-form-control nzErrorTip="请输入当前密码">
+      <form nz-form [formGroup]="form">
+        <se-container col="1" nzLayout="vertical">
+          <se label="当前密码" required error="请输入当前密码">
             <app-password-input formControlName="oldPassword" placeholder="输入当前登录密码" autocomplete="current-password" />
             <div class="account-field-note">用于验证当前管理员身份，服务端会校验旧密码是否正确。</div>
-          </nz-form-control>
-        </nz-form-item>
+          </se>
 
-        <nz-form-item>
-          <nz-form-label nzRequired>新密码</nz-form-label>
-          <nz-form-control nzErrorTip="新密码至少 8 位">
+          <se label="新密码" required error="新密码至少 8 位">
             <app-password-input formControlName="newPassword" placeholder="至少 8 位" autocomplete="new-password" />
             <div class="password-strength" [class]="passwordStrengthClass()">
               <span>强度：{{ passwordStrengthText() }}</span>
               <i></i>
             </div>
-          </nz-form-control>
-        </nz-form-item>
+          </se>
 
-        <nz-form-item>
-          <nz-form-label nzRequired>确认新密码</nz-form-label>
-          <nz-form-control nzErrorTip="请再次输入新密码">
+          <se label="确认新密码" required error="请再次输入新密码">
             <app-password-input formControlName="confirmPassword" placeholder="再次输入新密码" autocomplete="new-password" />
             <div class="account-field-note">两次输入一致后再保存，避免把账号锁在不可预期的密码上。</div>
-          </nz-form-control>
-        </nz-form-item>
+          </se>
+        </se-container>
 
         <div class="password-actions">
           <button nz-button nzType="primary" type="button" [nzLoading]="saving" (click)="savePassword()">

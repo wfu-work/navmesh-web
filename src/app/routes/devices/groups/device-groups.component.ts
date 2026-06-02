@@ -116,6 +116,7 @@ export class DeviceGroupsComponent implements OnInit {
     },
     {
       title: '操作',
+      width: 150,
       buttons: [
         { icon: 'edit', click: (item) => this.edit(item) },
         { icon: 'appstore', click: (item) => this.openDevices(this.groupKey(item)) },
@@ -128,6 +129,16 @@ export class DeviceGroupsComponent implements OnInit {
             title: '禁用后该类型将不能用于新设备注册，确认继续？',
             okType: 'danger',
             icon: 'stop',
+          },
+        },
+        {
+          icon: 'delete',
+          className: 'text-error',
+          click: (item) => this.delete(item),
+          pop: {
+            title: '删除后该设备类型将从列表中移除；已被设备使用的类型不能删除，确认继续？',
+            okType: 'danger',
+            icon: 'delete',
           },
         },
       ],
@@ -218,6 +229,16 @@ export class DeviceGroupsComponent implements OnInit {
         this.load();
       },
       error: () => this.message.error('设备类型禁用失败'),
+    });
+  }
+
+  protected delete(item: DeviceGroup): void {
+    this.devicesService.deleteGroup(item.guid || this.groupKey(item)).subscribe({
+      next: () => {
+        this.message.success('设备类型已删除');
+        this.load();
+      },
+      error: (error) => this.message.error(error?.msg || error?.message || '设备类型删除失败'),
     });
   }
 

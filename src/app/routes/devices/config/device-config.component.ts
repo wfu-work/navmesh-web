@@ -12,7 +12,7 @@ import {
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { NavMeshSetting, NavMeshSettingsService } from '../../settings/settings.service';
-import { ClientRelease, DeviceStatus, DeviceToken, DeviceTypeDefault, DeviceUpgradeTask } from '../devices.service';
+import { DeviceStatus, DeviceToken, DeviceTypeDefault, DeviceUpgradeTask, Release } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 import { HttpMappingEditComponent } from '../mapping-edit/http-mapping-edit.component';
 import { HttpAccessService, PortMapping } from '../http-access.service';
@@ -38,7 +38,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected mappings: PortMapping[] = [];
   protected settings: NavMeshSetting[] = [];
   protected types: DeviceTypeDefault[] = [];
-  protected releases: ClientRelease[] = [];
+  protected releases: Release[] = [];
   protected upgradeTasks: DeviceUpgradeTask[] = [];
   protected selectedReleaseGuid = '';
   protected creatingUpgrade = false;
@@ -116,7 +116,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       mappings: this.httpAccessService.list({ page: 1, size: 100, deviceGuid: this.guid }),
       types: this.devicesService.typeDefaults().pipe(catchError(() => of([] as DeviceTypeDefault[]))),
       settings: this.settingsService.list().pipe(catchError(() => of([] as NavMeshSetting[]))),
-      releases: this.devicesService.clientReleases({ page: 1, size: 100, status: 1 }).pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 100 }))),
+      releases: this.devicesService.releases({ page: 1, size: 100, status: 1, releaseType: 'navmesh' }).pipe(
+        catchError(() => of({ data: [], total: 0, page: 1, size: 100 })),
+      ),
       upgrades: this.devicesService.upgradeTasks(this.guid, { page: 1, size: 10 }).pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 10 }))),
     })
       .pipe(
@@ -301,14 +303,25 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       });
   }
 
-  protected compatibleReleases(): ClientRelease[] {
+  protected compatibleReleases(): Release[] {
     const os = this.normalizePlatformValue(this.device?.os);
     const arch = this.normalizePlatformValue(this.device?.arch);
+    const deviceType = this.firstText(this.device?.deviceType, this.device?.device_type, this.device?.groupGuid, this.device?.group_guid);
     return this.releases.filter((item) => {
+      const releaseType = this.normalizeReleaseType(this.firstText(item.releaseType, item.release_type, 'navmesh'));
+      const releaseDeviceType = this.firstText(item.deviceType, item.device_type, 'all');
       const releaseOS = this.normalizePlatformValue(item.os);
       const releaseArch = this.normalizePlatformValue(item.arch);
-      return (!os || !releaseOS || os === releaseOS) && (!arch || !releaseArch || arch === releaseArch);
+      const matchDeviceType = !releaseDeviceType || releaseDeviceType === 'all' || !deviceType || releaseDeviceType === deviceType;
+      return releaseType === 'navmesh' && matchDeviceType && (!os || !releaseOS || releaseOS === 'all' || os === releaseOS) && (!arch || !releaseArch || releaseArch === 'all' || arch === releaseArch);
     });
+  }
+
+  private normalizeReleaseType(value: string): string {
+    const map: Record<string, string> = {
+      navmesh_client: 'navmesh',
+    };
+    return map[value] ?? value;
   }
 
   protected devicePlatformText(): string {
@@ -450,6 +463,17 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       osx: 'darwin',
       win32: 'windows',
       win64: 'windows',
+      ubuntu: 'linux',
+      debian: 'linux',
+      centos: 'linux',
+      rhel: 'linux',
+      redhat: 'linux',
+      fedora: 'linux',
+      rocky: 'linux',
+      almalinux: 'linux',
+      opensuse: 'linux',
+      suse: 'linux',
+      alpine: 'linux',
     };
     return aliases[normalized] || normalized;
   }

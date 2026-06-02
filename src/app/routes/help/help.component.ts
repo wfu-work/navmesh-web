@@ -1,4 +1,5 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { environment } from '@env/environment';
 import { SHARED_IMPORTS } from '@shared';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
@@ -29,6 +30,12 @@ interface DownloadLink {
 export class HelpComponent {
   protected readonly links: HelpLink[] = [
     {
+      title: '版本管理',
+      description: '上传并启用边缘客户端版本，安装包可按版本独立下载。',
+      link: '/version/release',
+      icon: 'cloud-upload',
+    },
+    {
       title: '设备列表',
       description: '查看在线状态、外网 IP、位置、系统版本，并进入设备配置。',
       link: '/devices/list',
@@ -57,7 +64,7 @@ export class HelpComponent {
   protected readonly steps: HelpStep[] = [
     {
       title: '安装并启动客户端',
-      description: '优先使用 Release 在线安装脚本；内网环境可使用自建下载镜像。',
+      description: '先在版本管理中启用边缘客户端版本，再使用后台下载地址安装。',
     },
     {
       title: '确认设备上线',
@@ -78,31 +85,26 @@ export class HelpComponent {
   ];
 
   protected readonly downloadLinks: DownloadLink[] = [
-    {
-      label: 'Linux amd64',
-      href: 'https://github.com/wfu-work/navmesh-go/releases/latest/download/navmesh-client-linux-amd64',
-    },
-    {
-      label: 'Linux arm64',
-      href: 'https://github.com/wfu-work/navmesh-go/releases/latest/download/navmesh-client-linux-arm64',
-    },
-    {
-      label: 'macOS arm64',
-      href: 'https://github.com/wfu-work/navmesh-go/releases/latest/download/navmesh-client-darwin-arm64',
-    },
-  ];
+    { label: 'linux amd64', os: 'linux', arch: 'amd64' },
+    { label: 'linux arm64', os: 'linux', arch: 'arm64' },
+    { label: 'darwin arm64', os: 'darwin', arch: 'arm64' },
+    { label: 'windows amd64', os: 'windows', arch: 'amd64' },
+  ].map((platform) => ({
+    label: platform.label,
+    href: `${this.downloadBase}/releases/latest?releaseType=navmesh&os=${platform.os}&arch=${platform.arch}`,
+  }));
 
   protected readonly installCommand = [
-    'curl -fsSL https://github.com/wfu-work/navmesh-go/releases/latest/download/install-client.sh | sudo sh -s -- \\',
+    `curl -fsSL ${this.downloadBase}/install-client.sh | sudo sh -s -- \\`,
+    `  --download-base ${this.downloadBase} \\`,
     '  --server navmesh.navfirst.com \\',
     '  --api https://navmesh.navfirst.com \\',
     '  --port 3008 \\',
     '  --token navfirst@2020',
   ].join('\n');
 
-  protected readonly mirrorInstallCommand = [
-    'curl -fsSL https://navmesh.navfirst.com/api/downloads/install-client.sh | sudo sh -s -- \\',
-    '  --download-base https://navmesh.navfirst.com/api/downloads \\',
+  protected readonly githubInstallCommand = [
+    'curl -fsSL https://github.com/wfu-work/navmesh-go/releases/latest/download/install-client.sh | sudo sh -s -- \\',
     '  --server navmesh.navfirst.com \\',
     '  --api https://navmesh.navfirst.com \\',
     '  --port 3008 \\',
@@ -124,4 +126,11 @@ export class HelpComponent {
     '/usr/local/bin/navmesh-client',
     '/etc/systemd/system/navmesh-client.service',
   ];
+
+  protected get downloadBase(): string {
+    const baseUrl = `${environment.api.baseUrl || ''}`.replace(/\/$/, '');
+    if (/^https?:\/\//.test(baseUrl)) return `${baseUrl}/downloads`;
+    const origin = globalThis.location?.origin || '';
+    return `${origin}${baseUrl}/downloads`;
+  }
 }

@@ -17,16 +17,23 @@
       <div class="guide-section-head">
         <div>
           <h2>navmesh-client 在线安装</h2>
-          <p>Linux 设备推荐使用 GitHub Release 中的在线安装脚本。脚本会下载对应平台的裸二进制，安装到系统目录，并创建 systemd 服务。</p>
+          <p>Linux 设备推荐使用后台下载接口中的在线安装脚本。脚本会从版本管理中已启用的边缘客户端版本下载对应平台二进制，并创建 systemd 服务。</p>
         </div>
         <nz-tag nzColor="green">Recommended</nz-tag>
       </div>
 
+      <p class="guide-copy">方式一：使用后台版本管理中已启用的边缘客户端版本。</p>
       <pre class="guide-command"><code class="command-code">{{ installCommand }}</code></pre>
 
-      <p class="guide-copy">如果设备无法稳定访问 GitHub，可以把 <span class="inline-code">install-client.sh</span> 和对应平台二进制同步到自己的下载域名：</p>
+      <p class="guide-copy">
+        安装前请在
+        <a routerLink="/version/release" [queryParams]="{ releaseType: 'navmesh' }">版本管理</a>
+        上传并启用边缘客户端版本。安装脚本会通过 <span class="inline-code">{{ downloadBase }}/releases/latest</span> 按
+        <span class="inline-code">releaseType=navmesh</span>、系统和架构下载最新匹配安装包。
+      </p>
 
-      <pre class="guide-command"><code class="command-code">{{ mirrorInstallCommand }}</code></pre>
+      <p class="guide-copy">方式二：直接使用 GitHub Release 最新版本，适合设备可以稳定访问 GitHub 的公网环境。</p>
+      <pre class="guide-command"><code class="command-code">{{ githubInstallCommand }}</code></pre>
 
       <div class="guide-install-meta">
         @for (path of installPaths; track path) {
@@ -39,7 +46,7 @@
       <div class="guide-section-head">
         <div>
           <h2>手动下载</h2>
-          <p>无法在线执行脚本时，可以下载对应平台的裸二进制，放到设备后手动启动或写入自己的服务管理脚本。</p>
+          <p>无法在线执行脚本时，可以下载对应平台的已启用版本，放到设备后手动启动或写入自己的服务管理脚本。</p>
         </div>
         <nz-tag nzColor="blue">Download</nz-tag>
       </div>
@@ -53,7 +60,7 @@
         }
       </div>
 
-      <p class="guide-copy">Release 资源名称按系统和 CPU 架构区分，例如 <span class="inline-code">navmesh-client-linux-amd64</span>。</p>
+      <p class="guide-copy">下载接口会按边缘客户端类型和平台匹配最新启用版本；需要指定历史版本时，请在版本管理列表中点击对应版本的下载按钮。</p>
     </nz-card>
 
     <nz-card class="card-border" [nzBordered]="false">

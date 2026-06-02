@@ -26,6 +26,7 @@ export class SystemSettingsComponent implements OnInit {
 
   protected readonly form = this.fb.group({
     ssh_gateway_domain: ['', [Validators.required]],
+    http_gateway_domain: ['', [Validators.required]],
     ssh_listen: ['', [Validators.required]],
     ssh_enabled: [true],
     http_listen: ['', [Validators.required]],
@@ -106,6 +107,7 @@ export class SystemSettingsComponent implements OnInit {
   private patchForm(): void {
     this.form.patchValue({
       ssh_gateway_domain: this.setting('ssh_gateway_domain', 'sshd.navfirst.com'),
+      http_gateway_domain: this.setting('http_gateway_domain', 'httpd.navfirst.com'),
       ssh_listen: this.setting('ssh_listen', ':3010'),
       ssh_enabled: this.boolSetting('ssh_enabled', true),
       http_listen: this.setting('http_listen', ':3009'),

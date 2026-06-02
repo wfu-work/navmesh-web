@@ -29,7 +29,7 @@
       <div class="settings-section-head">
         <div>
           <h2>接入域名</h2>
-          <p>用于生成设备的 SSH 连接地址。HTTP 映射域名已移动到设备类型和设备配置中维护。</p>
+          <p>用于生成设备的 SSH 和 HTTPD 接入地址。设备类型仍可维护默认映射域名，单台设备也可以在设备配置中覆盖。</p>
         </div>
         <nz-tag nzColor="blue">Gateway</nz-tag>
       </div>
@@ -45,12 +45,35 @@
           </nz-form-item>
 
           <nz-form-item>
+            <nz-form-label nzRequired>HTTPD 网关域名</nz-form-label>
+            <nz-form-control nzErrorTip="请输入 HTTPD 网关域名">
+              <input nz-input formControlName="http_gateway_domain" placeholder="httpd.navfirst.com" />
+              <div class="field-note">用于规划 HTTP 映射的统一接入域名，例如 <code>device.httpd.navfirst.com</code>。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
             <nz-form-label nzRequired>设备注册 Token</nz-form-label>
             <nz-form-control nzErrorTip="请输入设备注册 Token">
               <input nz-input formControlName="device_register_token" autocomplete="off" placeholder="首次注册使用的共享 Token" />
               <div class="field-note">只用于设备首次注册。设备注册成功后会使用独立 Token，建议定期轮换这个值。</div>
             </nz-form-control>
           </nz-form-item>
+        </div>
+
+        <div class="settings-domain-hints">
+          <article>
+            <strong>SSH 示例</strong>
+            <span><code>device.sshd.navfirst.com</code> 指向 SSH 网关，设备配置页会生成登录命令。</span>
+          </article>
+          <article>
+            <strong>HTTPD 示例</strong>
+            <span><code>device.httpd.navfirst.com</code> 可作为 HTTP 映射统一入口，再由网关转发到设备 Web 服务。</span>
+          </article>
+          <article>
+            <strong>部署提醒</strong>
+            <span>请确保 DNS、反向代理和证书覆盖这些域名；修改域名后，已复制出去的访问地址需要同步更新。</span>
+          </article>
         </div>
       </form>
     </nz-card>
@@ -148,7 +171,7 @@
             <nz-form-label>客户端下载基址</nz-form-label>
             <nz-form-control>
               <input nz-input formControlName="client_download_base" placeholder="https://navmesh.example.com/api/downloads" />
-              <div class="field-note">留空时按当前 API 域名生成，例如 <code>/api/downloads/navmesh-client-linux-amd64</code>。</div>
+              <div class="field-note">留空时按当前 API 域名生成，例如 <code>/api/downloads/releases/latest?releaseType=navmesh</code>。</div>
             </nz-form-control>
           </nz-form-item>
 

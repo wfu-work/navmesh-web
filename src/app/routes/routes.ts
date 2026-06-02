@@ -22,6 +22,7 @@ export const routes: Routes = [
       { path: 'sessions', loadChildren: () => import('./sessions/routes').then((m) => m.routes) },
       { path: 'policies', loadChildren: () => import('./policies/routes').then((m) => m.routes) },
       { path: 'audit', loadChildren: () => import('./audit/routes').then((m) => m.routes) },
+      { path: 'version', loadChildren: () => import('./version/routes').then((m) => m.routes) },
       { path: 'settings', loadChildren: () => import('./settings/routes').then((m) => m.routes) },
       { path: 'help', component: HelpComponent, data: { title: '使用指南' } },
     ],

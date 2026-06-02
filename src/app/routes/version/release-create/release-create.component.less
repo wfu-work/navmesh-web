@@ -1,0 +1,126 @@
+.release-create-page {
+  min-width: 0;
+}
+
+.release-create-header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.release-create-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 18px;
+}
+
+.release-create-card {
+  width: 100%;
+}
+
+.release-create-section-head {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #edf1f4;
+
+  h2,
+  p {
+    margin: 0;
+  }
+
+  h2 {
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+
+  p {
+    max-width: 680px;
+    margin-top: 6px;
+    color: #667586;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.7;
+  }
+
+  nz-tag {
+    flex: 0 0 auto;
+    margin: 2px 0 0;
+    font-weight: 800;
+  }
+}
+
+.release-create-field-note {
+  margin-top: 8px;
+  color: #7a8897;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.6;
+}
+
+.release-create-upload {
+  display: block;
+
+  ::ng-deep .ant-upload-list {
+    margin-top: 8px;
+  }
+
+  ::ng-deep .ant-upload-list-item {
+    border-radius: 6px;
+  }
+}
+
+.release-create-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #edf1f4;
+}
+
+:host-context([data-theme='dark']) {
+  .release-create-section-head {
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+
+    h2 {
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    p {
+      color: rgba(255, 255, 255, 0.56);
+    }
+  }
+
+  .release-create-field-note {
+    color: rgba(255, 255, 255, 0.52);
+  }
+
+  .release-create-actions {
+    border-top-color: rgba(255, 255, 255, 0.08);
+  }
+}
+
+@media (max-width: 767px) {
+  .release-create-header,
+  .release-create-grid,
+  .release-create-section-head {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .release-create-actions {
+    justify-content: stretch;
+
+    button {
+      width: 100%;
+    }
+  }
+}

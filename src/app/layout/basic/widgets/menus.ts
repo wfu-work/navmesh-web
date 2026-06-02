@@ -74,6 +74,10 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
             <i nz-icon nzType="audit"></i>
             <span>审计日志</span>
           </li>
+          <li nz-menu-item nzMatchRouter routerLink="/version/release">
+            <i nz-icon nzType="cloud-upload"></i>
+            <span>版本管理</span>
+          </li>
           <li nz-submenu nzTitle="系统设置" nzIcon="setting">
             <ul>
               <li nz-menu-item nzMatchRouter routerLink="/settings/system">
@@ -81,9 +85,6 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
               </li>
               <li nz-menu-item nzMatchRouter routerLink="/settings/retention">
                 <span>数据保留</span>
-              </li>
-              <li nz-menu-item nzMatchRouter routerLink="/settings/client-releases">
-                <span>客户端</span>
               </li>
               <li nz-menu-item nzMatchRouter routerLink="/settings/account">
                 <span>账号安全</span>
