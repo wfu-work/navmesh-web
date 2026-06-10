@@ -78,6 +78,7 @@ export class EventListComponent implements OnInit {
   protected readonly sourceTag: STColumnTag = {
     device: { text: '设备', color: 'green' },
     device_offline: { text: '设备离线', color: 'orange' },
+    disk_usage_high: { text: '磁盘告警', color: 'gold' },
     ssh: { text: 'SSH', color: 'purple' },
     http: { text: 'HTTP', color: 'blue' },
     tunnel: { text: '隧道', color: 'cyan' },

@@ -144,6 +144,7 @@ export class EventDetailComponent implements OnInit {
     const map: Record<string, string> = {
       device: '设备',
       device_offline: '设备离线',
+      disk_usage_high: '磁盘告警',
       ssh: 'SSH',
       http: 'HTTP',
       tunnel: '隧道',

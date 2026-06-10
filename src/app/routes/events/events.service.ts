@@ -50,6 +50,7 @@ export function eventDisplayTitle(item: Partial<EventItem>): string {
   const key = title || type;
 
   if (type === 'device_offline' || key.includes('device tunnel offline')) return '设备离线提醒';
+  if (type === 'disk_usage_high') return '磁盘空间不足';
   if (type === 'session_rejected' && key.includes('ssh')) return 'SSH 会话拒绝';
   if (type === 'session_rejected' && key.includes('http')) return 'HTTP 会话拒绝';
   if (type === 'session_rejected') return '访问会话拒绝';
@@ -71,6 +72,9 @@ export function eventDisplayMessage(item: Partial<EventItem>): string {
 
   if (type === 'device_offline' || title.includes('device tunnel offline')) {
     return '设备隧道已断开，请检查设备网络或 navmesh-client 运行状态。';
+  }
+  if (type === 'disk_usage_high') {
+    return message || '设备磁盘使用率已达到告警阈值，请及时清理空间。';
   }
   if (type === 'open_tcp_failed' && title.includes('http')) {
     return 'HTTP 映射无法连接目标服务，请检查设备在线状态和本地 Web 服务端口。';
