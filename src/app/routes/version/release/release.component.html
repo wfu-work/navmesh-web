@@ -22,6 +22,43 @@
     }
   </nz-tabs>
 
+  @if (activeReleaseType === 'rain') {
+    <nz-card class="card-border release-install-card" [nzBordered]="false">
+      <div class="release-install-head">
+        <div>
+          <div class="release-install-title">
+            <h2>rain 在线安装</h2>
+            <nz-tag nzColor="green">Recommended</nz-tag>
+            <nz-tag nzColor="cyan">systemd</nz-tag>
+          </div>
+          <p>
+            上传并启用北斗降雨水位版本后，可在设备上执行安装命令；脚本会按
+            <span class="inline-code">releaseType=rain</span>、<span class="inline-code">deviceType=rain</span>
+            和当前系统架构匹配最新安装包。
+          </p>
+        </div>
+        <button
+          type="button"
+          nz-button
+          nzType="primary"
+          [cdkCopyToClipboard]="rainInstallCommand"
+          (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event)"
+        >
+          <nz-icon nzType="copy" />
+          复制命令
+        </button>
+      </div>
+
+      <pre class="release-install-command"><code>{{ rainInstallCommand }}</code></pre>
+
+      <div class="release-install-meta">
+        @for (path of rainInstallPaths; track path) {
+          <nz-tag>{{ path }}</nz-tag>
+        }
+      </div>
+    </nz-card>
+  }
+
   <nz-card class="card-border release-table-card" [nzBordered]="false">
     <div class="release-toolbar">
       <h2>{{ currentTab().label }} <span>{{ total }} 个</span></h2>

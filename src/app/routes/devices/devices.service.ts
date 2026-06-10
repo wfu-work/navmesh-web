@@ -14,6 +14,27 @@ export interface DeviceQuery {
   size?: number;
 }
 
+export interface DeviceStatsQuery {
+  keyword?: string;
+  content?: string;
+  type?: string;
+  groupGuid?: string;
+  tag?: string;
+}
+
+export interface DeviceStats {
+  total: number;
+  registered: number;
+  online: number;
+  offline: number;
+  disabled: number;
+}
+
+export interface DeviceVPNRestartCommand {
+  requestedAt: number;
+  message: string;
+}
+
 export interface DeviceTokenPayload {
   name?: string;
   expireTime?: number;
@@ -246,21 +267,33 @@ export interface CreateDeviceUpgradePayload {
 export interface DeviceUpgradeTask {
   guid: string;
   deviceGuid: string;
+  device_guid?: string;
   releaseGuid: string;
+  release_guid?: string;
   version?: string;
   os: string;
   arch: string;
   fileName: string;
+  file_name?: string;
   downloadUrl: string;
+  download_url?: string;
   sha256: string;
   size: number;
   fromVersion?: string;
+  from_version?: string;
   currentVersion?: string;
+  current_version?: string;
   status: number;
+  progress?: number;
+  downloadedSize?: number;
+  downloaded_size?: number;
   message?: string;
   errorMessage?: string;
+  error_message?: string;
   startTime?: number;
+  start_time?: number;
   finishTime?: number;
+  finish_time?: number;
   createTime: number;
   create_time?: number;
   updateTime: number;
@@ -288,6 +321,10 @@ export class DevicesService {
     return this.http.get<PageEntity<Device>>('/devices/list', { params: { ...params } });
   }
 
+  stats(params?: DeviceStatsQuery): Observable<DeviceStats> {
+    return this.http.get<DeviceStats>('/devices/stats', { params: { ...params } });
+  }
+
   get(guid: string): Observable<DeviceDetail> {
     return this.http.get<DeviceDetail>(`/devices/${guid}`);
   }
@@ -306,6 +343,10 @@ export class DevicesService {
 
   disable(guid: string): Observable<boolean> {
     return this.http.post<boolean>(`/devices/${guid}/disable`, {});
+  }
+
+  restartVPN(guid: string): Observable<DeviceVPNRestartCommand> {
+    return this.http.post<DeviceVPNRestartCommand>(`/devices/${guid}/vpn/restart`, {});
   }
 
   createToken(deviceGuid: string, payload: DeviceTokenPayload): Observable<DeviceTokenResult> {

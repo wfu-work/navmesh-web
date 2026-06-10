@@ -14,7 +14,7 @@ type ReleaseType = 'rain' | 'hipnames' | 'dic' | 'navmesh';
 @Component({
   selector: 'app-release',
   templateUrl: './release.component.html',
-  styleUrls: ['../../settings/settings.component.less'],
+  styleUrls: ['../../settings/settings.component.less', './release.component.less'],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [...SHARED_IMPORTS, TitleLabelComponent],
 })
@@ -31,6 +31,15 @@ export class ReleaseComponent implements OnInit {
   protected total = 0;
   protected activeTabIndex = 0;
   protected activeReleaseType: ReleaseType = 'rain';
+
+  protected readonly rainInstallCommand = [
+    `curl -fsSL ${this.downloadBase}/install-rain.sh | sudo sh -s -- \\`,
+    `  --download-base ${this.downloadBase} \\`,
+    '  --release-type rain \\',
+    '  --device-type rain',
+  ].join('\n');
+
+  protected readonly rainInstallPaths = ['/mnt/navfirst/nav-rain-go', '/etc/systemd/system/raind.service', 'raind'];
 
   protected readonly statusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -190,6 +199,12 @@ export class ReleaseComponent implements OnInit {
     window.open(this.downloadHref(item), '_blank', 'noopener');
   }
 
+  protected onCopyRainInstallCommand(copied: boolean): void {
+    if (copied) {
+      this.message.success('rain 在线安装命令已复制');
+    }
+  }
+
   protected currentTab(): (typeof this.releaseTabs)[number] {
     return this.releaseTabs[this.activeTabIndex] ?? this.releaseTabs[0];
   }
@@ -314,5 +329,12 @@ export class ReleaseComponent implements OnInit {
       if (text) return text;
     }
     return '';
+  }
+
+  protected get downloadBase(): string {
+    const baseUrl = `${environment.api.baseUrl || ''}`.replace(/\/$/, '');
+    if (/^https?:\/\//.test(baseUrl)) return `${baseUrl}/downloads`;
+    const origin = globalThis.location?.origin || '';
+    return `${origin}${baseUrl}/downloads`;
   }
 }

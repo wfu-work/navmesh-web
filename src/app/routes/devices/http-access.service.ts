@@ -7,6 +7,7 @@ export interface MappingQuery {
   keyword?: string;
   content?: string;
   deviceGuid?: string;
+  deviceGuids?: string;
   status?: string | number;
   page?: number;
   size?: number;

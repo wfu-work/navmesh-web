@@ -1,9 +1,12 @@
-import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { DA_SERVICE_TOKEN } from '@delon/auth';
 import { STColumn, STColumnTag } from '@delon/abc/st';
+import { environment } from '@env/environment';
 import { SHARED_IMPORTS } from '@shared';
 import { NzEmptyModule } from 'ng-zorro-antd/empty';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { catchError, finalize, forkJoin, of, timer } from 'rxjs';
 import {
   MetricSummaryComponent,
   MetricSummaryItem,
@@ -19,6 +22,8 @@ import { HttpAccessService, PortMapping } from '../http-access.service';
 import { SshAliasEditComponent } from '../ssh-alias-edit/ssh-alias-edit.component';
 import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
 
+type ServiceLogStatus = 'idle' | 'connecting' | 'streaming' | 'error';
+
 @Component({
   selector: 'app-device-config',
   templateUrl: './device-config.component.html',
@@ -27,10 +32,17 @@ import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
   imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule, MetricSummaryComponent],
 })
 export class DeviceConfigComponent extends DevicePageBase implements OnInit {
+  @ViewChild('serviceLogWindow') private serviceLogWindow?: ElementRef<HTMLElement>;
+
   private readonly sshService = inject(SSHService);
   private readonly httpAccessService = inject(HttpAccessService);
   private readonly settingsService = inject(NavMeshSettingsService);
   private readonly modalService = inject(NzModalService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly tokenService = inject(DA_SERVICE_TOKEN);
+  private readonly serviceLogNamePattern = /^[A-Za-z0-9_.@-]+\.service$/;
+  private readonly maxServiceLogChars = 240_000;
+  private serviceLogAbortController?: AbortController;
 
   protected tokens: DeviceToken[] = [];
   protected sshAliases: SSHAlias[] = [];
@@ -42,6 +54,15 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected upgradeTasks: DeviceUpgradeTask[] = [];
   protected selectedReleaseGuid = '';
   protected creatingUpgrade = false;
+  protected refreshingUpgrades = false;
+  protected restartingVPN = false;
+  protected serviceLogName = '';
+  protected serviceLogTail = 200;
+  protected serviceLogStatus: ServiceLogStatus = 'idle';
+  protected serviceLogOutput = '';
+  protected serviceLogError = '';
+  protected readonly serviceLogTailOptions = [100, 200, 500, 1000, 2000];
+  protected readonly serviceLogSuggestions = ['navmesh-client.service', 'raind.service'];
 
   protected readonly tokenStatusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -99,7 +120,15 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   ];
 
   ngOnInit(): void {
+    this.destroyRef.onDestroy(() => this.stopServiceLogStream(false));
     this.load();
+    timer(3000, 3000)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (this.hasActiveUpgradeTask()) {
+          this.refreshUpgradeTasks();
+        }
+      });
   }
 
   protected load(): void {
@@ -139,10 +168,32 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
           this.types = (types ?? []).map((item) => this.normalizeType(item));
           this.settings = settings ?? [];
           this.releases = releases.data ?? [];
-          this.upgradeTasks = upgrades.data ?? [];
+          this.upgradeTasks = (upgrades.data ?? []).map((task) => this.normalizeUpgradeTask(task));
+          this.syncDeviceVersionFromUpgradeTasks();
           this.selectedReleaseGuid = this.compatibleReleases()[0]?.guid || '';
+          this.serviceLogName ||= this.defaultServiceLogName();
         },
         error: () => this.message.error('设备配置加载失败'),
+      });
+  }
+
+  private refreshUpgradeTasks(): void {
+    if (!this.guid || this.refreshingUpgrades) {
+      return;
+    }
+    this.refreshingUpgrades = true;
+    this.devicesService
+      .upgradeTasks(this.guid, { page: 1, size: 10 })
+      .pipe(
+        catchError(() => of({ data: this.upgradeTasks, total: this.upgradeTasks.length, page: 1, size: 10 })),
+        finalize(() => {
+          this.refreshingUpgrades = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe((upgrades) => {
+        this.upgradeTasks = (upgrades.data ?? []).map((task) => this.normalizeUpgradeTask(task));
+        this.syncDeviceVersionFromUpgradeTasks();
       });
   }
 
@@ -185,6 +236,94 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       },
       error: () => this.message.error('凭证启用失败'),
     });
+  }
+
+  protected restartVPN(): void {
+    if (!this.guid) {
+      this.message.error('设备标识不存在');
+      return;
+    }
+    if (this.device?.status !== 2) {
+      this.message.warning('设备在线时才能下发 VPN 重启');
+      return;
+    }
+    this.restartingVPN = true;
+    this.devicesService
+      .restartVPN(this.guid)
+      .pipe(
+        finalize(() => {
+          this.restartingVPN = false;
+          this.cdr.markForCheck();
+        }),
+      )
+      .subscribe({
+        next: () => this.message.success('VPN 重启指令已创建，等待客户端心跳执行'),
+        error: () => this.message.error('VPN 重启指令下发失败'),
+      });
+  }
+
+  protected useServiceLogName(value: string): void {
+    if (this.serviceLogStatus === 'streaming' || this.serviceLogStatus === 'connecting') return;
+    this.serviceLogName = value;
+  }
+
+  protected startServiceLogStream(): void {
+    if (!this.guid) {
+      this.message.error('设备标识不存在');
+      return;
+    }
+    if (this.device?.status !== 2) {
+      this.message.warning('设备在线时才能查看实时日志');
+      return;
+    }
+    const serviceName = this.serviceLogName.trim();
+    if (!this.serviceLogNamePattern.test(serviceName)) {
+      this.message.warning('请输入有效的 systemd service 名称，例如 raind.service');
+      return;
+    }
+    this.stopServiceLogStream(false);
+    const controller = new AbortController();
+    this.serviceLogAbortController = controller;
+    this.serviceLogStatus = 'connecting';
+    this.serviceLogOutput = '';
+    this.serviceLogError = '';
+    this.cdr.markForCheck();
+    void this.readServiceLogStream(serviceName, this.serviceLogTail, controller);
+  }
+
+  protected stopServiceLogStream(markIdle = true): void {
+    this.serviceLogAbortController?.abort();
+    this.serviceLogAbortController = undefined;
+    if (markIdle && this.serviceLogStatus !== 'error') {
+      this.serviceLogStatus = 'idle';
+    }
+    this.cdr.markForCheck();
+  }
+
+  protected clearServiceLogs(): void {
+    this.serviceLogOutput = '';
+    this.serviceLogError = '';
+    this.cdr.markForCheck();
+  }
+
+  protected serviceLogStatusText(): string {
+    const map: Record<ServiceLogStatus, string> = {
+      idle: '未连接',
+      connecting: '连接中',
+      streaming: '实时查看中',
+      error: '连接失败',
+    };
+    return map[this.serviceLogStatus];
+  }
+
+  protected serviceLogStatusColor(): string {
+    const map: Record<ServiceLogStatus, string> = {
+      idle: 'default',
+      connecting: 'processing',
+      streaming: 'success',
+      error: 'error',
+    };
+    return map[this.serviceLogStatus];
   }
 
   protected openSshModal(item?: SSHAlias): void {
@@ -273,6 +412,82 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return this.tokens.filter((token) => token.status === 1).length;
   }
 
+  private async readServiceLogStream(serviceName: string, tail: number, controller: AbortController): Promise<void> {
+    try {
+      const response = await fetch(this.serviceLogStreamUrl(serviceName, tail), {
+        headers: this.serviceLogHeaders(),
+        signal: controller.signal,
+      });
+      if (!response.ok || !response.body) {
+        const errorText = await response.text().catch(() => '');
+        throw new Error(errorText || `日志流连接失败：${response.status}`);
+      }
+      this.serviceLogStatus = 'streaming';
+      this.appendServiceLog(`[${new Date().toLocaleTimeString()}] 已连接 ${serviceName}\n`);
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      while (!controller.signal.aborted) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        if (value) {
+          this.appendServiceLog(decoder.decode(value, { stream: true }));
+        }
+      }
+      const rest = decoder.decode();
+      if (rest) this.appendServiceLog(rest);
+      if (!controller.signal.aborted) {
+        this.serviceLogStatus = 'idle';
+        this.appendServiceLog('\n[日志流已结束]\n');
+      }
+    } catch (error) {
+      if (controller.signal.aborted) {
+        this.appendServiceLog('\n[日志流已停止]\n');
+        return;
+      }
+      const message = error instanceof Error ? error.message : '日志流连接失败';
+      this.serviceLogStatus = 'error';
+      this.serviceLogError = message;
+      this.appendServiceLog(`\n[连接失败] ${message}\n`);
+      this.message.error('服务日志连接失败');
+    } finally {
+      if (this.serviceLogAbortController === controller) {
+        this.serviceLogAbortController = undefined;
+      }
+      this.cdr.markForCheck();
+    }
+  }
+
+  private appendServiceLog(chunk: string): void {
+    if (!chunk) return;
+    const next = this.serviceLogOutput + chunk;
+    this.serviceLogOutput = next.length > this.maxServiceLogChars ? next.slice(next.length - this.maxServiceLogChars) : next;
+    this.cdr.markForCheck();
+    setTimeout(() => this.scrollServiceLogToBottom());
+  }
+
+  private scrollServiceLogToBottom(): void {
+    const element = this.serviceLogWindow?.nativeElement;
+    if (!element) return;
+    element.scrollTop = element.scrollHeight;
+  }
+
+  private serviceLogStreamUrl(serviceName: string, tail: number): string {
+    const params = new URLSearchParams({
+      service: serviceName,
+      tail: String(tail || 200),
+    });
+    return `${this.apiBaseUrl()}/devices/${encodeURIComponent(this.guid)}/service-logs/stream?${params.toString()}`;
+  }
+
+  private serviceLogHeaders(): HeadersInit {
+    const token = this.tokenService.get()?.token;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  }
+
+  private apiBaseUrl(): string {
+    return `${environment.api.baseUrl || ''}`.replace(/\/$/, '');
+  }
+
   protected enabledSshCount(): number {
     return this.sshAliases.filter((item) => item.status !== 0).length;
   }
@@ -359,6 +574,47 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return map[status] || 'default';
   }
 
+  protected hasActiveUpgradeTask(): boolean {
+    return this.upgradeTasks.some((task) => task.status === 1 || task.status === 2);
+  }
+
+  protected showUpgradeProgress(task: DeviceUpgradeTask): boolean {
+    return task.status !== 1 || this.upgradeProgress(task) > 0;
+  }
+
+  protected upgradeProgress(task: DeviceUpgradeTask): number {
+    const progress = this.firstNumber(task.progress);
+    if (task.status === 3) return 100;
+    if (task.status === 2 && progress <= 0) return 1;
+    return Math.min(100, Math.max(0, progress));
+  }
+
+  protected upgradeProgressStatus(task: DeviceUpgradeTask): 'success' | 'exception' | 'active' | 'normal' {
+    if (task.status === 3) return 'success';
+    if (task.status === 4) return 'exception';
+    if (task.status === 2) return 'active';
+    return 'normal';
+  }
+
+  protected upgradeStageText(task: DeviceUpgradeTask): string {
+    return this.firstText(task.message, this.upgradeStatusText(task.status));
+  }
+
+  protected upgradeDownloadedText(task: DeviceUpgradeTask): string {
+    const downloaded = this.firstNumber(task.downloadedSize, task.downloaded_size);
+    const total = this.firstNumber(task.size);
+    if (downloaded > 0 && total > 0) {
+      return `${this.formatBytes(downloaded)} / ${this.formatBytes(total)}`;
+    }
+    if (downloaded > 0) {
+      return `已下载 ${this.formatBytes(downloaded)}`;
+    }
+    if (total > 0 && task.status === 2) {
+      return `总大小 ${this.formatBytes(total)}`;
+    }
+    return '';
+  }
+
   protected taskTime(item: DeviceUpgradeTask): number {
     return item.updateTime || item.update_time || item.createTime || item.create_time || 0;
   }
@@ -443,6 +699,32 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     };
   }
 
+  private normalizeUpgradeTask(item: DeviceUpgradeTask): DeviceUpgradeTask {
+    return {
+      ...item,
+      deviceGuid: this.firstText(item.deviceGuid, item.device_guid),
+      releaseGuid: this.firstText(item.releaseGuid, item.release_guid),
+      fileName: this.firstText(item.fileName, item.file_name),
+      downloadUrl: this.firstText(item.downloadUrl, item.download_url),
+      fromVersion: this.firstText(item.fromVersion, item.from_version),
+      currentVersion: this.firstText(item.currentVersion, item.current_version),
+      progress: this.firstNumber(item.progress),
+      downloadedSize: this.firstNumber(item.downloadedSize, item.downloaded_size),
+      errorMessage: this.firstText(item.errorMessage, item.error_message),
+      startTime: this.firstNumber(item.startTime, item.start_time),
+      finishTime: this.firstNumber(item.finishTime, item.finish_time),
+      createTime: this.firstNumber(item.createTime, item.create_time),
+      updateTime: this.firstNumber(item.updateTime, item.update_time),
+    };
+  }
+
+  private syncDeviceVersionFromUpgradeTasks(): void {
+    const latestSuccess = this.upgradeTasks.find((task) => task.status === 3 && this.firstText(task.currentVersion));
+    if (this.device && latestSuccess?.currentVersion && this.device.clientVersion !== latestSuccess.currentVersion) {
+      this.device = { ...this.device, clientVersion: latestSuccess.currentVersion };
+    }
+  }
+
   private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {
     return {
       ...item,
@@ -519,6 +801,12 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
 
   private defaultHttpIsCustomDomain(): boolean {
     return false;
+  }
+
+  private defaultServiceLogName(): string {
+    const deviceType = this.firstText(this.device?.deviceType, this.device?.device_type).toLowerCase();
+    if (deviceType.includes('rain')) return 'raind.service';
+    return 'navmesh-client.service';
   }
 
   private firstPositiveNumber(...values: Array<number | undefined | null>): number {

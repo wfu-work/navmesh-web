@@ -8,7 +8,32 @@
 
   <nz-card class="card-border device-filter-card" [nzBordered]="false">
     <div class="device-toolbar">
+      <div class="device-status-summary" aria-label="设备状态统计">
+        <article class="device-status-summary-item">
+          <span>全部设备</span>
+          <strong>{{ totalCount }}</strong>
+        </article>
+        <article class="device-status-summary-item summary-online">
+          <span>在线设备</span>
+          <strong>{{ onlineCount }}</strong>
+        </article>
+        <article class="device-status-summary-item summary-offline">
+          <span>离线设备</span>
+          <strong>{{ offlineCount }}</strong>
+        </article>
+      </div>
       <div class="device-filter-actions">
+        <nz-select
+          nzAllowClear
+          nzPlaceHolder="全部状态"
+          [(ngModel)]="q.status"
+          (ngModelChange)="q.page = 1; getData()"
+          class="device-filter-status"
+        >
+          <nz-option nzValue="" nzLabel="全部" />
+          <nz-option nzValue="2" nzLabel="在线" />
+          <nz-option nzValue="3" nzLabel="离线" />
+        </nz-select>
         <nz-select
           nzShowSearch
           nzAllowClear

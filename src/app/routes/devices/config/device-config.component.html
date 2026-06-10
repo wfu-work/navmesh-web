@@ -1,10 +1,25 @@
 <section class="device-detail-page">
-  <div class="device-header">
+  <div class="device-header device-config-header">
     <title-label
       [title]="title()"
       description="管理当前设备的激活凭证、SSH 接入和 HTTP 映射。"
       [showBack]="true"
     />
+    @if (device; as item) {
+      <button
+        nz-button
+        nzType="primary"
+        class="vpn-restart-button"
+        [nzLoading]="restartingVPN"
+        [disabled]="item.status !== 2"
+        nz-popconfirm
+        nzPopconfirmTitle="将断开并重建当前设备 VPN 隧道，确认重启？"
+        (nzOnConfirm)="restartVPN()"
+      >
+        <nz-icon nzType="reload" />
+        VPN 重启
+      </button>
+    }
   </div>
 
   <nz-spin [nzSpinning]="loading">
@@ -86,9 +101,24 @@
           <div class="access-list">
             @for (task of upgradeTasks; track task.guid) {
               <article class="access-list-item">
-                <div>
+                <div class="upgrade-task-main">
                   <strong>{{ task.version || task.fileName }}</strong>
                   <span>{{ task.fileName }} · {{ task.os }}/{{ task.arch }} · {{ taskTime(task) ? (taskTime(task) | _date: 'MM-dd HH:mm') : '-' }}</span>
+                  @if (upgradeStageText(task)) {
+                    <span class="upgrade-stage">{{ upgradeStageText(task) }}</span>
+                  }
+                  @if (showUpgradeProgress(task)) {
+                    <div class="upgrade-progress-row">
+                      <nz-progress
+                        [nzPercent]="upgradeProgress(task)"
+                        [nzStatus]="upgradeProgressStatus(task)"
+                        [nzStrokeWidth]="6"
+                      />
+                      @if (upgradeDownloadedText(task)) {
+                        <span class="upgrade-progress-size">{{ upgradeDownloadedText(task) }}</span>
+                      }
+                    </div>
+                  }
                   @if (task.errorMessage) {
                     <code class="ssh-command-inline">{{ task.errorMessage }}</code>
                   }
@@ -101,6 +131,71 @@
               <nz-empty nzNotFoundContent="暂无升级任务" />
             }
           </div>
+        </nz-card>
+
+        <nz-card class="card-border access-card service-log-card" [nzBordered]="false">
+          <div class="detail-card-title service-log-title">
+            <div>
+              <h2>服务日志</h2>
+              <p>实时查看当前设备 systemd service 日志，仅支持 <span class="service-log-inline">*.service</span>。</p>
+            </div>
+            <nz-tag [nzColor]="serviceLogStatusColor()">{{ serviceLogStatusText() }}</nz-tag>
+          </div>
+
+          <div class="service-log-controls">
+            <label>
+              <span>服务</span>
+              <input
+                nz-input
+                [(ngModel)]="serviceLogName"
+                placeholder="例如 raind.service"
+                [disabled]="serviceLogStatus === 'connecting' || serviceLogStatus === 'streaming'"
+                (keyup.enter)="startServiceLogStream()"
+              />
+            </label>
+            <label>
+              <span>最近行数</span>
+              <nz-select
+                [(ngModel)]="serviceLogTail"
+                [disabled]="serviceLogStatus === 'connecting' || serviceLogStatus === 'streaming'"
+              >
+                @for (tail of serviceLogTailOptions; track tail) {
+                  <nz-option [nzValue]="tail" [nzLabel]="tail + ' 行'" />
+                }
+              </nz-select>
+            </label>
+            <div class="service-log-actions">
+              @if (serviceLogStatus === 'connecting' || serviceLogStatus === 'streaming') {
+                <button nz-button nzDanger (click)="stopServiceLogStream()">
+                  <nz-icon nzType="pause-circle" />
+                  停止
+                </button>
+              } @else {
+                <button nz-button nzType="primary" [disabled]="item.status !== 2" (click)="startServiceLogStream()">
+                  <nz-icon nzType="play-circle" />
+                  开始查看
+                </button>
+              }
+              <button nz-button (click)="clearServiceLogs()">
+                <nz-icon nzType="delete" />
+                清空
+              </button>
+            </div>
+          </div>
+
+          <div class="service-log-suggestions">
+            @for (name of serviceLogSuggestions; track name) {
+              <button type="button" nz-button nzSize="small" (click)="useServiceLogName(name)">
+                {{ name }}
+              </button>
+            }
+          </div>
+
+          @if (serviceLogError) {
+            <nz-alert nzType="error" [nzMessage]="serviceLogError" nzShowIcon />
+          }
+
+          <pre #serviceLogWindow class="service-log-window"><code>{{ serviceLogOutput || '等待连接服务日志...' }}</code></pre>
         </nz-card>
 
         <nz-card class="card-border access-card" [nzBordered]="false">

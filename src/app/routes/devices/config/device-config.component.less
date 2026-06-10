@@ -3,6 +3,24 @@
   gap: 18px;
 }
 
+.device-config-header {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.vpn-restart-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  min-width: 112px;
+  height: 40px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
 .access-card {
   min-width: 0;
 }
@@ -84,6 +102,172 @@
 .access-list {
   display: grid;
   gap: 10px;
+}
+
+.upgrade-task-main {
+  min-width: 0;
+}
+
+.upgrade-stage {
+  color: #445469 !important;
+  font-weight: 760 !important;
+}
+
+.upgrade-progress-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  margin-top: 3px;
+}
+
+.upgrade-progress-size {
+  min-width: 116px;
+  color: #6a7785 !important;
+  font-size: 12px !important;
+  font-weight: 760 !important;
+  text-align: right;
+}
+
+:host ::ng-deep .upgrade-progress-row .ant-progress {
+  min-width: 0;
+  margin: 0;
+}
+
+:host-context([data-theme='dark']) .upgrade-stage,
+:host-context([data-theme='dark']) .upgrade-progress-size {
+  color: rgba(255, 255, 255, 0.68) !important;
+}
+
+.service-log-card {
+  overflow: hidden;
+}
+
+.service-log-title {
+  align-items: flex-start;
+}
+
+.service-log-inline {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border: 1px solid rgb(var(--nm-primary-rgb) / 12%);
+  border-radius: 5px;
+  color: #405165;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  font-weight: 760;
+  background: rgb(var(--nm-primary-rgb) / 6%);
+}
+
+.service-log-controls {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 150px auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 10px;
+
+  label {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+    margin: 0;
+
+    > span {
+      color: #445469;
+      font-size: 12px;
+      font-weight: 780;
+      line-height: 1.2;
+    }
+  }
+
+  input {
+    min-width: 0;
+  }
+}
+
+.service-log-actions,
+.service-log-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.service-log-actions {
+  justify-content: flex-end;
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 88px;
+    white-space: nowrap;
+  }
+}
+
+.service-log-suggestions {
+  margin-bottom: 12px;
+
+  button {
+    max-width: 100%;
+    overflow: hidden;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+    text-overflow: ellipsis;
+  }
+}
+
+.service-log-window {
+  display: block;
+  width: 100%;
+  height: clamp(260px, 34vh, 460px);
+  min-height: 260px;
+  max-height: 520px;
+  overflow: auto;
+  margin: 12px 0 0;
+  padding: 14px 16px;
+  border: 1px solid #243143;
+  border-radius: 8px;
+  color: #d8e1eb;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  tab-size: 2;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: #151d29;
+
+  code {
+    display: block;
+    min-width: 0;
+    color: inherit;
+    font-family: inherit;
+    font-size: inherit;
+    line-height: inherit;
+    white-space: inherit;
+    background: transparent;
+  }
+}
+
+:host ::ng-deep .service-log-controls .ant-select {
+  width: 100%;
+}
+
+:host-context([data-theme='dark']) .service-log-inline {
+  border-color: rgb(var(--nm-primary-rgb) / 22%);
+  color: rgba(255, 255, 255, 0.76);
+  background: rgb(var(--nm-primary-rgb) / 12%);
+}
+
+:host-context([data-theme='dark']) .service-log-controls label > span {
+  color: rgba(255, 255, 255, 0.68);
+}
+
+:host-context([data-theme='dark']) .service-log-window {
+  border-color: rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.82);
+  background: #111821;
 }
 
 .access-list-item {
@@ -195,9 +379,37 @@
 }
 
 @media (max-width: 767px) {
+  .device-config-header {
+    flex-direction: column;
+  }
+
+  .vpn-restart-button {
+    width: 100%;
+  }
+
   .access-list-item,
   .form-grid {
     grid-template-columns: 1fr;
+  }
+
+  .service-log-title {
+    gap: 10px;
+  }
+
+  .service-log-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .service-log-actions {
+    justify-content: flex-start;
+
+    button {
+      flex: 1 1 132px;
+    }
+  }
+
+  .service-log-window {
+    height: 320px;
   }
 
   .upgrade-actions {
@@ -214,5 +426,15 @@
 
   .access-item-actions {
     justify-content: flex-start;
+  }
+
+  .upgrade-progress-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .upgrade-progress-size {
+    min-width: 0;
+    text-align: left;
   }
 }

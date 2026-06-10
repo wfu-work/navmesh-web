@@ -6,13 +6,23 @@ import {
   inject,
 } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { SHARED_IMPORTS } from '@shared';
+import { SearchCacheService, SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { finalize, forkJoin } from 'rxjs';
+import { finalize, forkJoin, map, of, switchMap } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { Device, DeviceStatus, DeviceTypeDefault, DevicesService } from '../devices.service';
+import { Device, DeviceStats, DeviceStatus, DeviceTypeDefault, DevicesService } from '../devices.service';
 import { HttpAccessService, PortMapping } from '../http-access.service';
+
+interface DeviceListQuery {
+  page: number;
+  size: number;
+  status: string;
+  content: string;
+  type: string;
+}
+
+const DEVICE_LIST_SEARCH_CACHE_KEY = 'devices:list:search';
 
 @Component({
   selector: 'app-device-list',
@@ -29,8 +39,9 @@ export class DeviceListComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly searchCache = inject(SearchCacheService);
 
-  q = {
+  q: DeviceListQuery = {
     page: 1,
     size: 9,
     status: '',
@@ -42,18 +53,20 @@ export class DeviceListComponent implements OnInit {
   protected types: DeviceTypeDefault[] = [];
   protected mappingsByDevice = new Map<string, PortMapping[]>();
   protected totalCount = 0;
+  protected onlineCount = 0;
+  protected offlineCount = 0;
   protected loading = false;
   protected statusChanging = new Set<string>();
 
   ngOnInit(): void {
-    this.q.type = this.route.snapshot.queryParamMap.get('type') ?? '';
+    this.restoreSearch();
     this.loadTypes();
     this.getData();
   }
 
   protected loadTypes(): void {
     this.devicesService.typeDefaults().subscribe({
-        next: (res) => {
+      next: (res) => {
         this.types = (res ?? []).map((item) => this.normalizeType(item));
         this.cdr.markForCheck();
       },
@@ -62,11 +75,22 @@ export class DeviceListComponent implements OnInit {
   }
 
   protected getData(): void {
+    this.cacheSearch();
     this.loading = true;
     forkJoin({
       devices: this.devicesService.list(this.q),
-      mappings: this.httpAccessService.list({ page: 1, size: 500, status: 1 }),
+      stats: this.devicesService.stats(this.statsQuery()),
     })
+      .pipe(
+        switchMap(({ devices, stats }) => {
+          const rows = (devices.data ?? []).map((item) => this.normalizeDevice(item));
+          const deviceGuids = rows.map((item) => item.guid).filter(Boolean).join(',');
+          const mappings$ = deviceGuids
+            ? this.httpAccessService.list({ page: 1, size: Math.max(20, rows.length * 5), status: 1, deviceGuids })
+            : of({ data: [], total: 0, page: 1, size: 0 });
+          return mappings$.pipe(map((mappings) => ({ devices, stats, rows, mappings })));
+        }),
+      )
       .pipe(
         finalize(() => {
           this.loading = false;
@@ -74,9 +98,9 @@ export class DeviceListComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ devices, mappings }) => {
-          this.data = (devices.data ?? []).map((item) => this.normalizeDevice(item));
-          this.totalCount = devices.total ?? 0;
+        next: ({ devices, stats, rows, mappings }) => {
+          this.data = rows;
+          this.applyStats(stats, devices.total ?? 0);
           this.mappingsByDevice = this.groupMappingsByDevice((mappings.data ?? []).map((item) => this.normalizeMapping(item)));
         },
         error: () => this.message.error('设备列表加载失败'),
@@ -238,6 +262,7 @@ export class DeviceListComponent implements OnInit {
 
   protected reset(): void {
     this.q = { page: 1, size: this.q.size, status: '', content: '', type: '' };
+    this.searchCache.clearCache(DEVICE_LIST_SEARCH_CACHE_KEY);
     this.getData();
   }
 
@@ -327,6 +352,35 @@ export class DeviceListComponent implements OnInit {
       createTime: this.firstNumber(item.createTime, item.create_time),
       updateTime: this.firstNumber(item.updateTime, item.update_time),
     };
+  }
+
+  private restoreSearch(): void {
+    const cached = this.searchCache.getCache<DeviceListQuery>(DEVICE_LIST_SEARCH_CACHE_KEY);
+    if (cached) {
+      this.q = { ...this.q, ...cached };
+    }
+    const routeType = this.route.snapshot.queryParamMap.get('type');
+    if (routeType !== null) {
+      this.q.type = routeType;
+      this.q.page = 1;
+    }
+  }
+
+  private cacheSearch(): void {
+    this.searchCache.setCache<DeviceListQuery>(DEVICE_LIST_SEARCH_CACHE_KEY, { ...this.q });
+  }
+
+  private statsQuery(): Omit<DeviceListQuery, 'page' | 'size' | 'status'> {
+    return {
+      content: this.q.content,
+      type: this.q.type,
+    };
+  }
+
+  private applyStats(stats: DeviceStats | undefined, fallbackTotal: number): void {
+    this.totalCount = stats?.total ?? fallbackTotal;
+    this.onlineCount = stats?.online ?? 0;
+    this.offlineCount = stats?.offline ?? 0;
   }
 
   private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {

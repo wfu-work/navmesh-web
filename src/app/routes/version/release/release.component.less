@@ -1,0 +1,99 @@
+.release-install-card {
+  margin-bottom: 18px;
+}
+
+.release-install-card + .release-table-card {
+  margin-top: 0;
+}
+
+.release-install-head {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  p {
+    max-width: 860px;
+    margin: 8px 0 0;
+    color: #5f7080;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.7;
+  }
+
+  button {
+    flex: 0 0 auto;
+  }
+}
+
+.release-install-title {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+
+  h2 {
+    margin: 0 4px 0 0;
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+
+  nz-tag {
+    margin: 0;
+    font-weight: 800;
+  }
+}
+
+.release-install-command {
+  margin: 16px 0 0;
+  padding: 14px 16px;
+  overflow-x: auto;
+  border: 1px solid #dfe8e4;
+  border-radius: 8px;
+  color: #23364a;
+  background: #f7faf9;
+  font-size: 12px;
+  line-height: 1.7;
+
+  code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    white-space: pre;
+  }
+}
+
+.release-install-card .inline-code {
+  padding: 1px 5px;
+  border-radius: 5px;
+  color: #2f4f61;
+  background: #eef4f2;
+  font-size: 12px;
+}
+
+.release-install-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+
+  nz-tag {
+    margin: 0;
+    color: #426073;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 700;
+    background: #f4f7f6;
+  }
+}
+
+@media (max-width: 767px) {
+  .release-install-head {
+    display: grid;
+    grid-template-columns: 1fr;
+
+    button {
+      width: 100%;
+    }
+  }
+}
