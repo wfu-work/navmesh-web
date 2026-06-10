@@ -68,8 +68,8 @@
                   <img [src]="osIconSrc(item)" [alt]="osLabel(item)" />
                 </div>
                 <div class="device-title-text">
-                  <strong>{{ item.name || item.sncode || item.hostname || item.guid }}</strong>
-                  <span>设备号：{{ item.sncode || item.guid }}</span>
+                  <strong>{{ item.sncode || item.guid }}</strong>
+                  <span>设备：{{ item.name || item.sncode || item.hostname || item.guid }}</span>
                 </div>
               </div>
 
