@@ -27,10 +27,14 @@ export class SystemSettingsComponent implements OnInit {
   protected readonly form = this.fb.group({
     ssh_gateway_domain: ['', [Validators.required]],
     http_gateway_domain: ['', [Validators.required]],
+    tcp_gateway_domain: ['', [Validators.required]],
     ssh_listen: ['', [Validators.required]],
     ssh_enabled: [true],
     http_listen: ['', [Validators.required]],
     http_mapping_enabled: [true],
+    tcp_mapping_enabled: [true],
+    tcp_public_port_min: [20000, [Validators.min(1), Validators.max(65535)]],
+    tcp_public_port_max: [29999, [Validators.min(1), Validators.max(65535)]],
     tunnel_listen: ['', [Validators.required]],
     tunnel_enabled: [true],
     device_register_token: ['', [Validators.required]],
@@ -75,6 +79,10 @@ export class SystemSettingsComponent implements OnInit {
       });
       return;
     }
+    if (this.tcpPortRangeInvalid()) {
+      this.message.warning('TCP 公网端口范围配置不正确');
+      return;
+    }
     const value = this.form.getRawValue();
     const payload = Object.entries(value).map(([key, item]) =>
       this.settingsService.save(key, this.stringifyValue(item)),
@@ -104,14 +112,24 @@ export class SystemSettingsComponent implements OnInit {
     return Object.keys(this.form.controls).length;
   }
 
+  protected tcpPortRangeInvalid(): boolean {
+    const min = Number(this.form.controls.tcp_public_port_min.value);
+    const max = Number(this.form.controls.tcp_public_port_max.value);
+    return Number.isFinite(min) && Number.isFinite(max) && min > max;
+  }
+
   private patchForm(): void {
     this.form.patchValue({
       ssh_gateway_domain: this.setting('ssh_gateway_domain', 'sshd.navfirst.com'),
       http_gateway_domain: this.setting('http_gateway_domain', 'httpd.navfirst.com'),
+      tcp_gateway_domain: this.setting('tcp_gateway_domain', 'tcpd.navfirst.com'),
       ssh_listen: this.setting('ssh_listen', ':3010'),
       ssh_enabled: this.boolSetting('ssh_enabled', true),
       http_listen: this.setting('http_listen', ':3009'),
       http_mapping_enabled: this.boolSetting('http_mapping_enabled', true),
+      tcp_mapping_enabled: this.boolSetting('tcp_mapping_enabled', true),
+      tcp_public_port_min: this.numberSetting('tcp_public_port_min', 20000),
+      tcp_public_port_max: this.numberSetting('tcp_public_port_max', 29999),
       tunnel_listen: this.setting('tunnel_listen', ':3008'),
       tunnel_enabled: this.boolSetting('tunnel_enabled', true),
       device_register_token: this.setting('device_register_token', ''),

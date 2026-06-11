@@ -12,7 +12,7 @@ import { NzMessageService } from 'ng-zorro-antd/message';
 import { finalize } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { DeviceStatus, DeviceTypeDefault, DevicesService } from '../devices.service';
+import { Device, DeviceStatus, DeviceTypeDefault, DevicesService } from '../devices.service';
 
 @Component({
   selector: 'app-device-edit',
@@ -33,6 +33,7 @@ export class DeviceEditComponent implements OnInit {
   protected loading = false;
   protected saving = false;
   protected types: DeviceTypeDefault[] = [];
+  protected device?: Device;
 
   protected form = this.fb.group({
     sncode: ['', [Validators.required]],
@@ -77,15 +78,17 @@ export class DeviceEditComponent implements OnInit {
       )
       .subscribe({
         next: ({ device }) => {
+          const item = this.normalizeDevice(device);
+          this.device = item;
           this.form.patchValue({
-            sncode: device.sncode,
-            alias: device.alias || device.sncode,
-            deviceType: device.deviceType || device.device_type || '',
-            remark: device.remark || '',
-            hostname: device.hostname,
-            hostIp: device.hostIp || device.host_ip || device.privateIp || device.private_ip || '',
-            clientVersion: device.clientVersion,
-            status: this.normalizeStatus(device.status),
+            sncode: item.sncode || '',
+            alias: item.alias || item.sncode || '',
+            deviceType: item.deviceType || '',
+            remark: item.remark || '',
+            hostname: item.hostname || '',
+            hostIp: item.hostIp || item.privateIp || '',
+            clientVersion: item.clientVersion || '',
+            status: this.normalizeStatus(item.status),
           });
           this.form.disable({ emitEvent: false });
           this.form.controls.sncode.enable({ emitEvent: false });
@@ -98,7 +101,11 @@ export class DeviceEditComponent implements OnInit {
   }
 
   protected submit(): void {
-    const editableControls = [this.form.controls.sncode, this.form.controls.alias, this.form.controls.deviceType];
+    const editableControls = [
+      this.form.controls.sncode,
+      this.form.controls.alias,
+      this.form.controls.deviceType,
+    ];
     if (editableControls.some((control) => control.invalid)) {
       editableControls.forEach((control) => {
         control.markAsDirty();
@@ -136,7 +143,9 @@ export class DeviceEditComponent implements OnInit {
   }
 
   protected manageGroup(): void {
-    this.router.navigate(['/devices/list'], { queryParams: { type: this.form.controls.deviceType.value } });
+    this.router.navigate(['/devices/list'], {
+      queryParams: { type: this.form.controls.deviceType.value },
+    });
   }
 
   protected manageTokens(): void {
@@ -152,7 +161,9 @@ export class DeviceEditComponent implements OnInit {
   }
 
   protected typeIcon(item: DeviceTypeDefault): string {
-    return this.normalizeIcon(this.firstText(item.icon, this.defaultTypeIcon(this.typeValue(item))));
+    return this.normalizeIcon(
+      this.firstText(item.icon, this.defaultTypeIcon(this.typeValue(item))),
+    );
   }
 
   protected title(): string {
@@ -165,7 +176,11 @@ export class DeviceEditComponent implements OnInit {
   }
 
   protected subtitle(): string {
-    return this.firstText(this.form.controls.remark.value, this.form.controls.hostname.value, '客户端注册设备');
+    return this.firstText(
+      this.form.controls.remark.value,
+      this.form.controls.hostname.value,
+      '客户端注册设备',
+    );
   }
 
   protected statusText(status: DeviceStatus | number): string {
@@ -188,8 +203,102 @@ export class DeviceEditComponent implements OnInit {
     return map[this.normalizeStatus(status)];
   }
 
+  protected displayText(value: string | number | undefined): string {
+    if (value === undefined || value === null || value === '') return '-';
+    return String(value);
+  }
+
+  protected endpoint(host: string | undefined, port: number | undefined): string {
+    if (host && port) return `${host}:${port}`;
+    if (host) return host;
+    if (port) return `:${port}`;
+    return '-';
+  }
+
+  protected systemText(item: Device | undefined): string {
+    if (!item) return '-';
+    return [item.os, item.osVersion].filter(Boolean).join(' ') || '-';
+  }
+
+  protected kernelText(item: Device | undefined): string {
+    if (!item) return '-';
+    return [item.kernel, item.kernelVersion].filter(Boolean).join(' ') || '-';
+  }
+
+  protected timeText(value: number | undefined): number {
+    return value ?? 0;
+  }
+
+  protected formatBytes(value: number | undefined): string {
+    if (!value || value <= 0) return '-';
+    const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    let next = value;
+    let unitIndex = 0;
+    while (next >= 1024 && unitIndex < units.length - 1) {
+      next /= 1024;
+      unitIndex += 1;
+    }
+    const fixed = next >= 10 || unitIndex === 0 ? 0 : 1;
+    return `${next.toFixed(fixed)} ${units[unitIndex]}`;
+  }
+
+  protected usageText(used: number | undefined, total: number | undefined): string {
+    if (!used || !total) return '-';
+    return `${this.formatBytes(used)} / ${this.formatBytes(total)}`;
+  }
+
+  protected usagePercent(used: number | undefined, total: number | undefined): number {
+    if (!used || !total) return 0;
+    return Math.min(100, Math.max(0, Math.round((used / total) * 100)));
+  }
+
+  protected diskPercent(item: Device | undefined): number {
+    if (!item) return 0;
+    if (item.diskUsedPct !== undefined && item.diskUsedPct > 0) {
+      return Math.min(100, Math.max(0, Math.round(item.diskUsedPct)));
+    }
+    return this.usagePercent(item.diskUsed, item.diskTotal);
+  }
+
   private normalizeStatus(status: DeviceStatus | number): 1 | 2 | 3 | 4 {
     return status === 2 || status === 3 || status === 4 ? status : 1;
+  }
+
+  private normalizeDevice(item: Device): Device {
+    return {
+      ...item,
+      name: this.firstText(item.name, item.alias, item.sncode, item.hostname, item.guid),
+      sncode: this.firstText(item.sncode),
+      alias: this.firstText(item.alias),
+      remark: this.firstText(item.remark),
+      deviceType: this.firstText(item.deviceType, item.device_type),
+      hostIp: this.firstText(item.hostIp, item.host_ip, item.privateIp, item.private_ip),
+      sourceIp: this.firstText(item.sourceIp, item.source_ip, item.ip),
+      wanIp: this.firstText(item.wanIp),
+      sshPort: this.firstNumber(item.sshPort, item.ssh_port),
+      webPort: this.firstNumber(item.webPort, item.web_port),
+      webDomain: this.firstText(item.webDomain, item.web_domain),
+      osVersion: this.firstText(item.osVersion, item.os_version),
+      kernelVersion: this.firstText(item.kernelVersion, item.kernel_version),
+      privateIp: this.firstText(item.privateIp, item.private_ip),
+      clientVersion: this.firstText(item.clientVersion, item.client_version),
+      memoryTotal: this.firstNumber(item.memoryTotal, item.memory_total),
+      memoryUsed: this.firstNumber(item.memoryUsed, item.memory_used),
+      memoryFree: this.firstNumber(item.memoryFree, item.memory_free),
+      diskTotal: this.firstNumber(item.diskTotal, item.disk_total),
+      diskUsed: this.firstNumber(item.diskUsed, item.disk_used),
+      diskFree: this.firstNumber(item.diskFree, item.disk_free),
+      diskUsedPct: this.firstNumber(item.diskUsedPct, item.disk_used_pct),
+      lastHeartbeatAt: this.firstNumber(
+        item.lastHeartbeatAt,
+        item.last_heartbeat_at,
+        item.lastSeenTime,
+        item.last_seen_time,
+      ),
+      lastMetricAt: this.firstNumber(item.lastMetricAt, item.last_metric_at),
+      createTime: this.firstNumber(item.createTime, item.create_time),
+      updateTime: this.firstNumber(item.updateTime, item.update_time),
+    };
   }
 
   private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {
@@ -207,6 +316,10 @@ export class DeviceEditComponent implements OnInit {
 
   private firstText(...values: Array<string | undefined>): string {
     return values.find((value) => value !== undefined && value !== '') ?? '';
+  }
+
+  private firstNumber(...values: Array<number | undefined>): number {
+    return values.find((value) => value !== undefined && value !== null) ?? 0;
   }
 
   private defaultTypeIcon(type: string | undefined): string {

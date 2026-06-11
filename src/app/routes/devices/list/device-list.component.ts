@@ -345,7 +345,7 @@ export class DeviceListComponent implements OnInit {
       diskFree: this.firstNumber(item.diskFree, item.disk_free),
       diskUsedPct: this.firstNumber(item.diskUsedPct, item.disk_used_pct),
       privateIp: this.firstText(item.privateIp, item.private_ip, item.hostIp, item.host_ip),
-      clientVersion: this.firstText(item.clientVersion, item.client_version, item.clientVersion, item.client_version),
+      clientVersion: this.firstText(item.clientVersion, item.client_version),
       lastHeartbeatAt: this.firstNumber(item.lastHeartbeatAt, item.last_heartbeat_at, item.lastSeenTime, item.last_seen_time),
       lastMetricAt: this.firstNumber(item.lastMetricAt, item.last_metric_at),
       groupGuid: this.firstText(item.groupGuid, item.group_guid),

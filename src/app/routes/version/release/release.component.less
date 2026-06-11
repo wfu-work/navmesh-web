@@ -46,8 +46,36 @@
   }
 }
 
+.release-install-commands {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.release-install-command-block {
+  min-width: 0;
+}
+
+.release-install-command-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  strong {
+    color: #2a3d55;
+    font-size: 13px;
+    font-weight: 850;
+  }
+
+  button {
+    flex: 0 0 auto;
+  }
+}
+
 .release-install-command {
-  margin: 16px 0 0;
+  margin: 0;
   padding: 14px 16px;
   overflow-x: auto;
   border: 1px solid #dfe8e4;
@@ -87,7 +115,282 @@
   }
 }
 
+.version-tabs {
+  width: fit-content;
+  max-width: 100%;
+  margin: 4px 0 18px;
+  padding: 8px;
+  overflow-x: auto;
+  border: 1px solid #cfe2db;
+  border-radius: 14px;
+  background: #f3f8f6;
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 86%),
+    0 12px 28px rgb(41 99 119 / 8%);
+}
+
+:host ::ng-deep .version-tabs .ant-tabs-nav {
+  margin: 0;
+}
+
+:host ::ng-deep .version-tabs .ant-tabs-nav::before,
+:host ::ng-deep .version-tabs .ant-tabs-ink-bar {
+  display: none;
+}
+
+:host ::ng-deep .version-tabs .ant-tabs-nav-list {
+  gap: 8px;
+}
+
+:host ::ng-deep .version-tabs .ant-tabs-tab {
+  margin: 0;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease;
+}
+
+:host ::ng-deep .version-tabs .ant-tabs-tab:hover {
+  border-color: #c4ded4;
+  background: #fff;
+}
+
+:host ::ng-deep .version-tabs .ant-tabs-tab.ant-tabs-tab-active {
+  border-color: #087a58;
+  background: #0f8f68;
+  box-shadow:
+    0 12px 24px rgb(15 143 104 / 24%),
+    inset 0 1px 0 rgb(255 255 255 / 20%);
+  transform: translateY(-1px);
+}
+
+:host ::ng-deep .version-tabs .ant-tabs-tab-btn {
+  color: #354458;
+  font-weight: 850;
+  text-shadow: none;
+}
+
+:host ::ng-deep .version-tabs .ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #fff;
+}
+
+.version-tab-title {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 176px;
+  min-height: 48px;
+  padding: 0 22px;
+  font-size: 15px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+:host ::ng-deep .release-table-card .ant-table-tbody > tr:nth-child(even) > td {
+  background: #fbfcfd;
+}
+
+:host ::ng-deep .release-table-card .ant-table-tbody > tr:hover > td {
+  background: #f2faf7;
+}
+
+.release-file-cell {
+  display: grid;
+  grid-template-columns: 54px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+
+  .release-file-main {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  strong,
+  span {
+    min-width: 0;
+  }
+
+  .release-file-main > strong,
+  .release-file-main > span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .release-file-main > strong {
+    color: #18253a;
+    font-size: 14px;
+    font-weight: 880;
+    line-height: 1.35;
+  }
+
+  .release-file-main > span {
+    color: #718096;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+}
+
+.release-platform-mark {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid #d8e5df;
+  border-radius: 8px;
+  background: #f5f8f7;
+
+  strong {
+    font-size: 13px;
+    font-weight: 900;
+    line-height: 1.2;
+    letter-spacing: 0;
+  }
+
+  small {
+    margin-top: 2px;
+    font-size: 10px;
+    font-weight: 850;
+    line-height: 1.1;
+  }
+}
+
+.release-platform-linux {
+  border-color: #b8dfd1;
+  color: #16624f;
+  background: #eef8f4;
+}
+
+.release-platform-darwin {
+  border-color: #cbd5e1;
+  color: #334155;
+  background: #f3f6fa;
+}
+
+.release-platform-windows {
+  border-color: #bdd7ff;
+  color: #1e5aa8;
+  background: #eff6ff;
+}
+
+.release-platform-all {
+  border-color: #e4d4a1;
+  color: #765a12;
+  background: #fff9e8;
+}
+
+.release-device-tag {
+  max-width: 100%;
+  margin: 0;
+  overflow: hidden;
+  color: #425466;
+  font-weight: 800;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+}
+
+.release-version-cell {
+  display: inline-grid;
+  gap: 4px;
+  min-width: 88px;
+
+  strong {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: fit-content;
+    min-width: 76px;
+    min-height: 30px;
+    padding: 4px 10px;
+    border: 1px solid #bcd3ff;
+    border-radius: 8px;
+    color: #194a99;
+    background: #eef5ff;
+    font-size: 15px;
+    font-weight: 900;
+    line-height: 1.2;
+  }
+
+  span {
+    color: #718096;
+    font-size: 12px;
+    font-weight: 750;
+    line-height: 1.2;
+  }
+}
+
+.release-platform-cell {
+  display: inline-grid;
+  gap: 5px;
+  min-width: 120px;
+
+  strong {
+    color: #27364a;
+    font-size: 13px;
+    font-weight: 880;
+    line-height: 1.25;
+  }
+
+  span {
+    width: fit-content;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #426073;
+    background: #edf4f2;
+    font-size: 12px;
+    font-weight: 850;
+    line-height: 1.4;
+  }
+}
+
+.release-changelog {
+  display: grid;
+  gap: 5px;
+  max-width: 280px;
+  min-width: 0;
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    color: #394a5f;
+    font-size: 13px;
+    font-weight: 850;
+    line-height: 1.35;
+  }
+
+  span {
+    color: #7b8794;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+}
+
 @media (max-width: 767px) {
+  .version-tabs {
+    width: 100%;
+  }
+
+  .version-tab-title {
+    min-height: 40px;
+    min-width: 148px;
+    padding: 0 16px;
+  }
+
   .release-install-head {
     display: grid;
     grid-template-columns: 1fr;

@@ -116,6 +116,10 @@
                   <dd [title]="systemLabel(item)">{{ systemLabel(item) }}</dd>
                 </div>
                 <div>
+                  <dt>客户版本</dt>
+                  <dd [title]="item.clientVersion || '-'">{{ item.clientVersion || '-' }}</dd>
+                </div>
+                <div>
                   <dt>本机端口</dt>
                   <dd>SSH {{ item.sshPort || '-' }} / HTTP {{ item.webPort || '-' }}</dd>
                 </div>

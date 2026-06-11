@@ -1,0 +1,200 @@
+<section class="settings-page release-upgrade-page">
+  <div class="settings-header">
+    <title-label
+      [title]="releaseTitle()"
+      [description]="releaseMeta()"
+      [showBack]="true"
+    />
+    <div class="header-actions">
+      <button nz-button [nzLoading]="candidatesLoading || batchesLoading || tasksLoading" (click)="refreshAll()">
+        <nz-icon nzType="reload" />
+        刷新
+      </button>
+    </div>
+  </div>
+
+  <nz-spin [nzSpinning]="loading">
+    <app-metric-summary class="upgrade-summary" [items]="summaryItems()" />
+
+    <div class="upgrade-grid">
+      <nz-card class="card-border upgrade-panel" [nzBordered]="false">
+        <div class="upgrade-panel-head">
+          <div>
+            <h2>选择在线设备</h2>
+            <p>展示当前版本设备类型范围内的在线设备；系统、架构或客户端能力不匹配的设备会自动锁定。</p>
+          </div>
+          <nz-tag nzColor="green">{{ upgradeableCandidates().length }} 台可升级</nz-tag>
+        </div>
+
+        <div class="upgrade-selection-actions">
+          <button nz-button nzSize="small" (click)="selectAllUpgradeable()" [disabled]="!upgradeableCandidates().length">
+            <nz-icon nzType="check-square" />
+            全选可升级
+          </button>
+          <button nz-button nzSize="small" (click)="clearSelection()" [disabled]="!selectedDeviceGuids.size">
+            <nz-icon nzType="minus-square" />
+            清空
+          </button>
+          <span>已选 {{ selectedDeviceGuids.size }} 台</span>
+        </div>
+
+        <div class="candidate-list">
+          @for (item of candidates; track item.guid) {
+            <article class="candidate-item" [class.candidate-item-disabled]="!canSelectDevice(item)">
+              <label
+                nz-checkbox
+                [nzChecked]="selectedDeviceGuids.has(item.guid)"
+                [nzDisabled]="!canSelectDevice(item)"
+                (nzCheckedChange)="toggleDevice(item, $event)"
+              ></label>
+              <div class="candidate-main">
+                <strong>{{ deviceName(item) }}</strong>
+                <span>{{ deviceMeta(item) }}</span>
+                @if (hasActiveUpgrade(item)) {
+                  <code>{{ activeTaskText(item) }} · {{ item.activeTaskGuid || item.active_task_guid }}</code>
+                } @else if (disabledReason(item)) {
+                  <code>{{ disabledReason(item) }}</code>
+                }
+              </div>
+              <div class="candidate-tags">
+                <nz-tag nzColor="success">在线</nz-tag>
+                @if (hasActiveUpgrade(item)) {
+                  <nz-tag nzColor="gold">升级中</nz-tag>
+                }
+              </div>
+            </article>
+          } @empty {
+            <nz-empty nzNotFoundContent="暂无符合设备类型范围的在线设备" />
+          }
+        </div>
+
+        <div class="upgrade-submit">
+          <textarea
+            nz-input
+            [(ngModel)]="batchMessage"
+            rows="3"
+            maxlength="200"
+            placeholder="批次备注，可选"
+          ></textarea>
+          <button
+            nz-button
+            nzType="primary"
+            [nzLoading]="creating"
+            [disabled]="!selectedDeviceGuids.size"
+            nz-popconfirm
+            [nzPopconfirmTitle]="'将向 ' + selectedDeviceGuids.size + ' 台在线设备下发升级任务，确认继续？'"
+            (nzOnConfirm)="createBatch()"
+          >
+            <nz-icon nzType="cloud-upload" />
+            批量升级
+          </button>
+        </div>
+      </nz-card>
+
+      <nz-card class="card-border upgrade-panel" [nzBordered]="false">
+        <div class="upgrade-panel-head">
+          <div>
+            <h2>升级记录</h2>
+            <p>批次进度按终态任务计算，任务明细会随设备心跳和上报自动更新。</p>
+          </div>
+          <nz-tag>{{ batchTotal }} 个批次</nz-tag>
+        </div>
+
+        <div class="batch-list">
+          @for (batch of batches; track batch.guid) {
+            <article class="batch-item" [class.batch-item-active]="isSelectedBatch(batch)" (click)="loadBatchTasks(batch)">
+              <div class="batch-topline">
+                <strong>{{ batch.version || batch.fileName }}</strong>
+                <nz-tag [nzColor]="batchStatusColor(batch.status)">{{ batchStatusText(batch.status) }}</nz-tag>
+              </div>
+              <div class="batch-meta">
+                <span>{{ batch.fileName }}</span>
+                <span>{{ platformText(batch) }}</span>
+                <span>{{ batchTime(batch) ? (batchTime(batch) | _date: 'MM-dd HH:mm') : '-' }}</span>
+              </div>
+              <div class="batch-progress">
+                <nz-progress
+                  [nzPercent]="batchProgress(batch)"
+                  [nzStatus]="batchProgressStatus(batch)"
+                  [nzStrokeWidth]="6"
+                />
+              </div>
+              <div class="batch-counts">
+                <span>总数 {{ batchCount(batch, 'total') }}</span>
+                <span>待执行 {{ batchCount(batch, 'pending') }}</span>
+                <span>执行中 {{ batchCount(batch, 'running') }}</span>
+                <span class="text-success">成功 {{ batchCount(batch, 'success') }}</span>
+                <span class="text-error">失败 {{ batchCount(batch, 'failed') }}</span>
+              </div>
+            </article>
+          } @empty {
+            <nz-empty nzNotFoundContent="暂无升级记录" />
+          }
+        </div>
+
+        @if (batchTotal > batchQuery.size) {
+          <nz-pagination
+            class="batch-pagination"
+            [nzPageIndex]="batchQuery.page"
+            [nzPageSize]="batchQuery.size"
+            [nzTotal]="batchTotal"
+            [nzShowSizeChanger]="true"
+            (nzPageIndexChange)="onBatchPageChange($event)"
+            (nzPageSizeChange)="onBatchSizeChange($event)"
+          />
+        }
+      </nz-card>
+    </div>
+
+    <nz-card class="card-border upgrade-panel task-panel" [nzBordered]="false">
+      <div class="upgrade-panel-head">
+        <div>
+          <h2>任务明细</h2>
+          <p>
+            @if (selectedBatch) {
+              当前批次：{{ selectedBatch.guid }}
+            } @else {
+              选择升级记录后查看设备级任务。
+            }
+          </p>
+        </div>
+        @if (selectedBatch) {
+          <nz-tag [nzColor]="batchStatusColor(selectedBatch.status)">{{ batchStatusText(selectedBatch.status) }}</nz-tag>
+        }
+      </div>
+
+      <nz-spin [nzSpinning]="tasksLoading">
+        <div class="task-list">
+          @for (task of batchTasks; track task.guid) {
+            <article class="task-item">
+              <div class="task-main">
+                <strong>{{ deviceName(task) }}</strong>
+                <span>{{ taskDeviceMeta(task) }}</span>
+                <span>{{ task.fileName }} · {{ task.os }}/{{ task.arch }} · {{ taskTime(task) ? (taskTime(task) | _date: 'MM-dd HH:mm') : '-' }}</span>
+                @if (task.message) {
+                  <code>{{ task.message }}</code>
+                }
+                @if (task.errorMessage) {
+                  <code class="task-error">{{ task.errorMessage }}</code>
+                }
+              </div>
+              <div class="task-side">
+                <nz-tag [nzColor]="upgradeStatusColor(task.status)">{{ upgradeStatusText(task.status) }}</nz-tag>
+                <nz-progress
+                  [nzPercent]="upgradeProgress(task)"
+                  [nzStatus]="upgradeProgressStatus(task)"
+                  [nzStrokeWidth]="6"
+                />
+                @if (upgradeDownloadedText(task)) {
+                  <span>{{ upgradeDownloadedText(task) }}</span>
+                }
+              </div>
+            </article>
+          } @empty {
+            <nz-empty nzNotFoundContent="暂无任务明细" />
+          }
+        </div>
+      </nz-spin>
+    </nz-card>
+  </nz-spin>
+</section>

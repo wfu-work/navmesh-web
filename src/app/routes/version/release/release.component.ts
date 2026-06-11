@@ -1,4 +1,11 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { NgClass } from '@angular/common';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { STChange, STColumn, STColumnTag } from '@delon/abc/st';
 import { environment } from '@env/environment';
@@ -16,7 +23,7 @@ type ReleaseType = 'rain' | 'hipnames' | 'dic' | 'navmesh';
   templateUrl: './release.component.html',
   styleUrls: ['../../settings/settings.component.less', './release.component.less'],
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [...SHARED_IMPORTS, TitleLabelComponent],
+  imports: [...SHARED_IMPORTS, TitleLabelComponent, NgClass],
 })
 export class ReleaseComponent implements OnInit {
   private readonly devicesService = inject(DevicesService);
@@ -32,61 +39,67 @@ export class ReleaseComponent implements OnInit {
   protected activeTabIndex = 0;
   protected activeReleaseType: ReleaseType = 'rain';
 
-  protected readonly rainInstallCommand = [
+  protected readonly rainInstallSimpleCommand = `curl -fsSL ${this.downloadBase}/install-rain.sh | sudo sh`;
+
+  protected readonly rainInstallFullCommand = [
     `curl -fsSL ${this.downloadBase}/install-rain.sh | sudo sh -s -- \\`,
     `  --download-base ${this.downloadBase} \\`,
     '  --release-type rain \\',
     '  --device-type rain',
   ].join('\n');
 
-  protected readonly rainInstallPaths = ['/mnt/navfirst/nav-rain-go', '/etc/systemd/system/raind.service', 'raind'];
+  protected readonly rainInstallPaths = [
+    '/mnt/navfirst/nav-rain-go',
+    '/etc/systemd/system/raind.service',
+    'raind',
+  ];
 
   protected readonly statusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
     0: { text: '禁用', color: 'default' },
   };
 
-  protected readonly releaseTabs: Array<{ label: string; value: ReleaseType; tag: string }> = [
+  protected readonly releaseTabs: Array<{ label: string; value: ReleaseType }> = [
     {
       label: '北斗降雨水位版本',
       value: 'rain',
-      tag: 'Rain',
     },
     {
       label: '单机版版本',
       value: 'hipnames',
-      tag: 'Hipnames',
     },
     {
       label: '视觉位移版本',
       value: 'dic',
-      tag: 'Dic',
     },
     {
       label: '边缘客户端版本',
       value: 'navmesh',
-      tag: 'Navmesh',
     },
   ];
 
   protected readonly columns: STColumn<Release>[] = [
-    { title: '文件', index: 'fileName', render: 'fileRender', fixed: 'left', width: 280 },
-    { title: '类型', index: 'releaseType', render: 'typeRender', width: 140 },
-    { title: '设备类型', index: 'deviceType', render: 'deviceTypeRender', width: 140 },
-    { title: '版本', index: 'version', width: 120, default: '-' },
-    { title: '平台', index: 'os', render: 'platformRender', width: 140 },
-    { title: '更新内容', index: 'changeLog', render: 'changeLogRender', width: 240 },
+    { title: '文件', index: 'fileName', render: 'fileRender', fixed: 'left', width: 360 },
+    { title: '设备类型', index: 'deviceType', render: 'deviceTypeRender', width: 120 },
+    { title: '版本', index: 'version', render: 'versionRender', width: 130 },
+    { title: '平台', index: 'os', render: 'platformRender', width: 180 },
+    { title: '更新内容', index: 'changeLog', render: 'changeLogRender', width: 300 },
     { title: '大小', index: 'size', render: 'sizeRender', width: 110 },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 100 },
     { title: '更新时间', index: 'updateTime', render: 'timeRender', width: 180 },
     {
       title: '操作',
       fixed: 'right',
-      width: 180,
+      width: 220,
       buttons: [
         {
           icon: 'edit',
           click: (item) => this.router.navigate(['/version/release/edit', item.guid]),
+        },
+        {
+          icon: 'cloud-upload',
+          iif: (item) => this.canBatchUpgrade(item),
+          click: (item) => this.openBatchUpgrade(item),
         },
         {
           icon: 'check-circle',
@@ -179,7 +192,16 @@ export class ReleaseComponent implements OnInit {
   }
 
   protected resetSearch(): void {
-    this.q = { releaseType: this.activeReleaseType, page: 1, size: this.q.size, deviceType: '', version: '', os: '', arch: '', status: '' };
+    this.q = {
+      releaseType: this.activeReleaseType,
+      page: 1,
+      size: this.q.size,
+      deviceType: '',
+      version: '',
+      os: '',
+      arch: '',
+      status: '',
+    };
     this.load();
   }
 
@@ -199,9 +221,20 @@ export class ReleaseComponent implements OnInit {
     window.open(this.downloadHref(item), '_blank', 'noopener');
   }
 
-  protected onCopyRainInstallCommand(copied: boolean): void {
+  protected openBatchUpgrade(item: Release): void {
+    this.router.navigate(['/version/release/upgrade', item.guid]);
+  }
+
+  protected canBatchUpgrade(item: Release): boolean {
+    const releaseType = this.normalizeReleaseType(
+      this.firstText(item.releaseType, item.release_type, this.activeReleaseType),
+    );
+    return item.status === 1 && (releaseType === 'navmesh' || releaseType === 'rain');
+  }
+
+  protected onCopyRainInstallCommand(copied: boolean, label = 'raind在线安装命令'): void {
     if (copied) {
-      this.message.success('rain 在线安装命令已复制');
+      this.message.success(`${label}已复制`);
     }
   }
 
@@ -224,6 +257,10 @@ export class ReleaseComponent implements OnInit {
     return map[value] ?? value;
   }
 
+  protected versionText(item: Release): string {
+    return this.firstText(item.version, '-');
+  }
+
   protected deviceTypeText(value?: string): string {
     value = this.firstText(value);
     if (!value || value === 'all') return '全部设备';
@@ -235,11 +272,77 @@ export class ReleaseComponent implements OnInit {
     return this.firstText(item.changeLog, item.change_log);
   }
 
+  protected releaseChangeTitle(item: Release): string {
+    const text = this.releaseChangeLog(item).replace(/\s+/g, ' ').trim();
+    if (!text) return '暂无更新说明';
+    const version = this.versionText(item);
+    const normalized = text.replace(/^v?[\w.-]+\s*版本更新说明\s*/i, '').trim();
+    const [beforeDate] = normalized.split(/发布日期\s*[:：]/);
+    const title = beforeDate.replace(/[，,。;；:：]+$/, '').trim();
+    return title || `${version} 更新说明`;
+  }
+
+  protected releaseChangeMeta(item: Release): string {
+    const text = this.releaseChangeLog(item);
+    const date = text.match(/发布日期\s*[:：]\s*([^，,。；;\s]+)/)?.[1];
+    if (date) return `发布日期 ${date}`;
+    return '';
+  }
+
   protected platformText(item: Release): string {
     const os = this.firstText(item.os);
     const arch = this.firstText(item.arch);
     if ((!os || os === 'all') && (!arch || arch === 'all')) return '全部平台';
     return `${os && os !== 'all' ? os : '全部系统'}/${arch && arch !== 'all' ? arch : '全部架构'}`;
+  }
+
+  protected platformOs(item: Release): string {
+    return this.firstText(item.os, 'all').toLowerCase();
+  }
+
+  protected platformArch(item: Release): string {
+    return this.firstText(item.arch, 'all').toLowerCase();
+  }
+
+  protected platformMark(item: Release): string {
+    const map: Record<string, string> = {
+      linux: 'LIN',
+      darwin: 'MAC',
+      windows: 'WIN',
+      all: 'ALL',
+    };
+    return map[this.platformOs(item)] ?? this.platformOs(item).slice(0, 3).toUpperCase();
+  }
+
+  protected platformOsLabel(item: Release): string {
+    const map: Record<string, string> = {
+      linux: 'Linux',
+      darwin: 'macOS',
+      windows: 'Windows',
+      all: '全部系统',
+    };
+    return map[this.platformOs(item)] ?? this.platformOs(item);
+  }
+
+  protected platformArchLabel(item: Release): string {
+    const map: Record<string, string> = {
+      amd64: 'x64',
+      arm64: 'ARM64',
+      all: '全部架构',
+    };
+    return map[this.platformArch(item)] ?? this.platformArch(item);
+  }
+
+  protected platformClass(item: Release): string {
+    const os = this.platformOs(item);
+    if (['linux', 'darwin', 'windows'].includes(os)) return `release-platform-${os}`;
+    return 'release-platform-all';
+  }
+
+  protected shortSha(value?: string): string {
+    const text = this.firstText(value);
+    if (!text) return 'SHA -';
+    return text.length > 18 ? `SHA ${text.slice(0, 12)}...${text.slice(-6)}` : `SHA ${text}`;
   }
 
   protected updateTime(item: Release): number {

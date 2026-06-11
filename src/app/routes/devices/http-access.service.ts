@@ -35,6 +35,28 @@ export interface PortMapping {
   update_time?: number;
 }
 
+export interface TCPMapping {
+  id: number;
+  guid: string;
+  deviceGuid: string;
+  device_guid?: string;
+  name: string;
+  publicHost: string;
+  public_host?: string;
+  publicPort: number;
+  public_port?: number;
+  targetHost: string;
+  target_host?: string;
+  targetPort: number;
+  target_port?: number;
+  remark: string;
+  status: number;
+  createTime: number;
+  create_time?: number;
+  updateTime: number;
+  update_time?: number;
+}
+
 export interface SavePortMappingPayload {
   guid?: string;
   deviceGuid: string;
@@ -45,6 +67,23 @@ export interface SavePortMappingPayload {
   protocol: string;
   isCustomDomain: boolean;
   status: number;
+}
+
+export interface SaveTCPMappingPayload {
+  guid?: string;
+  deviceGuid: string;
+  name: string;
+  publicHost?: string;
+  publicPort?: number;
+  targetHost: string;
+  targetPort: number;
+  remark?: string;
+  status: number;
+}
+
+export interface TCPPortRange {
+  min: number;
+  max: number;
 }
 
 export interface AccessLogQuery {
@@ -113,6 +152,24 @@ export class HttpAccessService {
 
   disable(guid: string): Observable<boolean> {
     return this.http.delete<boolean>(`/port-mappings/${guid}`);
+  }
+
+  tcpList(params?: MappingQuery): Observable<PageEntity<TCPMapping>> {
+    return this.http.get<PageEntity<TCPMapping>>('/tcp-mappings/list', {
+      params: this.cleanParams(params),
+    });
+  }
+
+  saveTcp(payload: SaveTCPMappingPayload): Observable<TCPMapping> {
+    return this.http.post<TCPMapping>('/tcp-mappings', payload);
+  }
+
+  disableTcp(guid: string): Observable<boolean> {
+    return this.http.delete<boolean>(`/tcp-mappings/${guid}`);
+  }
+
+  tcpPortRange(): Observable<TCPPortRange> {
+    return this.http.get<TCPPortRange>('/tcp-mappings/port-range');
   }
 
   accessLogs(params?: AccessLogQuery): Observable<PageEntity<HTTPAccessLog>> {

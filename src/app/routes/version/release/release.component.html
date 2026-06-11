@@ -5,7 +5,12 @@
       description="统一维护北斗降雨水位、单机版、视觉位移和边缘客户端版本，历史安装包可按版本独立下载。"
     />
     <div class="header-actions">
-      <a nz-button nzType="primary" [routerLink]="['/version/release/create']" [queryParams]="{ releaseType: activeReleaseType }">
+      <a
+        nz-button
+        nzType="primary"
+        [routerLink]="['/version/release/create']"
+        [queryParams]="{ releaseType: activeReleaseType }"
+      >
         <nz-icon nzType="plus" />
         新建
       </a>
@@ -16,9 +21,20 @@
     </div>
   </div>
 
-  <nz-tabs [nzAnimated]="false" [nzSelectedIndex]="activeTabIndex" (nzSelectedIndexChange)="switchReleaseType($event)" class="version-tabs">
+  <nz-tabs
+    [nzAnimated]="false"
+    [nzSelectedIndex]="activeTabIndex"
+    (nzSelectedIndexChange)="switchReleaseType($event)"
+    class="version-tabs"
+  >
     @for (tab of releaseTabs; track tab.value) {
-      <nz-tab [nzTitle]="tab.label"></nz-tab>
+      <nz-tab [nzTitle]="tabTitle">
+        <ng-template #tabTitle>
+          <span class="version-tab-title">
+            <span>{{ tab.label }}</span>
+          </span>
+        </ng-template>
+      </nz-tab>
     }
   </nz-tabs>
 
@@ -27,29 +43,60 @@
       <div class="release-install-head">
         <div>
           <div class="release-install-title">
-            <h2>rain 在线安装</h2>
-            <nz-tag nzColor="green">Recommended</nz-tag>
-            <nz-tag nzColor="cyan">systemd</nz-tag>
+            <h2>北斗降雨水位在线安装</h2>
+            <nz-tag nzColor="cyan">raind.service</nz-tag>
           </div>
           <p>
-            上传并启用北斗降雨水位版本后，可在设备上执行安装命令；脚本会按
-            <span class="inline-code">releaseType=rain</span>、<span class="inline-code">deviceType=rain</span>
-            和当前系统架构匹配最新安装包。
+            上传并启用北斗降雨水位版本后，可在设备上执行安装命令；简洁版使用默认安装参数，完整版适合复制后调整下载地址或服务参数。
           </p>
         </div>
         <button
           type="button"
           nz-button
           nzType="primary"
-          [cdkCopyToClipboard]="rainInstallCommand"
-          (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event)"
+          [cdkCopyToClipboard]="rainInstallSimpleCommand"
+          (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event, '简洁版指令')"
         >
           <nz-icon nzType="copy" />
-          复制命令
+          复制简洁版
         </button>
       </div>
 
-      <pre class="release-install-command"><code>{{ rainInstallCommand }}</code></pre>
+      <div class="release-install-commands">
+        <section class="release-install-command-block">
+          <div class="release-install-command-head">
+            <strong>简洁版指令</strong>
+            <button
+              type="button"
+              nz-button
+              nzSize="small"
+              [cdkCopyToClipboard]="rainInstallSimpleCommand"
+              (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event, '简洁版指令')"
+            >
+              <nz-icon nzType="copy" />
+              复制
+            </button>
+          </div>
+          <pre class="release-install-command"><code>{{ rainInstallSimpleCommand }}</code></pre>
+        </section>
+
+        <section class="release-install-command-block">
+          <div class="release-install-command-head">
+            <strong>完整版指令</strong>
+            <button
+              type="button"
+              nz-button
+              nzSize="small"
+              [cdkCopyToClipboard]="rainInstallFullCommand"
+              (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event, '完整版指令')"
+            >
+              <nz-icon nzType="copy" />
+              复制
+            </button>
+          </div>
+          <pre class="release-install-command"><code>{{ rainInstallFullCommand }}</code></pre>
+        </section>
+      </div>
 
       <div class="release-install-meta">
         @for (path of rainInstallPaths; track path) {
@@ -61,25 +108,52 @@
 
   <nz-card class="card-border release-table-card" [nzBordered]="false">
     <div class="release-toolbar">
-      <h2>{{ currentTab().label }} <span>{{ total }} 个</span></h2>
+      <h2>
+        {{ currentTab().label }} <span>{{ total }} 个</span>
+      </h2>
       <div class="release-toolbar-actions">
-        <input nz-input [(ngModel)]="q.version" placeholder="版本号" (keyup.enter)="q.page = 1; load()" />
-        <nz-select [(ngModel)]="q.deviceType" nzAllowClear nzPlaceHolder="设备类型" (ngModelChange)="q.page = 1; load()">
+        <input
+          nz-input
+          [(ngModel)]="q.version"
+          placeholder="版本号"
+          (keyup.enter)="q.page = 1; load()"
+        />
+        <nz-select
+          [(ngModel)]="q.deviceType"
+          nzAllowClear
+          nzPlaceHolder="设备类型"
+          (ngModelChange)="q.page = 1; load()"
+        >
           <nz-option nzValue="all" nzLabel="全部设备" />
           @for (type of deviceTypes; track type.guid || type.key) {
             <nz-option [nzValue]="type.key || type.guid" [nzLabel]="type.name" />
           }
         </nz-select>
-        <nz-select [(ngModel)]="q.os" nzAllowClear nzPlaceHolder="系统" (ngModelChange)="q.page = 1; load()">
+        <nz-select
+          [(ngModel)]="q.os"
+          nzAllowClear
+          nzPlaceHolder="系统"
+          (ngModelChange)="q.page = 1; load()"
+        >
           <nz-option nzValue="linux" nzLabel="linux" />
           <nz-option nzValue="darwin" nzLabel="darwin" />
           <nz-option nzValue="windows" nzLabel="windows" />
         </nz-select>
-        <nz-select [(ngModel)]="q.arch" nzAllowClear nzPlaceHolder="架构" (ngModelChange)="q.page = 1; load()">
+        <nz-select
+          [(ngModel)]="q.arch"
+          nzAllowClear
+          nzPlaceHolder="架构"
+          (ngModelChange)="q.page = 1; load()"
+        >
           <nz-option nzValue="amd64" nzLabel="amd64" />
           <nz-option nzValue="arm64" nzLabel="arm64" />
         </nz-select>
-        <nz-select [(ngModel)]="q.status" nzAllowClear nzPlaceHolder="状态" (ngModelChange)="q.page = 1; load()">
+        <nz-select
+          [(ngModel)]="q.status"
+          nzAllowClear
+          nzPlaceHolder="状态"
+          (ngModelChange)="q.page = 1; load()"
+        >
           <nz-option nzValue="1" nzLabel="启用" />
           <nz-option nzValue="0" nzLabel="禁用" />
         </nz-select>
@@ -97,31 +171,47 @@
       [pi]="q.page"
       [ps]="q.size"
       [total]="total"
-      [scroll]="{ x: '1540px' }"
+      [scroll]="{ x: 'max-content' }"
     >
       <ng-template st-row="fileRender" let-item>
         <div class="release-file-cell">
-          <strong>{{ item.fileName }}</strong>
-          <span>{{ item.sha256 }}</span>
+          <span class="release-platform-mark" [ngClass]="platformClass(item)">
+            <strong>{{ platformMark(item) }}</strong>
+            <small>{{ platformArchLabel(item) }}</small>
+          </span>
+          <span class="release-file-main">
+            <strong [title]="item.fileName">{{ item.fileName }}</strong>
+            <span>{{ shortSha(item.sha256) }}</span>
+          </span>
         </div>
       </ng-template>
 
-      <ng-template st-row="typeRender" let-item>
-        {{ releaseTypeText(item) }}
+      <ng-template st-row="deviceTypeRender" let-item>
+        <nz-tag class="release-device-tag">{{
+          deviceTypeText(item.deviceType || item.device_type)
+        }}</nz-tag>
       </ng-template>
 
-      <ng-template st-row="deviceTypeRender" let-item>
-        <nz-tag>{{ deviceTypeText(item.deviceType || item.device_type) }}</nz-tag>
+      <ng-template st-row="versionRender" let-item>
+        <div class="release-version-cell">
+          <strong>{{ versionText(item) }}</strong>
+        </div>
       </ng-template>
 
       <ng-template st-row="platformRender" let-item>
-        <nz-tag>{{ platformText(item) }}</nz-tag>
+        <div class="release-platform-cell">
+          <strong>{{ platformOsLabel(item) }}</strong>
+          <span>{{ platformArchLabel(item) }}</span>
+        </div>
       </ng-template>
 
       <ng-template st-row="changeLogRender" let-item>
-        <span class="release-changelog" [nzTooltipTitle]="releaseChangeLog(item) || null" nz-tooltip>
-          {{ releaseChangeLog(item) || '-' }}
-        </span>
+        <div class="release-changelog" [nzTooltipTitle]="releaseChangeLog(item) || null" nz-tooltip>
+          <strong>{{ releaseChangeTitle(item) }}</strong>
+          @if (releaseChangeMeta(item)) {
+            <span>{{ releaseChangeMeta(item) }}</span>
+          }
+        </div>
       </ng-template>
 
       <ng-template st-row="sizeRender" let-item>
@@ -131,7 +221,6 @@
       <ng-template st-row="timeRender" let-item>
         {{ updateTime(item) ? (updateTime(item) | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
       </ng-template>
-
     </st>
   </nz-card>
 </section>

@@ -89,6 +89,44 @@ export function eventDisplayMessage(item: Partial<EventItem>): string {
   return message || firstEventText(item.title, item.eventType, item.event_type, '事件已记录。');
 }
 
+export function eventSourceText(source: string | undefined): string {
+  const map: Record<string, string> = {
+    device: '设备',
+    device_offline: '设备离线',
+    disk_usage_high: '磁盘告警',
+    ssh: 'SSH',
+    http: 'HTTP',
+    tunnel: '隧道',
+    auth: '认证',
+    mapping: '映射',
+    session_rejected: '会话拒绝',
+    open_tcp_failed: '连接失败',
+    service_log: '服务日志',
+    client_upgrade: '客户端升级',
+    vpn_restart: 'VPN 重启',
+  };
+  return map[String(source)] ?? (source || '-');
+}
+
+export function eventSourceColor(source: string | undefined): string {
+  const map: Record<string, string> = {
+    device: 'green',
+    device_offline: 'orange',
+    disk_usage_high: 'gold',
+    ssh: 'purple',
+    http: 'blue',
+    tunnel: 'cyan',
+    auth: 'gold',
+    mapping: 'geekblue',
+    session_rejected: 'gold',
+    open_tcp_failed: 'red',
+    service_log: 'blue',
+    client_upgrade: 'processing',
+    vpn_restart: 'purple',
+  };
+  return map[String(source)] ?? 'default';
+}
+
 export function isOpenEventStatus(status: EventStatus | undefined): boolean {
   return String(status) === '1';
 }

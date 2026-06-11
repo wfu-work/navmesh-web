@@ -155,6 +155,20 @@
   width: 100%;
 }
 
+.port-range-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+
+  > span {
+    color: #7a8897;
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+}
+
 .field-note {
   margin-top: 8px;
   color: #7a8897;
@@ -398,5 +412,9 @@
     nz-select {
       width: 100%;
     }
+  }
+
+  .port-range-control {
+    grid-template-columns: 1fr;
   }
 }

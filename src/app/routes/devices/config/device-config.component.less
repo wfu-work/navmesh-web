@@ -104,40 +104,236 @@
   gap: 10px;
 }
 
-.upgrade-task-main {
-  min-width: 0;
-}
-
-.upgrade-stage {
-  color: #445469 !important;
-  font-weight: 760 !important;
-}
-
-.upgrade-progress-row {
+.upgrade-history {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
   gap: 10px;
-  align-items: center;
   min-width: 0;
-  margin-top: 3px;
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid #dfe9e5;
+  border-radius: 8px;
+  background: #f8fbfa;
 }
 
-.upgrade-progress-size {
-  min-width: 116px;
-  color: #6a7785 !important;
-  font-size: 12px !important;
-  font-weight: 760 !important;
-  text-align: right;
+.upgrade-history-head,
+.upgrade-task-topline,
+.upgrade-task-meta,
+.upgrade-task-progress,
+.upgrade-task-pagination {
+  display: flex;
+  min-width: 0;
 }
 
-:host ::ng-deep .upgrade-progress-row .ant-progress {
+.upgrade-history-head {
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+
+  > div {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  strong {
+    font-size: 14px;
+    font-weight: 850;
+    line-height: 1.25;
+    color: #223047;
+  }
+
+  span {
+    font-size: 12px;
+    font-weight: 680;
+    line-height: 1.35;
+    color: #667586;
+  }
+
+  nz-tag {
+    flex: 0 0 auto;
+    margin: 0;
+    font-weight: 780;
+  }
+}
+
+.upgrade-task-list {
+  overflow: auto;
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  max-height: 430px;
+  padding-right: 2px;
+}
+
+.upgrade-task-item {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid #e2e9ef;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.upgrade-task-marker {
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: #a8b3c0;
+  box-shadow: 0 0 0 4px rgb(168 179 192 / 14%);
+}
+
+.upgrade-task-marker-pending {
+  background: #d99a13;
+  box-shadow: 0 0 0 4px rgb(217 154 19 / 14%);
+}
+
+.upgrade-task-marker-running {
+  background: #2563eb;
+  box-shadow: 0 0 0 4px rgb(37 99 235 / 14%);
+}
+
+.upgrade-task-marker-success {
+  background: #2fb51f;
+  box-shadow: 0 0 0 4px rgb(47 181 31 / 14%);
+}
+
+.upgrade-task-marker-error {
+  background: #d64545;
+  box-shadow: 0 0 0 4px rgb(214 69 69 / 14%);
+}
+
+.upgrade-task-main {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.upgrade-task-topline {
+  gap: 10px;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 10px;
+    min-width: 0;
+  }
+
+  strong,
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  strong {
+    max-width: 360px;
+    font-size: 14px;
+    font-weight: 850;
+    line-height: 1.35;
+    color: #223047;
+  }
+
+  span {
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.5;
+    color: #667586;
+  }
+
+  nz-tag {
+    flex: 0 0 auto;
+    margin: 0;
+    font-weight: 780;
+  }
+}
+
+.upgrade-task-meta {
+  flex-wrap: wrap;
+  gap: 5px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  color: #667586;
+
+  span {
+    overflow: hidden;
+    max-width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.upgrade-task-stage {
+  overflow: hidden;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 760;
+  line-height: 1.4;
+  color: #334155;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.upgrade-task-progress {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 760;
+  color: #667586;
+}
+
+.upgrade-task-error {
+  overflow: hidden;
+  display: block;
+  min-width: 0;
+  padding: 5px 8px;
+  border: 1px solid #ffd8d5;
+  border-radius: 6px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #b42318;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: #fff4f3;
+}
+
+.upgrade-task-pagination {
+  justify-content: flex-end;
+  padding-top: 2px;
+}
+
+:host ::ng-deep .upgrade-task-progress .ant-progress {
   min-width: 0;
   margin: 0;
 }
 
-:host-context([data-theme='dark']) .upgrade-stage,
-:host-context([data-theme='dark']) .upgrade-progress-size {
-  color: rgba(255, 255, 255, 0.68) !important;
+:host-context([data-theme='dark']) .upgrade-history {
+  border-color: rgb(var(--nm-primary-rgb) / 20%);
+  background: rgb(var(--nm-primary-rgb) / 8%);
+}
+
+:host-context([data-theme='dark']) .upgrade-history-head strong,
+:host-context([data-theme='dark']) .upgrade-task-topline strong,
+:host-context([data-theme='dark']) .upgrade-task-stage {
+  color: rgb(255 255 255 / 86%);
+}
+
+:host-context([data-theme='dark']) .upgrade-history-head span,
+:host-context([data-theme='dark']) .upgrade-task-topline span,
+:host-context([data-theme='dark']) .upgrade-task-meta,
+:host-context([data-theme='dark']) .upgrade-task-progress {
+  color: rgb(255 255 255 / 58%);
+}
+
+:host-context([data-theme='dark']) .upgrade-task-item {
+  border-color: rgb(255 255 255 / 12%);
+  background: rgb(255 255 255 / 4%);
 }
 
 .service-log-card {
@@ -219,32 +415,33 @@
 }
 
 .service-log-window {
+  overflow: auto;
   display: block;
   width: 100%;
-  height: clamp(260px, 34vh, 460px);
-  min-height: 260px;
-  max-height: 520px;
-  overflow: auto;
+  height: clamp(380px, 48vh, 620px);
+  min-height: 380px;
+  max-height: 680px;
   margin: 12px 0 0;
-  padding: 14px 16px;
-  border: 1px solid #243143;
+  padding: 16px 18px;
+  border: 1px solid #d5dde8;
   border-radius: 8px;
-  color: #d8e1eb;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
   font-size: 12px;
-  line-height: 1.55;
+  line-height: 1.65;
+  color: #263445;
+  overflow-wrap: anywhere;
   tab-size: 2;
   white-space: pre-wrap;
-  overflow-wrap: anywhere;
-  background: #151d29;
+  background: #f5f8fb;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 84%);
 
   code {
     display: block;
     min-width: 0;
-    color: inherit;
     font-family: inherit;
     font-size: inherit;
     line-height: inherit;
+    color: inherit;
     white-space: inherit;
     background: transparent;
   }
@@ -265,9 +462,10 @@
 }
 
 :host-context([data-theme='dark']) .service-log-window {
-  border-color: rgba(255, 255, 255, 0.16);
-  color: rgba(255, 255, 255, 0.82);
-  background: #111821;
+  border-color: rgb(255 255 255 / 16%);
+  color: rgb(255 255 255 / 82%);
+  background: #17202b;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%);
 }
 
 .access-list-item {
@@ -409,7 +607,8 @@
   }
 
   .service-log-window {
-    height: 320px;
+    height: 420px;
+    min-height: 420px;
   }
 
   .upgrade-actions {
@@ -428,13 +627,44 @@
     justify-content: flex-start;
   }
 
-  .upgrade-progress-row {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 4px;
+  .upgrade-history {
+    padding: 10px;
   }
 
-  .upgrade-progress-size {
-    min-width: 0;
-    text-align: left;
+  .upgrade-history-head,
+  .upgrade-task-topline {
+    align-items: stretch;
+  }
+
+  .upgrade-task-item {
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-task-marker {
+    width: 100%;
+    height: 3px;
+    margin-top: 0;
+    border-radius: 999px;
+  }
+
+  .upgrade-task-topline,
+  .upgrade-task-topline > div {
+    display: grid;
+  }
+
+  .upgrade-task-topline strong {
+    max-width: 100%;
+  }
+
+  .upgrade-task-topline nz-tag {
+    justify-self: flex-start;
+  }
+
+  .upgrade-task-progress {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .upgrade-task-progress span:last-child {
+    grid-column: 1 / -1;
   }
 }

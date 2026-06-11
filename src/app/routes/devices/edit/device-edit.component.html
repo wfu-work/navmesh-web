@@ -53,8 +53,8 @@
       class="device-edit-alert"
       nzType="info"
       nzShowIcon
-      nzMessage="设备号、设备类型、别名和备注可在控制台修改"
-      nzDescription="保存后后台会在设备注册响应中回传最新值，navmesh-client 重启并重新上线后会写入本地状态；端口和域名仍由客户端注册参数维护。"
+      nzMessage="可编辑档案会在设备下次上线时同步"
+      nzDescription="设备号、类型、别名和备注可在控制台维护；主机、端口、域名和资源信息由客户端上报，如需修改请调整客户端配置。"
     />
 
     <form nz-form [formGroup]="form" (ngSubmit)="submit()">
@@ -73,12 +73,26 @@
               <input id="sncode" nz-input formControlName="sncode" placeholder="例如 test01" />
             </se>
             <se label="设备别名" required error="请输入设备别名">
-              <input id="alias" nz-input formControlName="alias" placeholder="默认与设备号一致，例如 test01" />
+              <input
+                id="alias"
+                nz-input
+                formControlName="alias"
+                placeholder="默认与设备号一致，例如 test01"
+              />
             </se>
             <se label="设备类型" required error="请输入设备类型">
-              <nz-select id="deviceType" nzShowSearch formControlName="deviceType" nzPlaceHolder="请选择设备类型">
+              <nz-select
+                id="deviceType"
+                nzShowSearch
+                formControlName="deviceType"
+                nzPlaceHolder="请选择设备类型"
+              >
                 @for (type of types; track typeValue(type)) {
-                  <nz-option nzCustomContent [nzValue]="typeValue(type)" [nzLabel]="typeLabel(type)">
+                  <nz-option
+                    nzCustomContent
+                    [nzValue]="typeValue(type)"
+                    [nzLabel]="typeLabel(type)"
+                  >
                     <span class="device-type-option">
                       <nz-icon [nzType]="typeIcon(type)" />
                       <span>{{ typeLabel(type) }}</span>
@@ -96,7 +110,12 @@
               </nz-select>
             </se>
             <se label="备注" col="1">
-              <input id="remark" nz-input formControlName="remark" placeholder="例如 深圳工厂1号测试网关" />
+              <input
+                id="remark"
+                nz-input
+                formControlName="remark"
+                placeholder="例如 深圳工厂1号测试网关"
+              />
             </se>
           </se-container>
         </nz-card>
@@ -115,13 +134,138 @@
               <input id="hostname" nz-input formControlName="hostname" placeholder="例如 web-01" />
             </se>
             <se label="本机 IP">
-              <input id="hostIp" nz-input formControlName="hostIp" placeholder="例如 192.168.1.10" />
+              <input
+                id="hostIp"
+                nz-input
+                formControlName="hostIp"
+                placeholder="例如 192.168.1.10"
+              />
             </se>
             <se label="客户端版本" col="1">
-              <input id="clientVersion" nz-input formControlName="clientVersion" placeholder="例如 v1.0.0" />
+              <input
+                id="clientVersion"
+                nz-input
+                formControlName="clientVersion"
+                placeholder="例如 v1.0.0"
+              />
             </se>
           </se-container>
         </nz-card>
+
+        @if (device; as item) {
+          <nz-card class="card-border device-edit-card device-edit-card-wide" [nzBordered]="false">
+            <div class="device-edit-card-title">
+              <nz-icon nzType="cloud-server" />
+              <div>
+                <h2>客户端上报信息</h2>
+                <p>最近一次注册或心跳带回的接入、系统和资源状态。</p>
+              </div>
+            </div>
+
+            <div class="device-report-grid">
+              <section class="device-report-section">
+                <h3>接入参数</h3>
+                <dl class="device-report-list">
+                  <div>
+                    <dt>公网 IP</dt>
+                    <dd>{{ displayText(item.wanIp || item.sourceIp) }}</dd>
+                  </div>
+                  <div>
+                    <dt>来源 IP</dt>
+                    <dd>{{ displayText(item.sourceIp) }}</dd>
+                  </div>
+                  <div>
+                    <dt>本机 SSH</dt>
+                    <dd>{{ endpoint(item.hostIp || item.privateIp, item.sshPort) }}</dd>
+                  </div>
+                  <div>
+                    <dt>本机 Web</dt>
+                    <dd>{{ endpoint(item.hostIp || item.privateIp, item.webPort) }}</dd>
+                  </div>
+                  <div>
+                    <dt>Web 映射域名</dt>
+                    <dd>{{ displayText(item.webDomain) }}</dd>
+                  </div>
+                  <div>
+                    <dt>位置</dt>
+                    <dd>{{ displayText(item.location) }}</dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section class="device-report-section">
+                <h3>系统信息</h3>
+                <dl class="device-report-list">
+                  <div>
+                    <dt>系统</dt>
+                    <dd>{{ systemText(item) }}</dd>
+                  </div>
+                  <div>
+                    <dt>内核</dt>
+                    <dd>{{ kernelText(item) }}</dd>
+                  </div>
+                  <div>
+                    <dt>架构</dt>
+                    <dd>{{ displayText(item.arch) }}</dd>
+                  </div>
+                  <div>
+                    <dt>客户端版本</dt>
+                    <dd>{{ displayText(item.clientVersion) }}</dd>
+                  </div>
+                  <div>
+                    <dt>最后在线</dt>
+                    <dd>
+                      {{
+                        timeText(item.lastHeartbeatAt)
+                          ? (timeText(item.lastHeartbeatAt) | _date: 'yyyy-MM-dd HH:mm:ss')
+                          : '-'
+                      }}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>最后指标</dt>
+                    <dd>
+                      {{
+                        timeText(item.lastMetricAt)
+                          ? (timeText(item.lastMetricAt) | _date: 'yyyy-MM-dd HH:mm:ss')
+                          : '-'
+                      }}
+                    </dd>
+                  </div>
+                </dl>
+              </section>
+
+              <section class="device-report-section device-report-resource-section">
+                <h3>资源概况</h3>
+                <div class="device-resource-grid">
+                  <article>
+                    <div>
+                      <span>内存</span>
+                      <strong>{{ usagePercent(item.memoryUsed, item.memoryTotal) }}%</strong>
+                    </div>
+                    <div class="device-resource-bar">
+                      <i [style.width.%]="usagePercent(item.memoryUsed, item.memoryTotal)"></i>
+                    </div>
+                    <p>{{ usageText(item.memoryUsed, item.memoryTotal) }}</p>
+                    <small>可用 {{ formatBytes(item.memoryFree) }}</small>
+                  </article>
+
+                  <article>
+                    <div>
+                      <span>磁盘</span>
+                      <strong>{{ diskPercent(item) }}%</strong>
+                    </div>
+                    <div class="device-resource-bar">
+                      <i [style.width.%]="diskPercent(item)"></i>
+                    </div>
+                    <p>{{ usageText(item.diskUsed, item.diskTotal) }}</p>
+                    <small>可用 {{ formatBytes(item.diskFree) }}</small>
+                  </article>
+                </div>
+              </section>
+            </div>
+          </nz-card>
+        }
       </div>
     </form>
   </nz-spin>

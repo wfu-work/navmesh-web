@@ -1,4 +1,12 @@
-import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  DestroyRef,
+  ElementRef,
+  OnInit,
+  ViewChild,
+  inject,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DA_SERVICE_TOKEN } from '@delon/auth';
 import { STColumn, STColumnTag } from '@delon/abc/st';
@@ -15,10 +23,17 @@ import {
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { NavMeshSetting, NavMeshSettingsService } from '../../settings/settings.service';
-import { DeviceStatus, DeviceToken, DeviceTypeDefault, DeviceUpgradeTask, Release } from '../devices.service';
+import {
+  DeviceStatus,
+  DeviceToken,
+  DeviceTypeDefault,
+  DeviceUpgradeTask,
+  Release,
+} from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 import { HttpMappingEditComponent } from '../mapping-edit/http-mapping-edit.component';
-import { HttpAccessService, PortMapping } from '../http-access.service';
+import { TcpMappingEditComponent } from '../mapping-edit/tcp-mapping-edit.component';
+import { HttpAccessService, PortMapping, TCPMapping } from '../http-access.service';
 import { SshAliasEditComponent } from '../ssh-alias-edit/ssh-alias-edit.component';
 import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
 
@@ -27,7 +42,11 @@ type ServiceLogStatus = 'idle' | 'connecting' | 'streaming' | 'error';
 @Component({
   selector: 'app-device-config',
   templateUrl: './device-config.component.html',
-  styleUrls: ['../list/device-list.component.less', '../detail/device-detail.component.less', './device-config.component.less'],
+  styleUrls: [
+    '../list/device-list.component.less',
+    '../detail/device-detail.component.less',
+    './device-config.component.less',
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule, MetricSummaryComponent],
 })
@@ -48,10 +67,13 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected sshAliases: SSHAlias[] = [];
   protected sshEntrypoints: SSHEntrypoint[] = [];
   protected mappings: PortMapping[] = [];
+  protected tcpMappings: TCPMapping[] = [];
   protected settings: NavMeshSetting[] = [];
   protected types: DeviceTypeDefault[] = [];
   protected releases: Release[] = [];
   protected upgradeTasks: DeviceUpgradeTask[] = [];
+  protected upgradeTaskTotal = 0;
+  protected upgradeTaskQuery = { page: 1, size: 8 };
   protected selectedReleaseGuid = '';
   protected creatingUpgrade = false;
   protected refreshingUpgrades = false;
@@ -61,7 +83,8 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected serviceLogStatus: ServiceLogStatus = 'idle';
   protected serviceLogOutput = '';
   protected serviceLogError = '';
-  protected readonly serviceLogTailOptions = [100, 200, 500, 1000, 2000];
+  protected readonly upgradeTaskPageSizeOptions = [5, 8, 10, 20];
+  protected readonly serviceLogTailOptions = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
   protected readonly serviceLogSuggestions = ['navmesh-client.service', 'raind.service'];
 
   protected readonly tokenStatusTag: STColumnTag = {
@@ -143,12 +166,19 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       sshAliases: this.sshService.listAliases(),
       sshEntrypoints: this.sshService.listEntrypoints(),
       mappings: this.httpAccessService.list({ page: 1, size: 100, deviceGuid: this.guid }),
-      types: this.devicesService.typeDefaults().pipe(catchError(() => of([] as DeviceTypeDefault[]))),
+      tcpMappings: this.httpAccessService.tcpList({ page: 1, size: 100, deviceGuid: this.guid }),
+      types: this.devicesService
+        .typeDefaults()
+        .pipe(catchError(() => of([] as DeviceTypeDefault[]))),
       settings: this.settingsService.list().pipe(catchError(() => of([] as NavMeshSetting[]))),
-      releases: this.devicesService.releases({ page: 1, size: 100, status: 1, releaseType: 'navmesh' }).pipe(
-        catchError(() => of({ data: [], total: 0, page: 1, size: 100 })),
-      ),
-      upgrades: this.devicesService.upgradeTasks(this.guid, { page: 1, size: 10 }).pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 10 }))),
+      releases: this.devicesService
+        .releases({ page: 1, size: 100, status: 1, releaseType: 'navmesh' })
+        .pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 100 }))),
+      upgrades: this.devicesService
+        .upgradeTasks(this.guid, this.upgradeTaskQuery)
+        .pipe(
+          catchError(() => of({ data: [], total: 0, page: 1, size: this.upgradeTaskQuery.size })),
+        ),
     })
       .pipe(
         finalize(() => {
@@ -157,18 +187,31 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ detail, sshAliases, sshEntrypoints, mappings, types, settings, releases, upgrades }) => {
+        next: ({
+          detail,
+          sshAliases,
+          sshEntrypoints,
+          mappings,
+          tcpMappings,
+          types,
+          settings,
+          releases,
+          upgrades,
+        }) => {
           this.device = this.normalizeDevice(detail.device);
           this.tokens = (detail.tokens ?? []).map((token) => this.normalizeToken(token));
           this.sshAliases = (sshAliases ?? [])
             .map((item) => this.normalizeAlias(item))
             .filter((item) => item.deviceGuid === this.guid);
-          this.sshEntrypoints = (sshEntrypoints ?? []).map((item) => this.normalizeEntrypoint(item));
+          this.sshEntrypoints = (sshEntrypoints ?? []).map((item) =>
+            this.normalizeEntrypoint(item),
+          );
           this.mappings = (mappings.data ?? []).map((item) => this.normalizeMapping(item));
+          this.tcpMappings = (tcpMappings.data ?? []).map((item) => this.normalizeTCPMapping(item));
           this.types = (types ?? []).map((item) => this.normalizeType(item));
           this.settings = settings ?? [];
           this.releases = releases.data ?? [];
-          this.upgradeTasks = (upgrades.data ?? []).map((task) => this.normalizeUpgradeTask(task));
+          this.applyUpgradeTasks(upgrades);
           this.syncDeviceVersionFromUpgradeTasks();
           this.selectedReleaseGuid = this.compatibleReleases()[0]?.guid || '';
           this.serviceLogName ||= this.defaultServiceLogName();
@@ -183,16 +226,23 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     }
     this.refreshingUpgrades = true;
     this.devicesService
-      .upgradeTasks(this.guid, { page: 1, size: 10 })
+      .upgradeTasks(this.guid, this.upgradeTaskQuery)
       .pipe(
-        catchError(() => of({ data: this.upgradeTasks, total: this.upgradeTasks.length, page: 1, size: 10 })),
+        catchError(() =>
+          of({
+            data: this.upgradeTasks,
+            total: this.upgradeTaskTotal,
+            page: this.upgradeTaskQuery.page,
+            size: this.upgradeTaskQuery.size,
+          }),
+        ),
         finalize(() => {
           this.refreshingUpgrades = false;
           this.cdr.markForCheck();
         }),
       )
       .subscribe((upgrades) => {
-        this.upgradeTasks = (upgrades.data ?? []).map((task) => this.normalizeUpgradeTask(task));
+        this.applyUpgradeTasks(upgrades);
         this.syncDeviceVersionFromUpgradeTasks();
       });
   }
@@ -408,11 +458,56 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     });
   }
 
+  protected openTCPMappingModal(item?: TCPMapping): void {
+    const mapping = item ? this.normalizeTCPMapping(item) : undefined;
+    const modal = this.modalService.create({
+      nzTitle: mapping ? '编辑 TCP 映射' : '新增 TCP 映射',
+      nzContent: TcpMappingEditComponent,
+      nzOkText: '保存',
+      nzCancelText: '取消',
+      nzMaskClosable: false,
+      nzWidth: 640,
+      nzData: {
+        deviceGuid: this.guid,
+        device: this.device,
+        mapping,
+        defaultPublicHost: mapping ? undefined : this.defaultTCPPublicHost(),
+        defaultTargetPort: mapping ? undefined : this.defaultTCPTargetPort(),
+      },
+      nzOnOk: (componentInstance) => {
+        componentInstance.submit().subscribe({
+          next: (success) => {
+            if (!success) return;
+            modal.close();
+            this.message.success('TCP 映射已保存');
+            this.load();
+          },
+          error: (error) => this.message.error(error.message || 'TCP 映射保存失败'),
+        });
+        return false;
+      },
+    });
+  }
+
+  protected disableTCPMapping(item: TCPMapping): void {
+    this.httpAccessService.disableTcp(item.guid).subscribe({
+      next: () => {
+        this.message.success('TCP 映射已禁用');
+        this.load();
+      },
+      error: () => this.message.error('TCP 映射禁用失败'),
+    });
+  }
+
   protected enabledTokenCount(): number {
     return this.tokens.filter((token) => token.status === 1).length;
   }
 
-  private async readServiceLogStream(serviceName: string, tail: number, controller: AbortController): Promise<void> {
+  private async readServiceLogStream(
+    serviceName: string,
+    tail: number,
+    controller: AbortController,
+  ): Promise<void> {
     try {
       const response = await fetch(this.serviceLogStreamUrl(serviceName, tail), {
         headers: this.serviceLogHeaders(),
@@ -460,7 +555,10 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   private appendServiceLog(chunk: string): void {
     if (!chunk) return;
     const next = this.serviceLogOutput + chunk;
-    this.serviceLogOutput = next.length > this.maxServiceLogChars ? next.slice(next.length - this.maxServiceLogChars) : next;
+    this.serviceLogOutput =
+      next.length > this.maxServiceLogChars
+        ? next.slice(next.length - this.maxServiceLogChars)
+        : next;
     this.cdr.markForCheck();
     setTimeout(() => this.scrollServiceLogToBottom());
   }
@@ -512,6 +610,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       .subscribe({
         next: () => {
           this.message.success('升级任务已下发');
+          this.upgradeTaskQuery = { ...this.upgradeTaskQuery, page: 1 };
           this.load();
         },
         error: () => this.message.error('升级任务下发失败'),
@@ -521,14 +620,30 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected compatibleReleases(): Release[] {
     const os = this.normalizePlatformValue(this.device?.os);
     const arch = this.normalizePlatformValue(this.device?.arch);
-    const deviceType = this.firstText(this.device?.deviceType, this.device?.device_type, this.device?.groupGuid, this.device?.group_guid);
+    const deviceType = this.firstText(
+      this.device?.deviceType,
+      this.device?.device_type,
+      this.device?.groupGuid,
+      this.device?.group_guid,
+    );
     return this.releases.filter((item) => {
-      const releaseType = this.normalizeReleaseType(this.firstText(item.releaseType, item.release_type, 'navmesh'));
+      const releaseType = this.normalizeReleaseType(
+        this.firstText(item.releaseType, item.release_type, 'navmesh'),
+      );
       const releaseDeviceType = this.firstText(item.deviceType, item.device_type, 'all');
       const releaseOS = this.normalizePlatformValue(item.os);
       const releaseArch = this.normalizePlatformValue(item.arch);
-      const matchDeviceType = !releaseDeviceType || releaseDeviceType === 'all' || !deviceType || releaseDeviceType === deviceType;
-      return releaseType === 'navmesh' && matchDeviceType && (!os || !releaseOS || releaseOS === 'all' || os === releaseOS) && (!arch || !releaseArch || releaseArch === 'all' || arch === releaseArch);
+      const matchDeviceType =
+        !releaseDeviceType ||
+        releaseDeviceType === 'all' ||
+        !deviceType ||
+        releaseDeviceType === deviceType;
+      return (
+        releaseType === 'navmesh' &&
+        matchDeviceType &&
+        (!os || !releaseOS || releaseOS === 'all' || os === releaseOS) &&
+        (!arch || !releaseArch || releaseArch === 'all' || arch === releaseArch)
+      );
     });
   }
 
@@ -589,7 +704,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return Math.min(100, Math.max(0, progress));
   }
 
-  protected upgradeProgressStatus(task: DeviceUpgradeTask): 'success' | 'exception' | 'active' | 'normal' {
+  protected upgradeProgressStatus(
+    task: DeviceUpgradeTask,
+  ): 'success' | 'exception' | 'active' | 'normal' {
     if (task.status === 3) return 'success';
     if (task.status === 4) return 'exception';
     if (task.status === 2) return 'active';
@@ -615,6 +732,42 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return '';
   }
 
+  protected upgradeVersionText(task: DeviceUpgradeTask): string {
+    const fromVersion = this.firstText(task.fromVersion, task.from_version);
+    const currentVersion = this.firstText(task.currentVersion, task.current_version);
+    if (fromVersion && currentVersion && fromVersion !== currentVersion) {
+      return `${fromVersion} -> ${currentVersion}`;
+    }
+    if (currentVersion) {
+      return `当前 ${currentVersion}`;
+    }
+    if (fromVersion) {
+      return `来自 ${fromVersion}`;
+    }
+    return '';
+  }
+
+  protected upgradeTaskRangeText(): string {
+    if (!this.upgradeTaskTotal) {
+      return '暂无记录';
+    }
+    const start = (this.upgradeTaskQuery.page - 1) * this.upgradeTaskQuery.size + 1;
+    const end = Math.min(this.upgradeTaskTotal, start + this.upgradeTasks.length - 1);
+    return `第 ${start}-${end} 条 / 共 ${this.upgradeTaskTotal} 条`;
+  }
+
+  protected onUpgradeTaskPageChange(page: number): void {
+    if (page === this.upgradeTaskQuery.page) return;
+    this.upgradeTaskQuery = { ...this.upgradeTaskQuery, page };
+    this.refreshUpgradeTasks();
+  }
+
+  protected onUpgradeTaskSizeChange(size: number): void {
+    if (size === this.upgradeTaskQuery.size) return;
+    this.upgradeTaskQuery = { page: 1, size };
+    this.refreshUpgradeTasks();
+  }
+
   protected taskTime(item: DeviceUpgradeTask): number {
     return item.updateTime || item.update_time || item.createTime || item.create_time || 0;
   }
@@ -623,12 +776,37 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return this.mappings.filter((item) => item.status !== 0).length;
   }
 
+  protected enabledTCPMappingCount(): number {
+    return this.tcpMappings.filter((item) => item.status !== 0).length;
+  }
+
   protected summaryItems(item: { status?: DeviceStatus }): MetricSummaryItem[] {
     return [
-      { label: '激活状态', value: this.statusText(item.status), tone: this.statusTone(item.status) },
-      { label: '启用凭证', value: `${this.enabledTokenCount()} / ${this.tokens.length}`, tone: this.enabledTokenCount() ? 'success' : 'muted' },
-      { label: 'SSH 接入', value: `${this.enabledSshCount()} / ${this.sshAliases.length}`, tone: this.enabledSshCount() ? 'primary' : 'muted' },
-      { label: 'HTTP 映射', value: `${this.enabledMappingCount()} / ${this.mappings.length}`, tone: this.enabledMappingCount() ? 'primary' : 'muted' },
+      {
+        label: '激活状态',
+        value: this.statusText(item.status),
+        tone: this.statusTone(item.status),
+      },
+      {
+        label: '启用凭证',
+        value: `${this.enabledTokenCount()} / ${this.tokens.length}`,
+        tone: this.enabledTokenCount() ? 'success' : 'muted',
+      },
+      {
+        label: 'SSH 接入',
+        value: `${this.enabledSshCount()} / ${this.sshAliases.length}`,
+        tone: this.enabledSshCount() ? 'primary' : 'muted',
+      },
+      {
+        label: 'HTTP 映射',
+        value: `${this.enabledMappingCount()} / ${this.mappings.length}`,
+        tone: this.enabledMappingCount() ? 'primary' : 'muted',
+      },
+      {
+        label: 'TCP 映射',
+        value: `${this.enabledTCPMappingCount()} / ${this.tcpMappings.length}`,
+        tone: this.enabledTCPMappingCount() ? 'primary' : 'muted',
+      },
     ];
   }
 
@@ -648,7 +826,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   protected availableSshEntrypoints(): SSHEntrypoint[] {
-    return this.sshEntrypoints.filter((item) => item.status !== 0 && (!item.deviceGuid || item.deviceGuid === this.guid));
+    return this.sshEntrypoints.filter(
+      (item) => item.status !== 0 && (!item.deviceGuid || item.deviceGuid === this.guid),
+    );
   }
 
   protected sshTargetHost(alias: SSHAlias | undefined): string {
@@ -699,6 +879,19 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     };
   }
 
+  private normalizeTCPMapping(item: TCPMapping): TCPMapping {
+    return {
+      ...item,
+      deviceGuid: this.firstText(item.deviceGuid, item.device_guid),
+      publicHost: this.firstText(item.publicHost, item.public_host),
+      publicPort: this.firstNumber(item.publicPort, item.public_port),
+      targetHost: this.firstText(item.targetHost, item.target_host),
+      targetPort: this.firstNumber(item.targetPort, item.target_port),
+      createTime: this.firstNumber(item.createTime, item.create_time),
+      updateTime: this.firstNumber(item.updateTime, item.update_time),
+    };
+  }
+
   private normalizeUpgradeTask(item: DeviceUpgradeTask): DeviceUpgradeTask {
     return {
       ...item,
@@ -718,9 +911,30 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     };
   }
 
+  private applyUpgradeTasks(upgrades: {
+    data?: DeviceUpgradeTask[];
+    total?: number;
+    page?: number;
+    size?: number;
+  }): void {
+    this.upgradeTasks = (upgrades.data ?? []).map((task) => this.normalizeUpgradeTask(task));
+    this.upgradeTaskTotal = this.firstNumber(upgrades.total, this.upgradeTasks.length);
+    this.upgradeTaskQuery = {
+      page: this.firstNumber(upgrades.page, this.upgradeTaskQuery.page) || 1,
+      size:
+        this.firstNumber(upgrades.size, this.upgradeTaskQuery.size) || this.upgradeTaskQuery.size,
+    };
+  }
+
   private syncDeviceVersionFromUpgradeTasks(): void {
-    const latestSuccess = this.upgradeTasks.find((task) => task.status === 3 && this.firstText(task.currentVersion));
-    if (this.device && latestSuccess?.currentVersion && this.device.clientVersion !== latestSuccess.currentVersion) {
+    const latestSuccess = this.upgradeTasks.find(
+      (task) => task.status === 3 && this.firstText(task.currentVersion),
+    );
+    if (
+      this.device &&
+      latestSuccess?.currentVersion &&
+      this.device.clientVersion !== latestSuccess.currentVersion
+    ) {
       this.device = { ...this.device, clientVersion: latestSuccess.currentVersion };
     }
   }
@@ -735,7 +949,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   private normalizePlatformValue(value: string | undefined): string {
-    const normalized = String(value || '').trim().toLowerCase();
+    const normalized = String(value || '')
+      .trim()
+      .toLowerCase();
     const aliases: Record<string, string> = {
       aarch64: 'arm64',
       armv8: 'arm64',
@@ -764,8 +980,17 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return {
       ...token,
       token: this.firstText(token.token),
-      tokenPrefix: this.firstText(token.tokenPrefix, token.token_prefix, this.guidPrefix(token.guid)),
-      lastUsedAt: this.firstNumber(token.lastUsedAt, token.last_used_at, token.lastUsedTime, token.last_used_time),
+      tokenPrefix: this.firstText(
+        token.tokenPrefix,
+        token.token_prefix,
+        this.guidPrefix(token.guid),
+      ),
+      lastUsedAt: this.firstNumber(
+        token.lastUsedAt,
+        token.last_used_at,
+        token.lastUsedTime,
+        token.last_used_time,
+      ),
       expiresAt: this.firstNumber(token.expiresAt, token.expireTime, token.expire_time),
       createTime: this.firstNumber(token.createTime, token.create_time),
       updateTime: this.firstNumber(token.updateTime, token.update_time),
@@ -773,7 +998,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   private defaultEntrypointIp(): string {
-    const bound = this.sshEntrypoints.find((item) => item.deviceGuid === this.guid && item.status !== 0);
+    const bound = this.sshEntrypoints.find(
+      (item) => item.deviceGuid === this.guid && item.status !== 0,
+    );
     const free = this.sshEntrypoints.find((item) => !item.deviceGuid && item.status !== 0);
     return bound?.ip || free?.ip || this.sshEntrypoints[0]?.ip || '';
   }
@@ -785,26 +1012,57 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
 
   private defaultHttpType(): DeviceTypeDefault | undefined {
     const deviceType = this.firstText(this.device?.deviceType, this.device?.device_type);
-    return this.types.find((item) => this.firstText(item.key, item.group_key, item.guid, item.type) === deviceType);
+    return this.types.find(
+      (item) => this.firstText(item.key, item.group_key, item.guid, item.type) === deviceType,
+    );
   }
 
   private defaultHttpPublicHost(): string {
-    const domain = this.firstText(this.defaultHttpType()?.defaultDomain, this.device?.webDomain).replace(/^\.+|\.+$/g, '');
+    const domain = this.firstText(
+      this.defaultHttpType()?.defaultDomain,
+      this.device?.webDomain,
+    ).replace(/^\.+|\.+$/g, '');
     const sncode = this.firstText(this.device?.sncode, this.device?.alias, this.device?.hostname);
     if (!domain) return '';
     return sncode ? `${sncode}.${domain}` : domain;
   }
 
   private defaultHttpTargetPort(): number {
-    return this.firstPositiveNumber(this.defaultHttpType()?.defaultWebPort, this.device?.webPort, 80);
+    return this.firstPositiveNumber(
+      this.defaultHttpType()?.defaultWebPort,
+      this.device?.webPort,
+      80,
+    );
   }
 
   private defaultHttpIsCustomDomain(): boolean {
     return false;
   }
 
+  protected tcpEndpoint(mapping: TCPMapping): string {
+    const port = this.firstNumber(mapping.publicPort, mapping.public_port);
+    const host = this.firstText(mapping.publicHost, mapping.public_host);
+    if (!host) return port ? `:${port}` : '-';
+    return port ? `${host}:${port}` : host;
+  }
+
+  private defaultTCPPublicHost(): string {
+    const sncode = this.firstText(this.device?.sncode, this.device?.alias, this.device?.hostname);
+    const domain =
+      this.setting('tcp_gateway_domain', 'tcpd.navfirst.com').replace(/^\.+|\.+$/g, '') ||
+      'tcpd.navfirst.com';
+    return sncode ? `${sncode}.${domain}` : domain;
+  }
+
+  private defaultTCPTargetPort(): number {
+    return this.firstPositiveNumber(this.device?.webPort, 80);
+  }
+
   private defaultServiceLogName(): string {
-    const deviceType = this.firstText(this.device?.deviceType, this.device?.device_type).toLowerCase();
+    const deviceType = this.firstText(
+      this.device?.deviceType,
+      this.device?.device_type,
+    ).toLowerCase();
     if (deviceType.includes('rain')) return 'raind.service';
     return 'navmesh-client.service';
   }
@@ -814,7 +1072,10 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   private sshGatewayDomain(): string {
-    return this.setting('ssh_gateway_domain', 'ssh.navfirst.com').replace(/^\.+|\.+$/g, '') || 'ssh.navfirst.com';
+    return (
+      this.setting('ssh_gateway_domain', 'ssh.navfirst.com').replace(/^\.+|\.+$/g, '') ||
+      'ssh.navfirst.com'
+    );
   }
 
   private sshGatewayPort(): number {

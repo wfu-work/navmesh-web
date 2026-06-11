@@ -53,6 +53,14 @@
           </nz-form-item>
 
           <nz-form-item>
+            <nz-form-label nzRequired>TCP 网关域名</nz-form-label>
+            <nz-form-control nzErrorTip="请输入 TCP 网关域名">
+              <input nz-input formControlName="tcp_gateway_domain" placeholder="tcpd.navfirst.com" />
+              <div class="field-note">用于生成 TCP 映射公网地址，例如 <code>postgres.tcpd.navfirst.com:20000</code>。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
             <nz-form-label nzRequired>设备注册 Token</nz-form-label>
             <nz-form-control nzErrorTip="请输入设备注册 Token">
               <input nz-input formControlName="device_register_token" autocomplete="off" placeholder="首次注册使用的共享 Token" />
@@ -69,6 +77,10 @@
           <article>
             <strong>HTTPD 示例</strong>
             <span><code>device.httpd.navfirst.com</code> 可作为 HTTP 映射统一入口，再由网关转发到设备 Web 服务。</span>
+          </article>
+          <article>
+            <strong>TCP 示例</strong>
+            <span><code>postgres.tcpd.navfirst.com:20000</code> 指向 TCP 映射公网端口，适合数据库、MQ、私有协议等服务。</span>
           </article>
           <article>
             <strong>部署提醒</strong>
@@ -118,6 +130,26 @@
             <nz-form-control>
               <label nz-checkbox formControlName="http_mapping_enabled">启用 HTTP 映射转发</label>
               <div class="field-note">关闭后自定义域名和默认映射域名都不会继续转发到设备。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>TCP 映射网关</nz-form-label>
+            <nz-form-control>
+              <label nz-checkbox formControlName="tcp_mapping_enabled">启用 TCP 映射转发</label>
+              <div class="field-note">关闭后 TCP 映射监听端口会停止接收新连接；重新启用可能需要服务保持运行或重启。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label>TCP 公网端口范围</nz-form-label>
+            <nz-form-control [nzValidateStatus]="tcpPortRangeInvalid() ? 'error' : ''" nzErrorTip="最小端口不能大于最大端口">
+              <div class="port-range-control">
+                <nz-input-number class="w-100" formControlName="tcp_public_port_min" [nzMin]="1" [nzMax]="65535" />
+                <span>至</span>
+                <nz-input-number class="w-100" formControlName="tcp_public_port_max" [nzMin]="1" [nzMax]="65535" />
+              </div>
+              <div class="field-note">新增 TCP 映射留空公网端口时，会在这个范围内自动分配。已存在映射不会自动改端口。</div>
             </nz-form-control>
           </nz-form-item>
 

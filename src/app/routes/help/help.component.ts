@@ -1,6 +1,7 @@
-import { ChangeDetectionStrategy, Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { environment } from '@env/environment';
 import { SHARED_IMPORTS } from '@shared';
+import { NzMessageService } from 'ng-zorro-antd/message';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 interface HelpLink {
@@ -28,6 +29,8 @@ interface DownloadLink {
   imports: [...SHARED_IMPORTS, TitleLabelComponent],
 })
 export class HelpComponent {
+  private readonly message = inject(NzMessageService);
+
   protected readonly links: HelpLink[] = [
     {
       title: '版本管理',
@@ -126,6 +129,12 @@ export class HelpComponent {
     '/usr/local/bin/navmesh-client',
     '/etc/systemd/system/navmesh-client.service',
   ];
+
+  protected onCopyInstallCommand(copied: boolean): void {
+    if (copied) {
+      this.message.success('安装命令已复制');
+    }
+  }
 
   protected get downloadBase(): string {
     const baseUrl = `${environment.api.baseUrl || ''}`.replace(/\/$/, '');

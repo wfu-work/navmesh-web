@@ -109,11 +109,15 @@ import {
   IdcardOutline,
   CloudSyncOutline,
   DownloadOutline,
+  CheckSquareOutline,
+  MinusSquareOutline,
 } from '@ant-design/icons-angular/icons';
 
 export const ICONS_AUTO = [
   HomeOutline,
   IdcardOutline,
+  CheckSquareOutline,
+  MinusSquareOutline,
   DownloadOutline,
   CloudSyncOutline,
   AndroidOutline,

@@ -23,6 +23,8 @@ import {
   EventsService,
   eventDisplayMessage,
   eventDisplayTitle,
+  eventSourceColor,
+  eventSourceText,
   isClosedEventStatus,
   isOpenEventStatus,
 } from '../events.service';
@@ -75,23 +77,10 @@ export class EventListComponent implements OnInit {
     info: { text: '信息', color: 'default' },
   };
 
-  protected readonly sourceTag: STColumnTag = {
-    device: { text: '设备', color: 'green' },
-    device_offline: { text: '设备离线', color: 'orange' },
-    disk_usage_high: { text: '磁盘告警', color: 'gold' },
-    ssh: { text: 'SSH', color: 'purple' },
-    http: { text: 'HTTP', color: 'blue' },
-    tunnel: { text: '隧道', color: 'cyan' },
-    auth: { text: '认证', color: 'gold' },
-    mapping: { text: '映射', color: 'geekblue' },
-    session_rejected: { text: '会话拒绝', color: 'gold' },
-    open_tcp_failed: { text: '连接失败', color: 'red' },
-  };
-
   protected readonly columns: STColumn<EventRow>[] = [
     { title: '事件', index: 'title', render: 'titleRender', fixed: 'left', width: 280 },
     { title: '等级', index: 'level', type: 'tag', tag: this.levelTag, width: 100 },
-    { title: '来源', index: 'source', type: 'tag', tag: this.sourceTag, width: 120 },
+    { title: '来源', index: 'source', render: 'sourceRender', width: 140 },
     { title: '设备', index: 'deviceName', width: 120, default: '-' },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 110 },
     { title: '消息', index: 'message', render: 'messageRender', width: 360 },
@@ -239,6 +228,14 @@ export class EventListComponent implements OnInit {
       2: '已关闭',
     };
     return map[String(status)] ?? '未知';
+  }
+
+  protected sourceText(source: string | undefined): string {
+    return eventSourceText(source);
+  }
+
+  protected sourceColor(source: string | undefined): string {
+    return eventSourceColor(source);
   }
 
   protected formatDateTime(value: number | undefined): string {

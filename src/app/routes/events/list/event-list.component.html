@@ -55,7 +55,7 @@
       [total]="total"
       [expand]="expand"
       [expandRowByClick]="true"
-      [scroll]="{ x: '1720px' }"
+      [scroll]="{ x: 'max-content' }"
     >
       <ng-template st-row="titleRender" let-item>
         <div class="event-title-cell">
@@ -70,6 +70,10 @@
         <ellipsis [lines]="1" tooltip>{{ item.message || '-' }}</ellipsis>
       </ng-template>
 
+      <ng-template st-row="sourceRender" let-item>
+        <nz-tag [nzColor]="sourceColor(item.source)">{{ sourceText(item.source) }}</nz-tag>
+      </ng-template>
+
       <ng-template st-row="timeRender" let-item let-column="column">
         {{ formatDateTime(timeValue(item, column.index)) }}
       </ng-template>
@@ -79,7 +83,7 @@
           <sv label="标题">{{ item.title || '-' }}</sv>
           <sv label="状态">{{ statusText(item.status) }}</sv>
           <sv label="设备">{{ item.deviceName || '-' }}</sv>
-          <sv label="来源">{{ item.source || '-' }}</sv>
+          <sv label="来源">{{ sourceText(item.source) }}</sv>
           <sv label="等级">{{ item.level || '-' }}</sv>
           <sv label="发生时间">{{ formatDateTime(item.occurredAt) }}</sv>
           <sv label="消息" col="1">{{ item.message || '-' }}</sv>

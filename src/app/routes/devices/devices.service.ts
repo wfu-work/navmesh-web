@@ -266,6 +266,8 @@ export interface CreateDeviceUpgradePayload {
 
 export interface DeviceUpgradeTask {
   guid: string;
+  batchGuid?: string;
+  batch_guid?: string;
   deviceGuid: string;
   device_guid?: string;
   releaseGuid: string;
@@ -298,6 +300,73 @@ export interface DeviceUpgradeTask {
   create_time?: number;
   updateTime: number;
   update_time?: number;
+}
+
+export interface DeviceUpgradeCandidate extends Device {
+  hasActiveUpgrade?: boolean;
+  has_active_upgrade?: boolean;
+  activeTaskGuid?: string;
+  active_task_guid?: string;
+  activeTaskStatus?: number;
+  active_task_status?: number;
+  onlineUpgradeable?: boolean;
+  online_upgradeable?: boolean;
+  upgradeDisabledReason?: string;
+  upgrade_disabled_reason?: string;
+}
+
+export interface CreateDeviceUpgradeBatchPayload {
+  deviceGuids: string[];
+  message?: string;
+}
+
+export interface DeviceUpgradeFailure {
+  deviceGuid: string;
+  device_guid?: string;
+  message: string;
+}
+
+export interface DeviceUpgradeBatchSummary {
+  guid: string;
+  releaseGuid: string;
+  release_guid?: string;
+  releaseType?: string;
+  release_type?: string;
+  deviceType?: string;
+  device_type?: string;
+  version?: string;
+  os: string;
+  arch: string;
+  fileName: string;
+  file_name?: string;
+  totalCount: number;
+  total_count?: number;
+  pendingCount?: number;
+  pending_count?: number;
+  runningCount?: number;
+  running_count?: number;
+  successCount?: number;
+  success_count?: number;
+  failedCount?: number;
+  failed_count?: number;
+  canceledCount?: number;
+  canceled_count?: number;
+  finishedCount?: number;
+  finished_count?: number;
+  progress?: number;
+  status?: string;
+  message?: string;
+  createTime: number;
+  create_time?: number;
+  updateTime: number;
+  update_time?: number;
+}
+
+export interface DeviceUpgradeBatchResult {
+  batch: DeviceUpgradeBatchSummary;
+  summary: DeviceUpgradeBatchSummary;
+  tasks: DeviceUpgradeTask[];
+  failures?: DeviceUpgradeFailure[];
 }
 
 export interface SaveDeviceGroupPayload {
@@ -425,6 +494,30 @@ export class DevicesService {
 
   createUpgradeTask(deviceGuid: string, payload: CreateDeviceUpgradePayload): Observable<DeviceUpgradeTask> {
     return this.http.post<DeviceUpgradeTask>(`/devices/${deviceGuid}/upgrades`, payload);
+  }
+
+  upgradeCandidates(releaseGuid: string): Observable<DeviceUpgradeCandidate[]> {
+    return this.http.get<DeviceUpgradeCandidate[]>(`/releases/${releaseGuid}/upgrade/candidates`);
+  }
+
+  createUpgradeBatch(releaseGuid: string, payload: CreateDeviceUpgradeBatchPayload): Observable<DeviceUpgradeBatchResult> {
+    return this.http.post<DeviceUpgradeBatchResult>(`/releases/${releaseGuid}/upgrade/batches`, payload);
+  }
+
+  upgradeBatches(releaseGuid: string, params?: { page?: number; size?: number }): Observable<PageEntity<DeviceUpgradeBatchSummary>> {
+    return this.http.get<PageEntity<DeviceUpgradeBatchSummary>>(`/releases/${releaseGuid}/upgrade/batches`, {
+      params: this.cleanParams(params),
+    });
+  }
+
+  upgradeBatchTasks(
+    releaseGuid: string,
+    batchGuid: string,
+    params?: { page?: number; size?: number; status?: string | number },
+  ): Observable<PageEntity<DeviceUpgradeTask>> {
+    return this.http.get<PageEntity<DeviceUpgradeTask>>(`/releases/${releaseGuid}/upgrade/batches/${batchGuid}/tasks`, {
+      params: this.cleanParams(params),
+    });
   }
 
   assignGroup(deviceGuid: string, groupGuid: string): Observable<boolean> {

@@ -18,6 +18,7 @@ import {
   EventsService,
   eventDisplayMessage,
   eventDisplayTitle,
+  eventSourceText,
   isClosedEventStatus,
   isOpenEventStatus,
 } from '../events.service';
@@ -141,19 +142,7 @@ export class EventDetailComponent implements OnInit {
   }
 
   protected sourceText(source: string | undefined): string {
-    const map: Record<string, string> = {
-      device: '设备',
-      device_offline: '设备离线',
-      disk_usage_high: '磁盘告警',
-      ssh: 'SSH',
-      http: 'HTTP',
-      tunnel: '隧道',
-      auth: '认证',
-      mapping: '映射',
-      session_rejected: '会话拒绝',
-      open_tcp_failed: '连接失败',
-    };
-    return map[String(source)] ?? (source || '-');
+    return eventSourceText(source);
   }
 
   protected formatDateTime(value: number | undefined): string {

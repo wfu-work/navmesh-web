@@ -16,10 +16,20 @@
     <nz-card class="card-border guide-wide" [nzBordered]="false">
       <div class="guide-section-head">
         <div>
-          <h2>navmesh-client 在线安装</h2>
+          <h2>navmesh-client 在线安装 <nz-tag nzColor="cyan" class="ml-md">navmesh-client.service</nz-tag></h2>
           <p>Linux 设备推荐使用后台下载接口中的在线安装脚本。脚本会从版本管理中已启用的边缘客户端版本下载对应平台二进制，并创建 systemd 服务。</p>
         </div>
-        <nz-tag nzColor="green">Recommended</nz-tag>
+        <button
+          type="button"
+          nz-button
+          nzSize="small"
+          class="guide-copy-action"
+          [cdkCopyToClipboard]="installCommand"
+          (cdkCopyToClipboardCopied)="onCopyInstallCommand($event)"
+        >
+          <nz-icon nzType="copy" />
+          复制
+        </button>
       </div>
 
       <p class="guide-copy">方式一：使用后台版本管理中已启用的边缘客户端版本。</p>

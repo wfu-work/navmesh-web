@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 
 import { ReleaseCreateComponent } from './release-create/release-create.component';
+import { ReleaseUpgradeComponent } from './release-upgrade/release-upgrade.component';
 import { ReleaseComponent } from './release/release.component';
 
 export const routes: Routes = [
@@ -14,6 +15,11 @@ export const routes: Routes = [
     path: 'release/edit/:guid',
     component: ReleaseCreateComponent,
     data: { title: '编辑版本' },
+  },
+  {
+    path: 'release/upgrade/:guid',
+    component: ReleaseUpgradeComponent,
+    data: { title: '批量升级' },
   },
   {
     path: 'release',

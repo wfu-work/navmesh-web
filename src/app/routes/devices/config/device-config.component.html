@@ -2,7 +2,7 @@
   <div class="device-header device-config-header">
     <title-label
       [title]="title()"
-      description="管理当前设备的激活凭证、SSH 接入和 HTTP 映射。"
+      description="管理当前设备的激活凭证、SSH 接入、HTTP 映射和 TCP 映射。"
       [showBack]="true"
     />
     @if (device; as item) {
@@ -54,7 +54,13 @@
             <ng-template st-row="tokenValueRender" let-token>
               <code class="token-secret-inline">{{ token.token || '-' }}</code>
               @if (token.token) {
-                <button nz-button nzType="link" nz-tooltip nzTooltipTitle="复制凭证" [cdkCopyToClipboard]="token.token">
+                <button
+                  nz-button
+                  nzType="link"
+                  nz-tooltip
+                  nzTooltipTitle="复制凭证"
+                  [cdkCopyToClipboard]="token.token"
+                >
                   <nz-icon nzType="copy" />
                 </button>
               }
@@ -70,9 +76,13 @@
           <div class="detail-card-title">
             <div>
               <h2>客户端升级</h2>
-              <p>选择与设备系统和架构匹配的边缘客户端发布版本，下发后客户端会在下一次心跳中执行。</p>
+              <p>
+                选择与设备系统和架构匹配的边缘客户端发布版本，下发后客户端会在下一次心跳中执行。
+              </p>
               <p class="upgrade-current-version">
-                当前客户端版本：{{ item.clientVersion || '-' }} · 当前平台：{{ devicePlatformText() }}
+                当前客户端版本：{{ item.clientVersion || '-' }} · 当前平台：{{
+                  devicePlatformText()
+                }}
               </p>
             </div>
             <div class="upgrade-actions">
@@ -85,12 +95,23 @@
                 @for (release of compatibleReleases(); track release.guid) {
                   <nz-option
                     [nzValue]="release.guid"
-                    [nzLabel]="(release.version || release.fileName) + ' · ' + release.os + '/' + release.arch"
+                    [nzLabel]="
+                      (release.version || release.fileName) +
+                      ' · ' +
+                      release.os +
+                      '/' +
+                      release.arch
+                    "
                   />
                 }
               </nz-select>
               @if (item.status === 2) {
-                <button nz-button nzType="primary" [nzLoading]="creatingUpgrade" (click)="createUpgradeTask()">
+                <button
+                  nz-button
+                  nzType="primary"
+                  [nzLoading]="creatingUpgrade"
+                  (click)="createUpgradeTask()"
+                >
                   <nz-icon nzType="cloud-upload" />
                   下发升级
                 </button>
@@ -98,37 +119,87 @@
             </div>
           </div>
 
-          <div class="access-list">
-            @for (task of upgradeTasks; track task.guid) {
-              <article class="access-list-item">
-                <div class="upgrade-task-main">
-                  <strong>{{ task.version || task.fileName }}</strong>
-                  <span>{{ task.fileName }} · {{ task.os }}/{{ task.arch }} · {{ taskTime(task) ? (taskTime(task) | _date: 'MM-dd HH:mm') : '-' }}</span>
-                  @if (upgradeStageText(task)) {
-                    <span class="upgrade-stage">{{ upgradeStageText(task) }}</span>
-                  }
-                  @if (showUpgradeProgress(task)) {
-                    <div class="upgrade-progress-row">
-                      <nz-progress
-                        [nzPercent]="upgradeProgress(task)"
-                        [nzStatus]="upgradeProgressStatus(task)"
-                        [nzStrokeWidth]="6"
-                      />
-                      @if (upgradeDownloadedText(task)) {
-                        <span class="upgrade-progress-size">{{ upgradeDownloadedText(task) }}</span>
+          <div class="upgrade-history">
+            <div class="upgrade-history-head">
+              <div>
+                <strong>升级记录</strong>
+                <span>{{ upgradeTaskRangeText() }}</span>
+              </div>
+              @if (refreshingUpgrades) {
+                <nz-tag nzColor="processing">同步中</nz-tag>
+              } @else {
+                <nz-tag>{{ upgradeTaskTotal }} 条</nz-tag>
+              }
+            </div>
+
+            <div class="upgrade-task-list">
+              @for (task of upgradeTasks; track task.guid) {
+                <article class="upgrade-task-item">
+                  <span
+                    class="upgrade-task-marker"
+                    [class.upgrade-task-marker-pending]="task.status === 1"
+                    [class.upgrade-task-marker-running]="task.status === 2"
+                    [class.upgrade-task-marker-success]="task.status === 3"
+                    [class.upgrade-task-marker-error]="task.status === 4"
+                  ></span>
+                  <div class="upgrade-task-main">
+                    <div class="upgrade-task-topline">
+                      <div>
+                        <strong>{{ task.version || task.fileName }}</strong>
+                        <span>{{
+                          taskTime(task) ? (taskTime(task) | _date: 'MM-dd HH:mm') : '-'
+                        }}</span>
+                      </div>
+                      <nz-tag [nzColor]="upgradeStatusColor(task.status)">{{
+                        upgradeStatusText(task.status)
+                      }}</nz-tag>
+                    </div>
+                    <div class="upgrade-task-meta">
+                      <span>{{ task.fileName }}</span>
+                      <span>{{ task.os }}/{{ task.arch }}</span>
+                      @if (upgradeVersionText(task)) {
+                        <span>{{ upgradeVersionText(task) }}</span>
                       }
                     </div>
-                  }
-                  @if (task.errorMessage) {
-                    <code class="ssh-command-inline">{{ task.errorMessage }}</code>
-                  }
-                </div>
-                <div class="access-item-actions">
-                  <nz-tag [nzColor]="upgradeStatusColor(task.status)">{{ upgradeStatusText(task.status) }}</nz-tag>
-                </div>
-              </article>
-            } @empty {
-              <nz-empty nzNotFoundContent="暂无升级任务" />
+                    @if (upgradeStageText(task)) {
+                      <span class="upgrade-task-stage">{{ upgradeStageText(task) }}</span>
+                    }
+                    @if (showUpgradeProgress(task)) {
+                      <div class="upgrade-task-progress">
+                        <nz-progress
+                          [nzPercent]="upgradeProgress(task)"
+                          [nzStatus]="upgradeProgressStatus(task)"
+                          [nzStrokeWidth]="6"
+                          [nzShowInfo]="false"
+                        />
+                        <span>{{ upgradeProgress(task) }}%</span>
+                        @if (upgradeDownloadedText(task)) {
+                          <span>{{ upgradeDownloadedText(task) }}</span>
+                        }
+                      </div>
+                    }
+                    @if (task.errorMessage) {
+                      <code class="upgrade-task-error">{{ task.errorMessage }}</code>
+                    }
+                  </div>
+                </article>
+              } @empty {
+                <nz-empty nzNotFoundContent="暂无升级任务" />
+              }
+            </div>
+
+            @if (upgradeTaskTotal > upgradeTaskQuery.size) {
+              <nz-pagination
+                class="upgrade-task-pagination"
+                nzSize="small"
+                [nzPageIndex]="upgradeTaskQuery.page"
+                [nzPageSize]="upgradeTaskQuery.size"
+                [nzTotal]="upgradeTaskTotal"
+                [nzPageSizeOptions]="upgradeTaskPageSizeOptions"
+                [nzShowSizeChanger]="true"
+                (nzPageIndexChange)="onUpgradeTaskPageChange($event)"
+                (nzPageSizeChange)="onUpgradeTaskSizeChange($event)"
+              />
             }
           </div>
         </nz-card>
@@ -137,7 +208,10 @@
           <div class="detail-card-title service-log-title">
             <div>
               <h2>服务日志</h2>
-              <p>实时查看当前设备 systemd service 日志，仅支持 <span class="service-log-inline">*.service</span>。</p>
+              <p>
+                实时查看当前设备 systemd service 日志，仅支持
+                <span class="service-log-inline">*.service</span>。
+              </p>
             </div>
             <nz-tag [nzColor]="serviceLogStatusColor()">{{ serviceLogStatusText() }}</nz-tag>
           </div>
@@ -171,7 +245,12 @@
                   停止
                 </button>
               } @else {
-                <button nz-button nzType="primary" [disabled]="item.status !== 2" (click)="startServiceLogStream()">
+                <button
+                  nz-button
+                  nzType="primary"
+                  [disabled]="item.status !== 2"
+                  (click)="startServiceLogStream()"
+                >
                   <nz-icon nzType="play-circle" />
                   开始查看
                 </button>
@@ -195,7 +274,12 @@
             <nz-alert nzType="error" [nzMessage]="serviceLogError" nzShowIcon />
           }
 
-          <pre #serviceLogWindow class="service-log-window"><code>{{ serviceLogOutput || '等待连接服务日志...' }}</code></pre>
+          @if (serviceLogOutput) {
+            <pre
+              #serviceLogWindow
+              class="service-log-window"
+            ><code>{{ serviceLogOutput }}</code></pre>
+          }
         </nz-card>
 
         <nz-card class="card-border access-card" [nzBordered]="false">
@@ -212,14 +296,24 @@
                 <div>
                   <strong>{{ alias.domain || '-' }}</strong>
                   <span>{{ alias.alias || '-' }} · HTTP CONNECT 代理 {{ sshProxyAddress() }}</span>
-                  <code class="ssh-command-inline">Host: {{ sshTargetHost(alias) }} · Proxy: {{ sshProxyAddress() }}</code>
+                  <code class="ssh-command-inline"
+                    >Host: {{ sshTargetHost(alias) }} · Proxy: {{ sshProxyAddress() }}</code
+                  >
                   <code class="ssh-command-inline">{{ sshConnectCommand(alias) }}</code>
                 </div>
                 <div class="access-item-actions">
-                  <button nz-button nzType="link" nz-tooltip nzTooltipTitle="复制 OpenSSH 示例" [cdkCopyToClipboard]="sshConnectCommand(alias)">
+                  <button
+                    nz-button
+                    nzType="link"
+                    nz-tooltip
+                    nzTooltipTitle="复制 OpenSSH 示例"
+                    [cdkCopyToClipboard]="sshConnectCommand(alias)"
+                  >
                     <nz-icon nzType="copy" />
                   </button>
-                  <nz-tag [nzColor]="alias.status === 0 ? 'default' : 'success'">{{ statusLabel(alias.status) }}</nz-tag>
+                  <nz-tag [nzColor]="alias.status === 0 ? 'default' : 'success'">{{
+                    statusLabel(alias.status)
+                  }}</nz-tag>
                   <button nz-button nzType="link" (click)="openSshModal(alias)">
                     <nz-icon nzType="edit" />
                   </button>
@@ -266,10 +360,16 @@
               <article class="access-list-item">
                 <div>
                   <strong>{{ mapping.publicHost || '-' }}</strong>
-                  <span>{{ mapping.name || '-' }} · {{ mapping.targetHost }}:{{ mapping.targetPort }}</span>
+                  <span
+                    >{{ mapping.name || '-' }} · {{ mapping.targetHost }}:{{
+                      mapping.targetPort
+                    }}</span
+                  >
                 </div>
                 <div class="access-item-actions">
-                  <nz-tag [nzColor]="mapping.status === 0 ? 'default' : 'success'">{{ statusLabel(mapping.status) }}</nz-tag>
+                  <nz-tag [nzColor]="mapping.status === 0 ? 'default' : 'success'">{{
+                    statusLabel(mapping.status)
+                  }}</nz-tag>
                   <button nz-button nzType="link" (click)="openLogs(mapping)">
                     <nz-icon nzType="file-search" />
                   </button>
@@ -295,8 +395,72 @@
             }
           </div>
         </nz-card>
-      </div>
 
+        <nz-card class="card-border access-card" [nzBordered]="false">
+          <div class="detail-card-title">
+            <div>
+              <h2>TCP 映射</h2>
+              <p>将公网 TCP 端口转发到当前设备的本地 TCP 服务。</p>
+            </div>
+            <div class="access-actions">
+              <button nz-button nzType="primary" (click)="openTCPMappingModal()">
+                <nz-icon nzType="plus" />
+                新增映射
+              </button>
+            </div>
+          </div>
+
+          <div class="access-list">
+            @for (mapping of tcpMappings; track mapping.guid) {
+              <article class="access-list-item">
+                <div>
+                  <strong>{{ tcpEndpoint(mapping) }}</strong>
+                  <span
+                    >{{ mapping.name || '-' }} · {{ mapping.targetHost }}:{{
+                      mapping.targetPort
+                    }}</span
+                  >
+                  @if (mapping.remark) {
+                    <span>{{ mapping.remark }}</span>
+                  }
+                </div>
+                <div class="access-item-actions">
+                  <button
+                    nz-button
+                    nzType="link"
+                    nz-tooltip
+                    nzTooltipTitle="复制连接地址"
+                    [disabled]="tcpEndpoint(mapping) === '-'"
+                    [cdkCopyToClipboard]="tcpEndpoint(mapping)"
+                  >
+                    <nz-icon nzType="copy" />
+                  </button>
+                  <nz-tag [nzColor]="mapping.status === 0 ? 'default' : 'success'">{{
+                    statusLabel(mapping.status)
+                  }}</nz-tag>
+                  <button nz-button nzType="link" (click)="openTCPMappingModal(mapping)">
+                    <nz-icon nzType="edit" />
+                  </button>
+                  @if (mapping.status !== 0) {
+                    <button
+                      nz-button
+                      nzType="link"
+                      nzDanger
+                      nz-popconfirm
+                      nzPopconfirmTitle="禁用后该公网 TCP 端口将不再转发到设备，确认继续？"
+                      (nzOnConfirm)="disableTCPMapping(mapping)"
+                    >
+                      <nz-icon nzType="stop" />
+                    </button>
+                  }
+                </div>
+              </article>
+            } @empty {
+              <nz-empty nzNotFoundContent="暂无 TCP 映射" />
+            }
+          </div>
+        </nz-card>
+      </div>
     } @else if (!loading) {
       <nz-card class="card-border detail-empty" [nzBordered]="false">
         <nz-empty nzNotFoundContent="未找到设备配置" />
