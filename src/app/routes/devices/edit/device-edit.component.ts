@@ -152,6 +152,25 @@ export class DeviceEditComponent implements OnInit {
     this.router.navigate(['/devices/config', this.guid]);
   }
 
+  protected osIconSrc(item: Device): string {
+    return `assets/icons/${this.osKind(item)}.svg`;
+  }
+
+  protected osLabel(item: Device): string {
+    const value = this.osText(item);
+    if (value.includes('ubuntu')) return 'Ubuntu';
+    if (value.includes('centos')) return 'CentOS';
+    if (value.includes('darwin') || value.includes('mac')) return 'Mac';
+    if (value.includes('win')) return 'Windows';
+    if (value.includes('debian')) return 'Debian';
+    if (value.includes('linux')) return 'Linux';
+    return item.os || '未知系统';
+  }
+
+  protected osClass(item: Device): string {
+    return `os-${this.osKind(item)}`;
+  }
+
   protected typeValue(item: DeviceTypeDefault | undefined): string {
     return this.firstText(item?.key, item?.group_key, item?.guid, item?.type);
   }
@@ -332,6 +351,22 @@ export class DeviceEditComponent implements OnInit {
     if (value.includes('ppp')) return 'deployment-unit';
     if (value.includes('sag')) return 'control';
     return 'appstore';
+  }
+
+  private osKind(item: Device): 'linux' | 'ubuntu' | 'centos' | 'windows' | 'macos' {
+    const value = this.osText(item);
+    if (value.includes('ubuntu')) return 'ubuntu';
+    if (value.includes('centos')) return 'centos';
+    if (value.includes('darwin') || value.includes('mac')) return 'macos';
+    if (value.includes('win')) return 'windows';
+    return 'linux';
+  }
+
+  private osText(item: Device): string {
+    return [item.os, item.osVersion, item.kernel, item.arch]
+      .map((value) => String(value || '').trim().toLowerCase())
+      .filter(Boolean)
+      .join(' ');
   }
 
   private normalizeIcon(icon: string | undefined): string {

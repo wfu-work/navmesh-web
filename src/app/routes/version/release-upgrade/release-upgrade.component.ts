@@ -18,6 +18,9 @@ import {
   DeviceUpgradeTask,
   DevicesService,
   Release,
+  upgradeTaskErrorText,
+  upgradeTaskMessageText,
+  upgradeTaskTargetVersionText,
 } from '../../devices/devices.service';
 
 @Component({
@@ -34,6 +37,7 @@ export class ReleaseUpgradeComponent implements OnInit {
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly platformMismatchReason = '设备系统或架构与升级包不匹配';
 
   protected readonly releaseGuid = this.route.snapshot.paramMap.get('guid') ?? '';
   protected release?: Release;
@@ -94,7 +98,7 @@ export class ReleaseUpgradeComponent implements OnInit {
       .subscribe({
         next: ({ release, candidates, batches }) => {
           this.release = this.normalizeRelease(release);
-          this.candidates = (candidates ?? []).map((item) => this.normalizeCandidate(item));
+          this.candidates = this.normalizeCandidates(candidates);
           this.batches = (batches.data ?? []).map((item) => this.normalizeBatch(item));
           this.batchTotal = batches.total ?? 0;
           this.reconcileSelection();
@@ -120,7 +124,7 @@ export class ReleaseUpgradeComponent implements OnInit {
         }),
       )
       .subscribe((items) => {
-        this.candidates = (items ?? []).map((item) => this.normalizeCandidate(item));
+        this.candidates = this.normalizeCandidates(items);
         this.reconcileSelection();
       });
   }
@@ -253,7 +257,7 @@ export class ReleaseUpgradeComponent implements OnInit {
     const upgradeable = this.upgradeableCandidates().length;
     const latest = this.batches[0];
     return [
-      { label: '可升级在线设备', value: upgradeable, tone: upgradeable ? 'success' : 'muted', hint: `共 ${this.candidates.length} 台在线设备` },
+      { label: '可升级在线设备', value: upgradeable, tone: upgradeable ? 'success' : 'muted', hint: `共 ${this.candidates.length} 台匹配平台在线设备` },
       { label: '已选择设备', value: this.selectedDeviceGuids.size, tone: this.selectedDeviceGuids.size ? 'primary' : 'muted' },
       { label: '升级批次', value: this.batchTotal, tone: this.batchTotal ? 'primary' : 'muted' },
       {
@@ -300,11 +304,19 @@ export class ReleaseUpgradeComponent implements OnInit {
   protected taskDeviceMeta(item: DeviceUpgradeTask): string {
     const releaseType = this.firstText(this.release?.releaseType, this.release?.release_type);
     if (releaseType === 'rain' || releaseType === 'device_software') {
-      return `目标版本 ${item.version || '-'}`;
+      return `目标版本 ${upgradeTaskTargetVersionText(item) || '-'}`;
     }
     const fromVersion = this.firstText(item.fromVersion, item.from_version, '-');
-    const currentVersion = this.firstText(item.currentVersion, item.current_version);
-    return `从 ${fromVersion} 升级到 ${currentVersion || item.version || '-'}`;
+    const targetVersion = upgradeTaskTargetVersionText(item);
+    return `从 ${fromVersion} 升级到 ${targetVersion || '-'}`;
+  }
+
+  protected taskMessageText(item: DeviceUpgradeTask): string {
+    return upgradeTaskMessageText(item);
+  }
+
+  protected taskErrorText(item: DeviceUpgradeTask): string {
+    return upgradeTaskErrorText(item);
   }
 
   protected activeTaskText(item: DeviceUpgradeCandidate): string {
@@ -533,6 +545,16 @@ export class ReleaseUpgradeComponent implements OnInit {
       upgradeDisabledReason: this.firstText(item.upgradeDisabledReason, item.upgrade_disabled_reason),
       updateTime: this.firstNumber(item.updateTime, item.update_time),
     };
+  }
+
+  private normalizeCandidates(items: DeviceUpgradeCandidate[] | undefined | null): DeviceUpgradeCandidate[] {
+    return (items ?? [])
+      .map((item) => this.normalizeCandidate(item))
+      .filter((item) => !this.isPlatformMismatchCandidate(item));
+  }
+
+  private isPlatformMismatchCandidate(item: DeviceUpgradeCandidate): boolean {
+    return this.firstText(item.upgradeDisabledReason, item.upgrade_disabled_reason) === this.platformMismatchReason;
   }
 
   private normalizeBatch(item: DeviceUpgradeBatchSummary): DeviceUpgradeBatchSummary {

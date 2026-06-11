@@ -21,7 +21,7 @@
         <div class="upgrade-panel-head">
           <div>
             <h2>选择在线设备</h2>
-            <p>展示当前版本设备类型范围内的在线设备；系统、架构或客户端能力不匹配的设备会自动锁定。</p>
+            <p>仅展示与升级包系统和架构匹配的在线设备；客户端能力不匹配的设备会自动锁定。</p>
           </div>
           <nz-tag nzColor="green">{{ upgradeableCandidates().length }} 台可升级</nz-tag>
         </div>
@@ -64,7 +64,7 @@
               </div>
             </article>
           } @empty {
-            <nz-empty nzNotFoundContent="暂无符合设备类型范围的在线设备" />
+            <nz-empty nzNotFoundContent="暂无符合设备类型与平台范围的在线设备" />
           }
         </div>
 
@@ -171,11 +171,11 @@
                 <strong>{{ deviceName(task) }}</strong>
                 <span>{{ taskDeviceMeta(task) }}</span>
                 <span>{{ task.fileName }} · {{ task.os }}/{{ task.arch }} · {{ taskTime(task) ? (taskTime(task) | _date: 'MM-dd HH:mm') : '-' }}</span>
-                @if (task.message) {
-                  <code>{{ task.message }}</code>
+                @if (taskMessageText(task)) {
+                  <code>{{ taskMessageText(task) }}</code>
                 }
-                @if (task.errorMessage) {
-                  <code class="task-error">{{ task.errorMessage }}</code>
+                @if (taskErrorText(task)) {
+                  <code class="task-error">{{ taskErrorText(task) }}</code>
                 }
               </div>
               <div class="task-side">

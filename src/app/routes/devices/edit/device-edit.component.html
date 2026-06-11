@@ -10,8 +10,15 @@
   <nz-spin [nzSpinning]="loading">
     <section class="device-edit-hero">
       <div class="device-edit-identity">
-        <span class="device-edit-avatar">
-          <nz-icon nzType="desktop" />
+        <span
+          class="device-edit-avatar {{ device ? osClass(device) : '' }}"
+          [title]="device ? osLabel(device) : '设备系统'"
+        >
+          @if (device; as item) {
+            <img [src]="osIconSrc(item)" [alt]="osLabel(item)" />
+          } @else {
+            <nz-icon nzType="desktop" />
+          }
         </span>
         <div>
           <strong>{{ title() || '设备信息' }}</strong>

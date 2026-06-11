@@ -302,6 +302,81 @@ export interface DeviceUpgradeTask {
   update_time?: number;
 }
 
+const upgradeMessageMap: Record<string, string> = {
+  'client binary replaced': '客户端二进制已替换，准备重启服务',
+  'client binary has been replaced': '客户端二进制已替换，准备重启服务',
+  'preparing upgrade': '准备升级',
+  'downloading client binary': '正在下载客户端二进制',
+  'setting client file permissions': '正在设置客户端文件权限',
+  'backing up current client': '正在备份当前客户端',
+  'replacing client binary': '正在替换客户端二进制',
+  'verifying client binary': '正在校验客户端二进制',
+  'client binary verified': '客户端二进制校验完成',
+  'client upgrade failed': '客户端升级失败',
+};
+
+export function upgradeTaskMessageText(
+  task: Partial<DeviceUpgradeTask>,
+  fallback = '',
+): string {
+  const message = firstUpgradeText(task.message);
+  return message ? upgradeDisplayText(message) : fallback;
+}
+
+export function upgradeTaskErrorText(task: Partial<DeviceUpgradeTask>): string {
+  const message = firstUpgradeText(task.errorMessage, task.error_message);
+  if (!message || isUpgradeVersionText(message)) {
+    return '';
+  }
+  return upgradeDisplayText(message);
+}
+
+export function upgradeTaskTargetVersionText(task: Partial<DeviceUpgradeTask>): string {
+  return firstUpgradeText(task.version, task.currentVersion, task.current_version);
+}
+
+function upgradeDisplayText(value: string): string {
+  const text = firstUpgradeText(value);
+  const key = text.toLowerCase().replace(/\s+/g, ' ');
+  if (upgradeMessageMap[key]) {
+    return upgradeMessageMap[key];
+  }
+  if (key.startsWith('download status ')) {
+    return `下载失败，${text}`;
+  }
+  if (key.startsWith('sha256 mismatch')) {
+    return `SHA256 校验失败，${text}`;
+  }
+  if (key.startsWith('download size mismatch')) {
+    return `下载文件大小不一致，${text}`;
+  }
+  if (key.startsWith('upgrade os mismatch')) {
+    return `系统不匹配，${text}`;
+  }
+  if (key.startsWith('upgrade arch mismatch')) {
+    return `架构不匹配，${text}`;
+  }
+  if (key === 'rain upgrade only supports linux hosts') {
+    return '北斗降雨升级仅支持 Linux 主机';
+  }
+  if (key.startsWith('systemctl not found')) {
+    return `未找到 systemctl，${text}`;
+  }
+  return text;
+}
+
+function isUpgradeVersionText(value: string): boolean {
+  return /^v?\d+(?:\.\d+){1,3}(?:[-+][0-9a-z.-]+)?$/i.test(firstUpgradeText(value));
+}
+
+function firstUpgradeText(...values: Array<string | undefined | null>): string {
+  for (const value of values) {
+    const text = `${value ?? ''}`.trim();
+    if (text) return text;
+  }
+  return '';
+}
+
 export interface DeviceUpgradeCandidate extends Device {
   hasActiveUpgrade?: boolean;
   has_active_upgrade?: boolean;

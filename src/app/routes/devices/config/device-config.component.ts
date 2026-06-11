@@ -29,6 +29,9 @@ import {
   DeviceTypeDefault,
   DeviceUpgradeTask,
   Release,
+  upgradeTaskErrorText,
+  upgradeTaskMessageText,
+  upgradeTaskTargetVersionText,
 } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 import { HttpMappingEditComponent } from '../mapping-edit/http-mapping-edit.component';
@@ -714,7 +717,11 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   protected upgradeStageText(task: DeviceUpgradeTask): string {
-    return this.firstText(task.message, this.upgradeStatusText(task.status));
+    return upgradeTaskMessageText(task, this.upgradeStatusText(task.status));
+  }
+
+  protected upgradeErrorText(task: DeviceUpgradeTask): string {
+    return upgradeTaskErrorText(task);
   }
 
   protected upgradeDownloadedText(task: DeviceUpgradeTask): string {
@@ -734,12 +741,12 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
 
   protected upgradeVersionText(task: DeviceUpgradeTask): string {
     const fromVersion = this.firstText(task.fromVersion, task.from_version);
-    const currentVersion = this.firstText(task.currentVersion, task.current_version);
-    if (fromVersion && currentVersion && fromVersion !== currentVersion) {
-      return `${fromVersion} -> ${currentVersion}`;
+    const targetVersion = upgradeTaskTargetVersionText(task);
+    if (fromVersion && targetVersion && fromVersion !== targetVersion) {
+      return `${fromVersion} -> ${targetVersion}`;
     }
-    if (currentVersion) {
-      return `当前 ${currentVersion}`;
+    if (targetVersion) {
+      return `目标 ${targetVersion}`;
     }
     if (fromVersion) {
       return `来自 ${fromVersion}`;

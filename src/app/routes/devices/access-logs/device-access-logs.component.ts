@@ -55,7 +55,7 @@ export class DeviceAccessLogsComponent implements OnInit {
   protected readonly columns: STColumn<HTTPAccessLog>[] = [
     { title: '访问域名', index: 'host', render: 'hostRender', fixed: 'left', width: 240 },
     { title: '方法', index: 'method', type: 'tag', tag: this.methodTag, width: 100 },
-    { title: '路径', index: 'path', render: 'pathRender', width: 300 },
+    { title: '路径', index: 'path', render: 'pathRender', width: 130 },
     { title: '状态码', index: 'statusCode', render: 'statusRender', width: 100 },
     { title: '链路耗时', index: 'durationMs', render: 'latencyRender', width: 230 },
     { title: '流量', index: 'bytesIn', render: 'trafficRender', width: 150 },

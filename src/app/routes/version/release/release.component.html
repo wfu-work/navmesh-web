@@ -136,7 +136,7 @@
           (ngModelChange)="q.page = 1; load()"
         >
           <nz-option nzValue="linux" nzLabel="linux" />
-          <nz-option nzValue="darwin" nzLabel="darwin" />
+          <nz-option nzValue="darwin" nzLabel="macos" />
           <nz-option nzValue="windows" nzLabel="windows" />
         </nz-select>
         <nz-select
@@ -200,8 +200,13 @@
 
       <ng-template st-row="platformRender" let-item>
         <div class="release-platform-cell">
-          <strong>{{ platformOsLabel(item) }}</strong>
-          <span>{{ platformArchLabel(item) }}</span>
+          <span class="release-platform-name">
+            @if (platformIconSrc(item); as iconSrc) {
+              <img [src]="iconSrc" [alt]="platformOsLabel(item)" />
+            }
+            <strong>{{ platformOsLabel(item) }}</strong>
+          </span>
+          <span class="release-platform-arch">{{ platformArchLabel(item) }}</span>
         </div>
       </ng-template>
 

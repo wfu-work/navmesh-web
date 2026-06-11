@@ -306,22 +306,35 @@ export class ReleaseComponent implements OnInit {
 
   protected platformMark(item: Release): string {
     const map: Record<string, string> = {
-      linux: 'LIN',
-      darwin: 'MAC',
-      windows: 'WIN',
-      all: 'ALL',
+      linux: 'linux',
+      darwin: 'macos',
+      macos: 'macos',
+      windows: 'windows',
+      all: 'all',
     };
-    return map[this.platformOs(item)] ?? this.platformOs(item).slice(0, 3).toUpperCase();
+    return map[this.platformOs(item)] ?? this.platformOs(item);
   }
 
   protected platformOsLabel(item: Release): string {
     const map: Record<string, string> = {
-      linux: 'Linux',
-      darwin: 'macOS',
-      windows: 'Windows',
+      linux: 'linux',
+      darwin: 'macos',
+      macos: 'macos',
+      windows: 'windows',
       all: '全部系统',
     };
     return map[this.platformOs(item)] ?? this.platformOs(item);
+  }
+
+  protected platformIconSrc(item: Release): string {
+    const map: Record<string, string> = {
+      linux: 'linux',
+      darwin: 'macos',
+      macos: 'macos',
+      windows: 'windows',
+    };
+    const icon = map[this.platformOs(item)];
+    return icon ? `assets/icons/${icon}.svg` : '';
   }
 
   protected platformArchLabel(item: Release): string {
@@ -335,7 +348,7 @@ export class ReleaseComponent implements OnInit {
 
   protected platformClass(item: Release): string {
     const os = this.platformOs(item);
-    if (['linux', 'darwin', 'windows'].includes(os)) return `release-platform-${os}`;
+    if (['linux', 'darwin', 'macos', 'windows'].includes(os)) return `release-platform-${os}`;
     return 'release-platform-all';
   }
 

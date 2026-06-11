@@ -67,7 +67,7 @@
       </ng-template>
 
       <ng-template st-row="pathRender" let-item>
-        <ellipsis [lines]="1" tooltip>{{ item.path || '-' }}</ellipsis>
+        <ellipsis length="30" tooltip>{{ item.path || '-' }}</ellipsis>
       </ng-template>
 
       <ng-template st-row="statusRender" let-item>

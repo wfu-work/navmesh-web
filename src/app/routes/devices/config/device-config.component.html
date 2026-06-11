@@ -24,7 +24,11 @@
 
   <nz-spin [nzSpinning]="loading">
     @if (device; as item) {
-      <app-metric-summary class="detail-summary-metrics" [items]="summaryItems(item)" />
+      <app-metric-summary
+        class="detail-summary-metrics device-config-summary"
+        [items]="summaryItems(item)"
+        [columns]="5"
+      />
 
       <div class="access-section-grid">
         <nz-card class="card-border access-card" [nzBordered]="false">
@@ -178,8 +182,8 @@
                         }
                       </div>
                     }
-                    @if (task.errorMessage) {
-                      <code class="upgrade-task-error">{{ task.errorMessage }}</code>
+                    @if (upgradeErrorText(task)) {
+                      <code class="upgrade-task-error">{{ upgradeErrorText(task) }}</code>
                     }
                   </div>
                 </article>

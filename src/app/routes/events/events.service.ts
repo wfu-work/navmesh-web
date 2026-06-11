@@ -101,7 +101,6 @@ export function eventSourceText(source: string | undefined): string {
     mapping: '映射',
     session_rejected: '会话拒绝',
     open_tcp_failed: '连接失败',
-    service_log: '服务日志',
     client_upgrade: '客户端升级',
     vpn_restart: 'VPN 重启',
   };
@@ -120,7 +119,6 @@ export function eventSourceColor(source: string | undefined): string {
     mapping: 'geekblue',
     session_rejected: 'gold',
     open_tcp_failed: 'red',
-    service_log: 'blue',
     client_upgrade: 'processing',
     vpn_restart: 'purple',
   };

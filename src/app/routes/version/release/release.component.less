@@ -201,7 +201,7 @@
 
 .release-file-cell {
   display: grid;
-  grid-template-columns: 54px minmax(0, 1fr);
+  grid-template-columns: 64px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
   min-width: 0;
@@ -243,17 +243,22 @@
   display: grid;
   place-items: center;
   align-content: center;
-  width: 48px;
+  width: 58px;
   height: 48px;
   border: 1px solid #d8e5df;
   border-radius: 8px;
   background: #f5f8f7;
 
   strong {
-    font-size: 13px;
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 12px;
     font-weight: 900;
     line-height: 1.2;
     letter-spacing: 0;
+    text-overflow: ellipsis;
+    text-transform: none;
+    white-space: nowrap;
   }
 
   small {
@@ -271,6 +276,12 @@
 }
 
 .release-platform-darwin {
+  border-color: #cbd5e1;
+  color: #334155;
+  background: #f3f6fa;
+}
+
+.release-platform-macos {
   border-color: #cbd5e1;
   color: #334155;
   background: #f3f6fa;
@@ -333,14 +344,33 @@
   gap: 5px;
   min-width: 120px;
 
+  .release-platform-name {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  img {
+    display: block;
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+  }
+
   strong {
+    min-width: 0;
+    overflow: hidden;
     color: #27364a;
     font-size: 13px;
     font-weight: 880;
     line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
-  span {
+  .release-platform-arch {
     width: fit-content;
     padding: 2px 8px;
     border-radius: 999px;

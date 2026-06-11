@@ -25,6 +25,16 @@
   min-width: 0;
 }
 
+:host ::ng-deep .device-config-summary {
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 2px;
+}
+
+:host ::ng-deep .device-config-summary .metric-summary {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
 .detail-card-title > div {
   min-width: 0;
 }
@@ -577,6 +587,10 @@
 }
 
 @media (max-width: 767px) {
+  :host ::ng-deep .device-config-summary .metric-summary {
+    min-width: 860px;
+  }
+
   .device-config-header {
     flex-direction: column;
   }
