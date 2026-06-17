@@ -9,6 +9,7 @@ module.exports = {
   '/dev/': {
     target: 'http://127.0.0.1:3007/api/',
     secure: false,
+    ws: true,
     pathRewrite: {
       '^/dev/': '',
     },
@@ -17,6 +18,7 @@ module.exports = {
   '/api/': {
     target: 'https://navmesh.navfirst.com/api/',
     secure: false,
+    ws: true,
     pathRewrite: {
       '^/api/': '',
     },

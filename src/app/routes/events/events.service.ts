@@ -71,7 +71,7 @@ export function eventDisplayMessage(item: Partial<EventItem>): string {
   const message = firstEventText(item.message);
 
   if (type === 'device_offline' || title.includes('device tunnel offline')) {
-    return '设备隧道已断开，请检查设备网络或 navmesh-client 运行状态。';
+    return message || '设备心跳已超时，请检查设备网络或 navmesh-client 运行状态。';
   }
   if (type === 'disk_usage_high') {
     return message || '设备磁盘使用率已达到告警阈值，请及时清理空间。';

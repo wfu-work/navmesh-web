@@ -12,8 +12,10 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { LayoutDefaultModule } from '@delon/theme/layout-default';
 import { NzIconModule } from 'ng-zorro-antd/icon';
-import { filter, forkJoin } from 'rxjs';
+import { auditTime, filter, forkJoin } from 'rxjs';
 
+import { EventWebSocketService } from '../../../core/net';
+import { Device, DevicesService } from '../../../routes/devices/devices.service';
 import {
   EventItem,
   EventsService,
@@ -49,6 +51,7 @@ import { ThemeColorComponent } from './theme-color';
           [items]="messageItems"
           (itemClick)="openMessage($event)"
           (markAllReadClick)="markMessagesRead($event)"
+          (allEventsClick)="openAllEvents()"
         />
         <header-avatar />
       </div>
@@ -205,6 +208,8 @@ export class BasicHeaderComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly eventsService = inject(EventsService);
+  private readonly eventWebSocketService = inject(EventWebSocketService);
+  private readonly devicesService = inject(DevicesService);
 
   @Output() public readonly collapsClick = new EventEmitter<boolean>();
 
@@ -217,6 +222,11 @@ export class BasicHeaderComponent implements OnInit {
   ngOnInit(): void {
     this.updatePageTitle();
     this.loadMessages();
+    this.eventWebSocketService.connect();
+    this.destroyRef.onDestroy(() => this.eventWebSocketService.disconnect());
+    this.eventWebSocketService.notifications$
+      .pipe(auditTime(300), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.loadMessages());
     this.router.events
       .pipe(
         filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -244,6 +254,10 @@ export class BasicHeaderComponent implements OnInit {
     }
   }
 
+  protected openAllEvents(): void {
+    this.router.navigate(['/events/list']);
+  }
+
   protected markMessagesRead(items: HeaderMessageItem[]): void {
     const guids = items.map((item) => item.eventGuid).filter((guid): guid is string => !!guid);
     if (!guids.length) return;
@@ -264,12 +278,19 @@ export class BasicHeaderComponent implements OnInit {
   }
 
   private loadMessages(): void {
-    this.eventsService
-      .list({ page: 1, size: 5, status: '1' })
+    forkJoin({
+      devices: this.devicesService.list({ page: 1, size: 200 }),
+      events: this.eventsService.list({ page: 1, size: 5, status: '1' }),
+    })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (res) => {
-          this.messageItems = (res.data ?? []).map((item) => this.toMessageItem(item));
+        next: ({ devices, events }) => {
+          const deviceMap = new Map(
+            (devices.data ?? []).map((device) => [device.guid, this.deviceLabel(device)]),
+          );
+          this.messageItems = (events.data ?? []).map((item) =>
+            this.toMessageItem(item, deviceMap),
+          );
         },
         error: () => {
           this.messageItems = [];
@@ -277,18 +298,31 @@ export class BasicHeaderComponent implements OnInit {
       });
   }
 
-  private toMessageItem(item: EventItem): HeaderMessageItem {
+  private toMessageItem(item: EventItem, deviceMap: Map<string, string>): HeaderMessageItem {
     const eventType = this.firstText(item.eventType, item.event_type);
-    const occurredAt = this.firstNumber(item.occurredAt, item.occurred_at, item.createTime, item.create_time);
+    const deviceGuid = this.firstText(item.deviceGuid, item.device_guid);
+    const deviceSncode = this.firstText(item.deviceSncode, item.device_sncode);
+    const occurredAt = this.firstNumber(
+      item.occurredAt,
+      item.occurred_at,
+      item.createTime,
+      item.create_time,
+    );
     return {
       id: item.guid,
       eventGuid: item.guid,
+      deviceGuid,
+      deviceName: this.firstText(deviceSncode, deviceMap.get(deviceGuid), deviceGuid),
       title: eventDisplayTitle({ ...item, eventType }),
       content: eventDisplayMessage({ ...item, eventType }),
       time: new Date(this.normalizeTimestamp(occurredAt) || Date.now()).toISOString(),
       read: !isOpenEventStatus(item.status),
       level: this.messageLevel(item.level),
     };
+  }
+
+  private deviceLabel(device: Device): string {
+    return this.firstText(device.sncode, device.alias, device.name, device.hostname, device.guid);
   }
 
   private messageLevel(level: string | undefined): HeaderMessageItem['level'] {

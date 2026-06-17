@@ -41,13 +41,6 @@ export class ReleaseComponent implements OnInit {
 
   protected readonly rainInstallSimpleCommand = `curl -fsSL ${this.downloadBase}/install-rain.sh | sudo sh`;
 
-  protected readonly rainInstallFullCommand = [
-    `curl -fsSL ${this.downloadBase}/install-rain.sh | sudo sh -s -- \\`,
-    `  --download-base ${this.downloadBase} \\`,
-    '  --release-type rain \\',
-    '  --device-type rain',
-  ].join('\n');
-
   protected readonly rainInstallPaths = [
     '/mnt/navfirst/nav-rain-go',
     '/etc/systemd/system/raind.service',

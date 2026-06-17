@@ -187,7 +187,7 @@
             <nz-form-label nzRequired>设备心跳超时</nz-form-label>
             <nz-form-control nzErrorTip="请输入 Go duration，例如 90s">
               <input nz-input formControlName="device_heartbeat_timeout" placeholder="90s" />
-              <div class="field-note">超过这个时间没有心跳或隧道活动后，设备会被标记为离线。</div>
+              <div class="field-note">超过这个时间没有心跳后，设备会被标记为离线。</div>
             </nz-form-control>
           </nz-form-item>
 
@@ -196,6 +196,14 @@
             <nz-form-control nzErrorTip="请输入 Go duration，例如 30s">
               <input nz-input formControlName="device_offline_check_interval" placeholder="30s" />
               <div class="field-note">后台按这个间隔检查设备在线状态。间隔越短，状态更新越及时。</div>
+            </nz-form-control>
+          </nz-form-item>
+
+          <nz-form-item>
+            <nz-form-label nzRequired>离线事件延迟</nz-form-label>
+            <nz-form-control nzErrorTip="请输入 Go duration，例如 300s">
+              <input nz-input formControlName="device_offline_event_delay" placeholder="300s" />
+              <div class="field-note">设备心跳超过这个时间未更新时，才生成离线事件通知。</div>
             </nz-form-control>
           </nz-form-item>
 

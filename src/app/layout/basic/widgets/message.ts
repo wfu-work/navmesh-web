@@ -19,6 +19,8 @@ type HeaderMessageLevel = 'info' | 'warning' | 'error';
 export interface HeaderMessageItem {
   id: string | number;
   eventGuid?: string;
+  deviceGuid?: string;
+  deviceName?: string;
   title: string;
   content: string;
   time: string;
@@ -95,7 +97,12 @@ export interface HeaderMessageItem {
                 <span class="header-message-item__dot"></span>
                 <div class="header-message-item__body">
                   <div class="header-message-item__row">
-                    <span class="header-message-item__title">{{ item.title }}</span>
+                    <span class="header-message-item__title">
+                      {{ item.title }}
+                      @if (item.deviceName) {
+                        <span class="header-message-item__device">· {{ item.deviceName }}</span>
+                      }
+                    </span>
                     <span class="header-message-item__time">
                       {{ item.time | date: 'MM-dd HH:mm' }}
                     </span>
@@ -110,6 +117,17 @@ export interface HeaderMessageItem {
             <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="emptyText" />
           </div>
         }
+
+        <div class="header-message-panel__footer">
+          <button
+            type="button"
+            class="header-message-panel__all-events"
+            (click)="openAllEvents($event)"
+          >
+            <span>查看全部事件</span>
+            <nz-icon nzType="arrow-right" />
+          </button>
+        </div>
       </div>
     </nz-dropdown-menu>
   `,
@@ -183,7 +201,8 @@ export interface HeaderMessageItem {
 
     :host-context([data-theme='dark']) .header-message-panel__subtitle,
     :host-context([data-theme='dark']) .header-message-item__content,
-    :host-context([data-theme='dark']) .header-message-item__time {
+    :host-context([data-theme='dark']) .header-message-item__time,
+    :host-context([data-theme='dark']) .header-message-item__device {
       color: rgba(255, 255, 255, 0.62);
     }
 
@@ -271,10 +290,16 @@ export interface HeaderMessageItem {
     }
 
     .header-message-item__title {
+      min-width: 0;
       color: #233348;
       font-size: 14px;
       font-weight: 700;
       line-height: 1.4;
+    }
+
+    .header-message-item__device {
+      color: #6e7d91;
+      font-weight: 700;
     }
 
     .header-message-item__time {
@@ -294,6 +319,38 @@ export interface HeaderMessageItem {
 
     .header-message-panel__empty {
       padding: 18px 12px 8px;
+    }
+
+    .header-message-panel__footer {
+      padding: 8px 12px 12px;
+      text-align: center;
+    }
+
+    .header-message-panel__all-events {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 36px;
+      padding: 0 8px;
+      border: 0;
+      color: var(--nm-primary);
+      font-size: 13px;
+      font-weight: 700;
+      background: transparent;
+      cursor: pointer;
+      transition:
+        color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+    .header-message-panel__all-events:hover {
+      color: var(--nm-primary-active);
+      transform: translateY(-1px);
+    }
+
+    :host-context([data-theme='dark']) .header-message-panel__all-events {
+      color: rgba(255, 255, 255, 0.86);
     }
 
     @media (max-width: 767px) {
@@ -321,6 +378,7 @@ export class HeaderMessage {
 
   @Output() readonly itemClick = new EventEmitter<HeaderMessageItem>();
   @Output() readonly markAllReadClick = new EventEmitter<HeaderMessageItem[]>();
+  @Output() readonly allEventsClick = new EventEmitter<void>();
 
   protected readonly messages = signal<HeaderMessageItem[]>([]);
 
@@ -338,6 +396,11 @@ export class HeaderMessage {
     const unreadItems = this.messages().filter((item) => !item.read);
     this.messages.update((list) => list.map((item) => ({ ...item, read: true })));
     this.markAllReadClick.emit(unreadItems);
+  }
+
+  protected openAllEvents(event: MouseEvent): void {
+    event.stopPropagation();
+    this.allEventsClick.emit();
   }
 
   protected handleItemClick(item: HeaderMessageItem): void {

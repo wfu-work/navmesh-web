@@ -155,15 +155,15 @@
 }
 
 :host ::ng-deep .version-tabs .ant-tabs-tab:hover {
-  border-color: #c4ded4;
-  background: #fff;
+  border-color: rgb(var(--nm-primary-rgb) / 24%);
+  background: rgb(var(--nm-primary-rgb) / 6%);
 }
 
 :host ::ng-deep .version-tabs .ant-tabs-tab.ant-tabs-tab-active {
-  border-color: #087a58;
-  background: #0f8f68;
+  border-color: var(--nm-primary-active);
+  background: var(--nm-primary);
   box-shadow:
-    0 12px 24px rgb(15 143 104 / 24%),
+    0 12px 24px rgb(var(--nm-primary-rgb) / 24%),
     inset 0 1px 0 rgb(255 255 255 / 20%);
   transform: translateY(-1px);
 }

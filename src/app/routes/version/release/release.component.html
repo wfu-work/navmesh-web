@@ -47,7 +47,7 @@
             <nz-tag nzColor="cyan">raind.service</nz-tag>
           </div>
           <p>
-            上传并启用北斗降雨水位版本后，可在设备上执行安装命令；简洁版使用默认安装参数，完整版适合复制后调整下载地址或服务参数。
+            上传并启用北斗降雨水位版本后，可在设备上执行安装命令；脚本会自动使用当前服务的下载地址和默认安装参数。
           </p>
         </div>
         <button
@@ -78,23 +78,6 @@
             </button>
           </div>
           <pre class="release-install-command"><code>{{ rainInstallSimpleCommand }}</code></pre>
-        </section>
-
-        <section class="release-install-command-block">
-          <div class="release-install-command-head">
-            <strong>完整版指令</strong>
-            <button
-              type="button"
-              nz-button
-              nzSize="small"
-              [cdkCopyToClipboard]="rainInstallFullCommand"
-              (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event, '完整版指令')"
-            >
-              <nz-icon nzType="copy" />
-              复制
-            </button>
-          </div>
-          <pre class="release-install-command"><code>{{ rainInstallFullCommand }}</code></pre>
         </section>
       </div>
 

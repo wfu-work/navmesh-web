@@ -1,4 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  Component,
+  OnInit,
+  inject,
+} from '@angular/core';
 import { NonNullableFormBuilder, Validators } from '@angular/forms';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -40,6 +46,7 @@ export class SystemSettingsComponent implements OnInit {
     device_register_token: ['', [Validators.required]],
     device_heartbeat_timeout: ['90s', [Validators.required]],
     device_offline_check_interval: ['30s', [Validators.required]],
+    device_offline_event_delay: ['300s', [Validators.required]],
     client_download_base: [''],
     client_upgrade_enabled: [true],
     session_idle_timeout: ['30m', [Validators.required]],
@@ -105,7 +112,10 @@ export class SystemSettingsComponent implements OnInit {
   }
 
   protected updatedAt(): number {
-    return Math.max(...this.settings.map((item) => this.firstNumber(item.updateTime, item.update_time)), 0);
+    return Math.max(
+      ...this.settings.map((item) => this.firstNumber(item.updateTime, item.update_time)),
+      0,
+    );
   }
 
   protected settingCount(): number {
@@ -135,6 +145,7 @@ export class SystemSettingsComponent implements OnInit {
       device_register_token: this.setting('device_register_token', ''),
       device_heartbeat_timeout: this.setting('device_heartbeat_timeout', '90s'),
       device_offline_check_interval: this.setting('device_offline_check_interval', '30s'),
+      device_offline_event_delay: this.setting('device_offline_event_delay', '300s'),
       client_download_base: this.setting('client_download_base', ''),
       client_upgrade_enabled: this.boolSetting('client_upgrade_enabled', true),
       session_idle_timeout: this.setting('session_idle_timeout', '30m'),
