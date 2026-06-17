@@ -39,8 +39,6 @@ export class ReleaseComponent implements OnInit {
   protected activeTabIndex = 0;
   protected activeReleaseType: ReleaseType = 'rain';
 
-  protected readonly rainInstallSimpleCommand = `curl -fsSL ${this.downloadBase}/install-rain.sh | sudo sh`;
-
   protected readonly rainInstallPaths = [
     '/mnt/navfirst/nav-rain-go',
     '/etc/systemd/system/raind.service',
@@ -229,6 +227,18 @@ export class ReleaseComponent implements OnInit {
     if (copied) {
       this.message.success(`${label}已复制`);
     }
+  }
+
+  protected get rainInstallSimpleCommand(): string {
+    return `curl -fsSL ${this.downloadBase}/install-rain.sh | sudo sh`;
+  }
+
+  protected get rainOfflineInstallCommand(): string {
+    return 'sudo ./install-rain.sh --exe-file ./navRainApp --skip-deps';
+  }
+
+  protected get rainInstallScriptHref(): string {
+    return `${this.downloadBase}/install-rain.sh`;
   }
 
   protected currentTab(): (typeof this.releaseTabs)[number] {
