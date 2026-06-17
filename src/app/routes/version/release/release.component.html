@@ -151,6 +151,119 @@
     </nz-card>
   }
 
+  @if (activeReleaseType === 'hipnames') {
+    <nz-card class="card-border release-install-card" [nzBordered]="false">
+      <div class="release-install-head">
+        <div>
+          <div class="release-install-title">
+            <h2>单机版在线安装</h2>
+            <nz-tag nzColor="cyan">在线网络安装</nz-tag>
+          </div>
+          <p>
+            上传并启用单机版版本后，可在设备上执行安装命令；脚本会自动使用当前服务的下载地址和默认安装参数。
+          </p>
+        </div>
+        <button
+          type="button"
+          nz-button
+          nzType="primary"
+          [cdkCopyToClipboard]="hipnamesInstallSimpleCommand"
+          (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event, '单机版在线安装命令')"
+        >
+          <nz-icon nzType="copy" />
+          复制安装命令
+        </button>
+      </div>
+
+      <div class="release-install-commands">
+        <section class="release-install-command-block">
+          <div class="release-install-command-head">
+            <strong>在线安装命令</strong>
+            <button
+              type="button"
+              nz-button
+              nzSize="small"
+              [cdkCopyToClipboard]="hipnamesInstallSimpleCommand"
+              (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event, '单机版在线安装命令')"
+            >
+              <nz-icon nzType="copy" />
+              复制
+            </button>
+          </div>
+          <pre class="release-install-command"><code>{{ hipnamesInstallSimpleCommand }}</code></pre>
+        </section>
+      </div>
+
+      <div class="release-install-meta">
+        @for (path of hipnamesInstallPaths; track path) {
+          <nz-tag>{{ path }}</nz-tag>
+        }
+      </div>
+    </nz-card>
+
+    <nz-card class="card-border release-install-card release-offline-card" [nzBordered]="false">
+      <div class="release-install-head">
+        <div>
+          <div class="release-install-title">
+            <h2>单机版离线安装</h2>
+            <nz-tag nzColor="purple">本地可执行程序</nz-tag>
+          </div>
+          <p>
+            将安装脚本和 navHipnames 拷贝到离线设备同一目录后，执行本地安装命令完成部署。
+          </p>
+        </div>
+        <button
+          type="button"
+          nz-button
+          nzType="primary"
+          [cdkCopyToClipboard]="hipnamesOfflineInstallCommand"
+          (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event, '单机版离线安装命令')"
+        >
+          <nz-icon nzType="copy" />
+          复制安装命令
+        </button>
+      </div>
+
+      <div class="release-install-commands">
+        <section class="release-install-command-block">
+          <div class="release-install-command-head">
+            <strong>本地安装命令</strong>
+            <button
+              type="button"
+              nz-button
+              nzSize="small"
+              [cdkCopyToClipboard]="hipnamesOfflineInstallCommand"
+              (cdkCopyToClipboardCopied)="onCopyRainInstallCommand($event, '单机版离线安装命令')"
+            >
+              <nz-icon nzType="copy" />
+              复制
+            </button>
+          </div>
+          <pre class="release-install-command"><code>{{ hipnamesOfflineInstallCommand }}</code></pre>
+        </section>
+      </div>
+
+      <div class="release-install-meta">
+        <nz-tag class="release-install-file-tag">
+          <span>install-hipnames.sh</span>
+          <a
+            class="release-install-file-download"
+            [href]="hipnamesInstallScriptHref"
+            download="install-hipnames.sh"
+            title="下载 install-hipnames.sh"
+            aria-label="下载 install-hipnames.sh"
+          >
+            <nz-icon nzType="download" />
+          </a>
+        </nz-tag>
+        <nz-tag>navHipnames</nz-tag>
+        @for (path of hipnamesInstallPaths; track path) {
+          <nz-tag>{{ path }}</nz-tag>
+        }
+      </div>
+    </nz-card>
+  }
+
   <nz-card class="card-border release-table-card" [nzBordered]="false">
     <div class="release-toolbar">
       <h2>

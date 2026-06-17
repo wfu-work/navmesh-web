@@ -45,6 +45,12 @@ export class ReleaseComponent implements OnInit {
     'raind',
   ];
 
+  protected readonly hipnamesInstallPaths = [
+    '/mnt/navfirst/nav-hipnames',
+    '/etc/systemd/system/hipnames.service',
+    'hipnames',
+  ];
+
   protected readonly statusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
     0: { text: '禁用', color: 'default' },
@@ -239,6 +245,18 @@ export class ReleaseComponent implements OnInit {
 
   protected get rainInstallScriptHref(): string {
     return `${this.downloadBase}/install-rain.sh`;
+  }
+
+  protected get hipnamesInstallSimpleCommand(): string {
+    return `curl -fsSL ${this.downloadBase}/install-hipnames.sh | sudo sh`;
+  }
+
+  protected get hipnamesOfflineInstallCommand(): string {
+    return 'sudo ./install-hipnames.sh --exe-file ./navHipnames';
+  }
+
+  protected get hipnamesInstallScriptHref(): string {
+    return `${this.downloadBase}/install-hipnames.sh`;
   }
 
   protected currentTab(): (typeof this.releaseTabs)[number] {
