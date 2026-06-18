@@ -11,7 +11,7 @@ import { TitleLabelComponent } from 'src/app/shared/components/title-label/title
 
 import { SessionsService, TunnelSession } from '../../sessions/sessions.service';
 import { TunnelConnection, TunnelsService } from '../../tunnels/tunnels.service';
-import { DeviceStatus, DeviceTrafficDay, DeviceTypeDefault } from '../devices.service';
+import { Device, DeviceStatus, DeviceTrafficDay, DeviceTypeDefault } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
 
 interface TrafficWindowOption {
@@ -209,6 +209,46 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     if (!value) return '-';
     const item = this.types.find((row) => this.typeValue(row) === value);
     return item?.name || this.fallbackTypeName(value);
+  }
+
+  protected displayText(value: string | number | undefined | null): string {
+    const text = `${value ?? ''}`.trim();
+    return text || '-';
+  }
+
+  protected endpoint(host: string | undefined, port: number | undefined): string {
+    const value = this.firstText(host);
+    if (!value) return '-';
+    return port && port > 0 ? `${value}:${port}` : value;
+  }
+
+  protected systemText(item: Device): string {
+    return [item.os, item.osVersion].filter(Boolean).join(' ') || '-';
+  }
+
+  protected kernelText(item: Device): string {
+    return this.firstText(item.kernel, item.kernelVersion, item.kernel_version, '-');
+  }
+
+  protected displayBytes(value: number | undefined): string {
+    return value && value > 0 ? this.formatBytes(value) : '-';
+  }
+
+  protected usageText(used: number | undefined, total: number | undefined): string {
+    if (!total || total <= 0) return '-';
+    return `${this.formatBytes(used || 0)} / ${this.formatBytes(total)}`;
+  }
+
+  protected usagePercent(used: number | undefined, total: number | undefined): number {
+    if (!total || total <= 0) return 0;
+    return Math.min(100, Math.max(0, Math.round(((used || 0) / total) * 100)));
+  }
+
+  protected diskPercent(item: Device): number {
+    if (item.diskUsedPct !== undefined && item.diskUsedPct >= 0) {
+      return Math.min(100, Math.max(0, Math.round(item.diskUsedPct)));
+    }
+    return this.usagePercent(item.diskUsed, item.diskTotal);
   }
 
   private statusTone(status: DeviceStatus | undefined): MetricSummaryTone {

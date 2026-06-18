@@ -1,0 +1,81 @@
+<section class="message-page">
+  <div class="message-header">
+    <title-label title="通知人员" description="维护接收通知的人员信息，可用标签区分离线告警、升级通知和值班团队。" />
+    <button nz-button nzType="primary" (click)="openModal()">
+      <nz-icon nzType="plus" />
+      新增人员
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="message-toolbar">
+      <h2>人员列表</h2>
+      <div class="message-toolbar-actions">
+        <nz-input-wrapper>
+          <nz-icon nzInputPrefix nzType="search" />
+          <input nz-input [(ngModel)]="q.keyword" placeholder="搜索姓名、邮箱或标签" (keydown.enter)="search()" />
+        </nz-input-wrapper>
+        <input nz-input [(ngModel)]="q.tag" placeholder="标签筛选" (keydown.enter)="search()" />
+        <nz-select nzAllowClear nzPlaceHolder="消息类型" [(ngModel)]="q.messageType" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部消息类型" />
+          @for (option of messageTypeOptions; track option.value) {
+            <nz-option [nzValue]="option.value" [nzLabel]="option.label" />
+          }
+        </nz-select>
+        <nz-select nzAllowClear nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option [nzValue]="1" nzLabel="启用" />
+          <nz-option [nzValue]="0" nzLabel="禁用" />
+        </nz-select>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="data"
+      [columns]="columns"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      (change)="tableChange($event)"
+      bordered="false"
+    >
+      <ng-template st-row="nameRender" let-item>
+        <div class="message-main-cell">
+          <strong>{{ item.name }}</strong>
+          <span>{{ item.remark || '通知接收人' }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="emailRender" let-item>
+          <code class="message-code">{{ item.email }}</code>
+      </ng-template>
+
+      <ng-template st-row="messageTypesRender" let-item>
+        @if (messageTypeList(item.messageTypes).length) {
+          <div class="message-tags">
+            @for (messageType of messageTypeList(item.messageTypes); track messageType) {
+              <nz-tag nzColor="blue">{{ messageTypeLabel(messageType) }}</nz-tag>
+            }
+          </div>
+        } @else {
+          <span class="text-grey">-</span>
+        }
+      </ng-template>
+
+      <ng-template st-row="tagsRender" let-item>
+        @if (tagList(item.tags).length) {
+          <div class="message-tags">
+            @for (tag of tagList(item.tags); track tag) {
+              <nz-tag>{{ tag }}</nz-tag>
+            }
+          </div>
+        } @else {
+          <span class="text-grey">-</span>
+        }
+      </ng-template>
+    </st>
+  </nz-card>
+</section>

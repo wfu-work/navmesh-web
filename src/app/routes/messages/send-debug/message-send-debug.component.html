@@ -1,0 +1,26 @@
+<nz-spin [nzSpinning]="loading">
+  <form nz-form [formGroup]="form" class="message-debug-form">
+    <se-container col="1" nzLayout="vertical">
+      <se label="消息模板" required error="请选择消息模板">
+        <nz-select formControlName="templateCode" nzShowSearch nzPlaceHolder="选择要调试的消息模板">
+          @for (template of templates; track template.code) {
+            <nz-option [nzValue]="template.code" [nzLabel]="templateOptionLabel(template)" />
+          }
+        </nz-select>
+      </se>
+
+      <se label="通知人员" required error="请选择通知人员">
+        <nz-select formControlName="recipientGuids" nzMode="multiple" nzShowSearch nzPlaceHolder="选择接收调试邮件的人员">
+          @for (recipient of recipients; track recipient.guid) {
+            <nz-option [nzValue]="recipient.guid" [nzLabel]="recipientOptionLabel(recipient)" />
+          }
+        </nz-select>
+      </se>
+    </se-container>
+
+    <div class="message-debug-note">
+      <strong>调试发送</strong>
+      <span>系统会使用测试变量渲染模板并写入发送记录，发送结果可在当前页面查看。</span>
+    </div>
+  </form>
+</nz-spin>

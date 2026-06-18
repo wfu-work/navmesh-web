@@ -41,6 +41,21 @@ import { SshAliasEditComponent } from '../ssh-alias-edit/ssh-alias-edit.componen
 import { SSHAlias, SSHEntrypoint, SSHService } from '../ssh.service';
 
 type ServiceLogStatus = 'idle' | 'connecting' | 'streaming' | 'error';
+type UpgradeReleaseType = 'navmesh' | 'rain' | 'hipnames';
+
+interface UpgradeSection {
+  releaseType: UpgradeReleaseType;
+  title: string;
+  description: string;
+  message: string;
+}
+
+interface UpgradeTaskPage {
+  data: DeviceUpgradeTask[];
+  total: number;
+  page: number;
+  size: number;
+}
 
 @Component({
   selector: 'app-device-config',
@@ -74,11 +89,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected settings: NavMeshSetting[] = [];
   protected types: DeviceTypeDefault[] = [];
   protected releases: Release[] = [];
-  protected upgradeTasks: DeviceUpgradeTask[] = [];
-  protected upgradeTaskTotal = 0;
-  protected upgradeTaskQuery = { page: 1, size: 8 };
-  protected selectedReleaseGuid = '';
-  protected creatingUpgrade = false;
+  protected selectedReleaseGuids: Partial<Record<UpgradeReleaseType, string>> = {};
+  protected upgradeTaskPages: Partial<Record<UpgradeReleaseType, UpgradeTaskPage>> = {};
+  protected creatingUpgradeType: UpgradeReleaseType | '' = '';
   protected refreshingUpgrades = false;
   protected restartingVPN = false;
   protected serviceLogName = '';
@@ -87,8 +100,8 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected serviceLogOutput = '';
   protected serviceLogError = '';
   protected readonly upgradeTaskPageSizeOptions = [5, 8, 10, 20];
+  private readonly defaultUpgradeTaskPageSize = 8;
   protected readonly serviceLogTailOptions = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
-  protected readonly serviceLogSuggestions = ['navmesh-client.service', 'raind.service', 'hipnames.service'];
 
   protected readonly tokenStatusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -177,11 +190,6 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       releases: this.devicesService
         .releases({ page: 1, size: 100, status: 1 })
         .pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 100 }))),
-      upgrades: this.devicesService
-        .upgradeTasks(this.guid, this.upgradeTaskQuery)
-        .pipe(
-          catchError(() => of({ data: [], total: 0, page: 1, size: this.upgradeTaskQuery.size })),
-        ),
     })
       .pipe(
         finalize(() => {
@@ -199,7 +207,6 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
           types,
           settings,
           releases,
-          upgrades,
         }) => {
           this.device = this.normalizeDevice(detail.device);
           this.tokens = (detail.tokens ?? []).map((token) => this.normalizeToken(token));
@@ -214,38 +221,47 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
           this.types = (types ?? []).map((item) => this.normalizeType(item));
           this.settings = settings ?? [];
           this.releases = releases.data ?? [];
-          this.applyUpgradeTasks(upgrades);
-          this.syncDeviceVersionFromUpgradeTasks();
-          this.selectedReleaseGuid = this.compatibleReleases()[0]?.guid || '';
+          this.syncUpgradeSelections();
           this.serviceLogName ||= this.defaultServiceLogName();
+          this.refreshUpgradeTasks(true);
         },
         error: () => this.message.error('设备配置加载失败'),
       });
   }
 
-  private refreshUpgradeTasks(): void {
-    if (!this.guid || this.refreshingUpgrades) {
+  private refreshUpgradeTasks(force = false): void {
+    if (!this.guid || (this.refreshingUpgrades && !force)) {
+      return;
+    }
+    const sections = this.upgradeSections();
+    if (!sections.length) {
       return;
     }
     this.refreshingUpgrades = true;
-    this.devicesService
-      .upgradeTasks(this.guid, this.upgradeTaskQuery)
+    forkJoin(
+      sections.map((section) => {
+        const query = this.upgradeTaskQuery(section.releaseType);
+        return this.devicesService
+          .upgradeTasks(this.guid, {
+            page: query.page,
+            size: query.size,
+            releaseType: section.releaseType,
+          })
+          .pipe(
+            catchError(() => of(this.pageResultFallback(section.releaseType))),
+          );
+      }),
+    )
       .pipe(
-        catchError(() =>
-          of({
-            data: this.upgradeTasks,
-            total: this.upgradeTaskTotal,
-            page: this.upgradeTaskQuery.page,
-            size: this.upgradeTaskQuery.size,
-          }),
-        ),
         finalize(() => {
           this.refreshingUpgrades = false;
           this.cdr.markForCheck();
         }),
       )
-      .subscribe((upgrades) => {
-        this.applyUpgradeTasks(upgrades);
+      .subscribe((pages) => {
+        sections.forEach((section, index) => {
+          this.applyUpgradeTaskPage(section.releaseType, pages[index]);
+        });
         this.syncDeviceVersionFromUpgradeTasks();
       });
   }
@@ -320,6 +336,15 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     this.serviceLogName = value;
   }
 
+  protected serviceLogSuggestions(): string[] {
+    const names = ['navmesh-client.service'];
+    const deviceService = this.deviceTypeServiceLogName();
+    if (deviceService && !names.includes(deviceService)) {
+      names.push(deviceService);
+    }
+    return names;
+  }
+
   protected startServiceLogStream(): void {
     if (!this.guid) {
       this.message.error('设备标识不存在');
@@ -331,7 +356,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     }
     const serviceName = this.serviceLogName.trim();
     if (!this.serviceLogNamePattern.test(serviceName)) {
-      this.message.warning('请输入有效的 systemd service 名称，例如 raind.service');
+      this.message.warning('请输入有效的 systemd service 名称，例如 navmesh-client.service');
       return;
     }
     this.stopServiceLogStream(false);
@@ -593,45 +618,72 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return this.sshAliases.filter((item) => item.status !== 0).length;
   }
 
-  protected createUpgradeTask(): void {
-    if (!this.guid || !this.selectedReleaseGuid) {
-      this.message.warning('请选择客户端发布版本');
+  protected createUpgradeTask(section: UpgradeSection): void {
+    const releaseGuid = this.selectedReleaseGuids[section.releaseType] || '';
+    if (!this.guid || !releaseGuid) {
+      this.message.warning(`请选择${section.title}发布版本`);
       return;
     }
-    this.creatingUpgrade = true;
+    this.creatingUpgradeType = section.releaseType;
     this.devicesService
       .createUpgradeTask(this.guid, {
-        releaseGuid: this.selectedReleaseGuid,
-        message: '管理端下发客户端升级',
+        releaseGuid,
+        message: section.message,
       })
       .pipe(
         finalize(() => {
-          this.creatingUpgrade = false;
+          this.creatingUpgradeType = '';
           this.cdr.markForCheck();
         }),
       )
       .subscribe({
         next: () => {
           this.message.success('升级任务已下发');
-          this.upgradeTaskQuery = { ...this.upgradeTaskQuery, page: 1 };
-          this.load();
+          this.setUpgradeTaskQuery(section.releaseType, {
+            ...this.upgradeTaskQuery(section.releaseType),
+            page: 1,
+          });
+          this.refreshUpgradeTasks(true);
         },
         error: () => this.message.error('升级任务下发失败'),
       });
   }
 
-  protected compatibleReleases(): Release[] {
+  protected upgradeSections(): UpgradeSection[] {
+    const sections: UpgradeSection[] = [
+      {
+        releaseType: 'navmesh',
+        title: '客户端升级',
+        description: '选择边缘客户端发布版本，下发后客户端会在下一次心跳中执行。',
+        message: '管理端下发客户端升级',
+      },
+    ];
+    const deviceKind = this.deviceUpgradeKind();
+    if (deviceKind === 'rain') {
+      sections.push({
+        releaseType: 'rain',
+        title: '雨量升级',
+        description: '选择雨量应用发布版本，下发后设备端雨量服务会在线替换并重启。',
+        message: '管理端下发雨量应用升级',
+      });
+    }
+    if (deviceKind === 'hipnames') {
+      sections.push({
+        releaseType: 'hipnames',
+        title: '单机版升级',
+        description: '选择单机版解算发布版本，下发后设备端单机版服务会在线替换并重启。',
+        message: '管理端下发单机版应用升级',
+      });
+    }
+    return sections;
+  }
+
+  protected compatibleReleases(releaseType: UpgradeReleaseType): Release[] {
     const os = this.normalizePlatformValue(this.device?.os);
     const arch = this.normalizePlatformValue(this.device?.arch);
-    const deviceType = this.firstText(
-      this.device?.deviceType,
-      this.device?.device_type,
-      this.device?.groupGuid,
-      this.device?.group_guid,
-    );
-    const expectedReleaseType = this.upgradeReleaseTypeForDevice();
+    const deviceType = this.deviceTypeKey();
     return this.releases.filter((item) => {
-      const releaseType = this.normalizeReleaseType(
+      const itemReleaseType = this.normalizeReleaseType(
         this.firstText(item.releaseType, item.release_type, 'navmesh'),
       );
       const releaseDeviceType = this.firstText(item.deviceType, item.device_type, 'all');
@@ -643,7 +695,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         !deviceType ||
         releaseDeviceType === deviceType;
       return (
-        releaseType === expectedReleaseType &&
+        itemReleaseType === releaseType &&
         matchDeviceType &&
         (!os || !releaseOS || releaseOS === 'all' || os === releaseOS) &&
         (!arch || !releaseArch || releaseArch === 'all' || arch === releaseArch)
@@ -661,16 +713,20 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return map[value] ?? value;
   }
 
-  private upgradeReleaseTypeForDevice(): string {
-    const deviceType = this.firstText(
+  private deviceUpgradeKind(): Exclude<UpgradeReleaseType, 'navmesh'> | '' {
+    const deviceType = this.deviceTypeKey().toLowerCase();
+    if (deviceType.includes('rain')) return 'rain';
+    if (deviceType.includes('hipnames') || deviceType.includes('standalone')) return 'hipnames';
+    return '';
+  }
+
+  private deviceTypeKey(): string {
+    return this.firstText(
       this.device?.deviceType,
       this.device?.device_type,
       this.device?.groupGuid,
       this.device?.group_guid,
-    ).toLowerCase();
-    if (deviceType.includes('rain')) return 'rain';
-    if (deviceType.includes('hipnames') || deviceType.includes('standalone')) return 'hipnames';
-    return 'navmesh';
+    );
   }
 
   protected devicePlatformText(): string {
@@ -679,11 +735,40 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return [os || '未知系统', arch || '未知架构'].join('/');
   }
 
-  protected releaseNotFoundText(): string {
+  protected upgradeSectionMetaText(section: UpgradeSection): string {
+    if (section.releaseType === 'navmesh') {
+      return `当前客户端版本：${this.device?.clientVersion || '-'} · 当前平台：${this.devicePlatformText()}`;
+    }
+    return `当前平台：${this.devicePlatformText()}`;
+  }
+
+  protected releaseNotFoundText(section: UpgradeSection): string {
     if (!this.releases.length) {
       return '暂无已启用的发布包';
     }
-    return `暂无匹配 ${this.devicePlatformText()} 的发布包`;
+    return `暂无匹配 ${this.devicePlatformText()} 的${section.title}发布包`;
+  }
+
+  protected isCreatingUpgrade(section: UpgradeSection): boolean {
+    return this.creatingUpgradeType === section.releaseType;
+  }
+
+  protected upgradeTasksForType(releaseType: UpgradeReleaseType): DeviceUpgradeTask[] {
+    return this.upgradeTaskPage(releaseType).data;
+  }
+
+  protected upgradeTaskTotal(releaseType: UpgradeReleaseType): number {
+    return this.upgradeTaskPage(releaseType).total;
+  }
+
+  protected upgradeTaskRangeText(section: UpgradeSection): string {
+    const page = this.upgradeTaskPage(section.releaseType);
+    if (!page.total) {
+      return '暂无记录';
+    }
+    const start = (page.page - 1) * page.size + 1;
+    const end = Math.min(page.total, start + page.data.length - 1);
+    return `第 ${start}-${end} 条 / 共 ${page.total} 条`;
   }
 
   protected upgradeStatusText(status: number): string {
@@ -709,7 +794,9 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   protected hasActiveUpgradeTask(): boolean {
-    return this.upgradeTasks.some((task) => task.status === 1 || task.status === 2);
+    return Object.values(this.upgradeTaskPages).some((page) =>
+      (page?.data ?? []).some((task) => task.status === 1 || task.status === 2),
+    );
   }
 
   protected showUpgradeProgress(task: DeviceUpgradeTask): boolean {
@@ -770,24 +857,17 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     return '';
   }
 
-  protected upgradeTaskRangeText(): string {
-    if (!this.upgradeTaskTotal) {
-      return '暂无记录';
-    }
-    const start = (this.upgradeTaskQuery.page - 1) * this.upgradeTaskQuery.size + 1;
-    const end = Math.min(this.upgradeTaskTotal, start + this.upgradeTasks.length - 1);
-    return `第 ${start}-${end} 条 / 共 ${this.upgradeTaskTotal} 条`;
-  }
-
-  protected onUpgradeTaskPageChange(page: number): void {
-    if (page === this.upgradeTaskQuery.page) return;
-    this.upgradeTaskQuery = { ...this.upgradeTaskQuery, page };
+  protected onUpgradeTaskPageChange(section: UpgradeSection, page: number): void {
+    const query = this.upgradeTaskQuery(section.releaseType);
+    if (page === query.page) return;
+    this.setUpgradeTaskQuery(section.releaseType, { ...query, page });
     this.refreshUpgradeTasks();
   }
 
-  protected onUpgradeTaskSizeChange(size: number): void {
-    if (size === this.upgradeTaskQuery.size) return;
-    this.upgradeTaskQuery = { page: 1, size };
+  protected onUpgradeTaskSizeChange(section: UpgradeSection, size: number): void {
+    const query = this.upgradeTaskQuery(section.releaseType);
+    if (size === query.size) return;
+    this.setUpgradeTaskQuery(section.releaseType, { page: 1, size });
     this.refreshUpgradeTasks();
   }
 
@@ -920,6 +1000,10 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       ...item,
       deviceGuid: this.firstText(item.deviceGuid, item.device_guid),
       releaseGuid: this.firstText(item.releaseGuid, item.release_guid),
+      releaseType: this.normalizeReleaseType(
+        this.firstText(item.releaseType, item.release_type, 'navmesh'),
+      ),
+      deviceType: this.firstText(item.deviceType, item.device_type),
       fileName: this.firstText(item.fileName, item.file_name),
       downloadUrl: this.firstText(item.downloadUrl, item.download_url),
       fromVersion: this.firstText(item.fromVersion, item.from_version),
@@ -934,23 +1018,79 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     };
   }
 
-  private applyUpgradeTasks(upgrades: {
-    data?: DeviceUpgradeTask[];
-    total?: number;
-    page?: number;
-    size?: number;
-  }): void {
-    this.upgradeTasks = (upgrades.data ?? []).map((task) => this.normalizeUpgradeTask(task));
-    this.upgradeTaskTotal = this.firstNumber(upgrades.total, this.upgradeTasks.length);
-    this.upgradeTaskQuery = {
-      page: this.firstNumber(upgrades.page, this.upgradeTaskQuery.page) || 1,
-      size:
-        this.firstNumber(upgrades.size, this.upgradeTaskQuery.size) || this.upgradeTaskQuery.size,
+  private applyUpgradeTaskPage(
+    releaseType: UpgradeReleaseType,
+    upgrades: {
+      data?: DeviceUpgradeTask[];
+      total?: number;
+      page?: number;
+      size?: number;
+    },
+  ): void {
+    const current = this.upgradeTaskPage(releaseType);
+    const data = (upgrades.data ?? []).map((task) => this.normalizeUpgradeTask(task));
+    this.upgradeTaskPages = {
+      ...this.upgradeTaskPages,
+      [releaseType]: {
+        data,
+        total: this.firstNumber(upgrades.total, data.length),
+        page: this.firstNumber(upgrades.page, current.page) || 1,
+        size: this.firstNumber(upgrades.size, current.size) || current.size,
+      },
     };
   }
 
+  private upgradeTaskPage(releaseType: UpgradeReleaseType): UpgradeTaskPage {
+    return (
+      this.upgradeTaskPages[releaseType] ?? {
+        data: [],
+        total: 0,
+        page: 1,
+        size: this.defaultUpgradeTaskPageSize,
+      }
+    );
+  }
+
+  protected upgradeTaskQuery(releaseType: UpgradeReleaseType): { page: number; size: number } {
+    const page = this.upgradeTaskPage(releaseType);
+    return { page: page.page, size: page.size };
+  }
+
+  private setUpgradeTaskQuery(
+    releaseType: UpgradeReleaseType,
+    query: { page: number; size: number },
+  ): void {
+    const page = this.upgradeTaskPage(releaseType);
+    this.upgradeTaskPages = {
+      ...this.upgradeTaskPages,
+      [releaseType]: {
+        ...page,
+        page: query.page,
+        size: query.size,
+      },
+    };
+  }
+
+  private syncUpgradeSelections(): void {
+    const visibleTypes = new Set(this.upgradeSections().map((section) => section.releaseType));
+    const nextSelections: Partial<Record<UpgradeReleaseType, string>> = {};
+    for (const section of this.upgradeSections()) {
+      const releases = this.compatibleReleases(section.releaseType);
+      const selected = this.selectedReleaseGuids[section.releaseType] || '';
+      nextSelections[section.releaseType] = releases.some((item) => item.guid === selected)
+        ? selected
+        : releases[0]?.guid || '';
+    }
+    this.selectedReleaseGuids = nextSelections;
+    this.upgradeTaskPages = Object.fromEntries(
+      Object.entries(this.upgradeTaskPages).filter(([releaseType]) =>
+        visibleTypes.has(releaseType as UpgradeReleaseType),
+      ),
+    ) as Partial<Record<UpgradeReleaseType, UpgradeTaskPage>>;
+  }
+
   private syncDeviceVersionFromUpgradeTasks(): void {
-    const latestSuccess = this.upgradeTasks.find(
+    const latestSuccess = this.upgradeTasksForType('navmesh').find(
       (task) => task.status === 3 && this.firstText(task.currentVersion),
     );
     if (
@@ -960,6 +1100,21 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
     ) {
       this.device = { ...this.device, clientVersion: latestSuccess.currentVersion };
     }
+  }
+
+  private pageResultFallback(releaseType: UpgradeReleaseType): {
+    data?: DeviceUpgradeTask[];
+    total?: number;
+    page?: number;
+    size?: number;
+  } {
+    const page = this.upgradeTaskPage(releaseType);
+    return {
+      data: page.data,
+      total: page.total,
+      page: page.page,
+      size: page.size,
+    };
   }
 
   private normalizeType(item: DeviceTypeDefault): DeviceTypeDefault {
@@ -972,13 +1127,15 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   private normalizePlatformValue(value: string | undefined): string {
-    const normalized = String(value || '')
+    const raw = String(value || '')
       .trim()
       .toLowerCase();
+    const normalized = raw.replace(/[_/-]+/g, ' ').replace(/\s+/g, ' ').trim();
     const aliases: Record<string, string> = {
       aarch64: 'arm64',
       armv8: 'arm64',
       x86_64: 'amd64',
+      'x86 64': 'amd64',
       x64: 'amd64',
       macos: 'darwin',
       osx: 'darwin',
@@ -996,7 +1153,20 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       suse: 'linux',
       alpine: 'linux',
     };
-    return aliases[normalized] || normalized;
+    if (aliases[raw]) return aliases[raw];
+    if (aliases[normalized]) return aliases[normalized];
+    for (const [alias, mapped] of Object.entries(aliases)) {
+      if (this.platformNameContainsToken(normalized, alias)) {
+        return mapped;
+      }
+    }
+    return normalized;
+  }
+
+  private platformNameContainsToken(value: string, token: string): boolean {
+    if (!value || !token) return false;
+    if (value === token) return true;
+    return value.split(/\s+/).some((field) => field === token);
   }
 
   private normalizeToken(token: DeviceToken): DeviceToken {
@@ -1082,13 +1252,19 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   private defaultServiceLogName(): string {
+    return this.serviceLogSuggestions()[0] || 'navmesh-client.service';
+  }
+
+  private deviceTypeServiceLogName(): string {
     const deviceType = this.firstText(
       this.device?.deviceType,
       this.device?.device_type,
+      this.device?.groupGuid,
+      this.device?.group_guid,
     ).toLowerCase();
     if (deviceType.includes('rain')) return 'raind.service';
     if (deviceType.includes('hipnames') || deviceType.includes('standalone')) return 'hipnames.service';
-    return 'navmesh-client.service';
+    return '';
   }
 
   private firstPositiveNumber(...values: Array<number | undefined | null>): number {

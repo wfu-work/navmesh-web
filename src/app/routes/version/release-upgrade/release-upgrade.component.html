@@ -48,7 +48,7 @@
                 (nzCheckedChange)="toggleDevice(item, $event)"
               ></label>
               <div class="candidate-main">
-                <strong>{{ deviceName(item) }}</strong>
+                <strong>{{ candidateDeviceTitle(item) }}</strong>
                 <span>{{ deviceMeta(item) }}</span>
                 @if (hasActiveUpgrade(item)) {
                   <code>{{ activeTaskText(item) }} · {{ item.activeTaskGuid || item.active_task_guid }}</code>

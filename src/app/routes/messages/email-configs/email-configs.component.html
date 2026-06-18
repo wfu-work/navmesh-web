@@ -1,0 +1,200 @@
+<section class="message-page">
+  <div class="message-header">
+    <title-label title="邮件配置" description="维护 SMTP 服务器、发件邮箱和默认发件配置，供消息通知发送邮件使用。" />
+    <button nz-button nzType="primary" (click)="openModal()">
+      <nz-icon nzType="plus" />
+      新增配置
+    </button>
+  </div>
+
+  <nz-card class="card-border message-filter-card" [nzBordered]="false">
+    <div class="message-email-toolbar">
+      <div class="message-status-summary" aria-label="邮件配置统计">
+        <article class="message-status-summary-item">
+          <span>全部配置</span>
+          <strong>{{ totalCount }}</strong>
+        </article>
+        <article class="message-status-summary-item summary-enabled">
+          <span>当前页启用</span>
+          <strong>{{ enabledCount() }}</strong>
+        </article>
+        <article class="message-status-summary-item summary-default">
+          <span>默认配置</span>
+          <strong>{{ defaultCount() }}</strong>
+        </article>
+      </div>
+
+      <div class="message-email-filter-actions">
+        <nz-select
+          nzAllowClear
+          nzPlaceHolder="全部状态"
+          [(ngModel)]="q.status"
+          (ngModelChange)="search()"
+          class="message-filter-status"
+        >
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option [nzValue]="1" nzLabel="启用" />
+          <nz-option [nzValue]="0" nzLabel="禁用" />
+        </nz-select>
+        <nz-input-wrapper class="message-filter-search">
+          <nz-icon nzInputPrefix nzType="search" />
+          <input nz-input [(ngModel)]="q.keyword" placeholder="搜索名称、服务器或发件邮箱" (keydown.enter)="search()" />
+        </nz-input-wrapper>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
+      </div>
+    </div>
+  </nz-card>
+
+  <nz-spin [nzSpinning]="loading">
+    <div class="message-email-card-grid">
+      @for (item of data; track trackByGuid($index, item)) {
+        <nz-card
+          class="message-email-card {{ cardStateClass(item) }}"
+          [nzBordered]="false"
+          [nzActions]="[editAction, defaultAction, disableAction, deleteAction]"
+        >
+          <div class="message-email-card-main">
+            <div class="message-email-card-copy">
+              <div class="message-email-card-title">
+                <div class="message-email-badge">
+                  <nz-icon nzType="mail" />
+                </div>
+                <div class="message-email-title-text">
+                  <strong>{{ item.name }}</strong>
+                  <span>{{ item.remark || 'SMTP 发件配置' }}</span>
+                </div>
+              </div>
+
+              <dl class="message-email-card-meta">
+                <div>
+                  <dt>SMTP</dt>
+                  <dd [title]="item.host + ':' + item.port">{{ item.host }}:{{ item.port }}</dd>
+                </div>
+                <div>
+                  <dt>账号</dt>
+                  <dd [title]="item.username || '-'">{{ item.username || '-' }}</dd>
+                </div>
+                <div>
+                  <dt>发件邮箱</dt>
+                  <dd [title]="sender(item)">{{ sender(item) }}</dd>
+                </div>
+                <div>
+                  <dt>发件名称</dt>
+                  <dd [title]="senderName(item)">{{ senderName(item) }}</dd>
+                </div>
+                <div>
+                  <dt>加密方式</dt>
+                  <dd>{{ encryptionText(item.encryption) }}</dd>
+                </div>
+                <div>
+                  <dt>更新时间</dt>
+                  <dd>
+                    {{ item.updateTime ? (item.updateTime | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            <div class="message-email-card-side">
+              <nz-tag [nzColor]="statusColor(item.status)">{{ statusText(item.status) }}</nz-tag>
+              @if (isDefault(item)) {
+                <nz-tag nzColor="green">默认</nz-tag>
+              }
+              <div class="message-email-illustration">
+                <nz-icon nzType="cloud-server" />
+              </div>
+            </div>
+          </div>
+
+          <ng-template #editAction>
+            <button nz-button nzType="link" (click)="edit(item)">
+              <nz-icon nzType="edit" />
+              编辑
+            </button>
+          </ng-template>
+
+          <ng-template #defaultAction>
+            @if (isDefault(item)) {
+              <button nz-button nzType="link" disabled>
+                <nz-icon nzType="check-circle" />
+                默认
+              </button>
+            } @else {
+              <button
+                nz-button
+                nzType="link"
+                nz-popconfirm
+                nzPopconfirmTitle="设为默认发件配置？"
+                (nzOnConfirm)="setDefault(item)"
+              >
+                <nz-icon nzType="check-circle" />
+                设默认
+              </button>
+            }
+          </ng-template>
+
+          <ng-template #disableAction>
+            @if (item.status === 0) {
+              <button nz-button nzType="link" disabled>
+                <nz-icon nzType="stop" />
+                已禁用
+              </button>
+            } @else {
+              <button
+                nz-button
+                nzType="link"
+                nz-popconfirm
+                nzPopconfirmTitle="禁用后不会用于发送邮件，确认继续？"
+                (nzOnConfirm)="disable(item)"
+              >
+                <nz-icon nzType="stop" />
+                禁用
+              </button>
+            }
+          </ng-template>
+
+          <ng-template #deleteAction>
+            <button
+              nz-button
+              nzType="link"
+              nzDanger
+              nz-popconfirm
+              nzPopconfirmTitle="删除后无法恢复，确认删除该邮件配置？"
+              (nzOnConfirm)="delete(item)"
+            >
+              <nz-icon nzType="delete" />
+              删除
+            </button>
+          </ng-template>
+        </nz-card>
+      } @empty {
+        <nz-card class="card-border message-email-empty" [nzBordered]="false">
+          <nz-icon nzType="inbox" />
+          <h2>暂无邮件配置</h2>
+          <p>新增 SMTP 配置后，事件通知就可以使用默认发件邮箱发送邮件。</p>
+        </nz-card>
+      }
+    </div>
+  </nz-spin>
+
+  @if (totalCount > 0) {
+    <div class="message-email-pagination">
+      <nz-pagination
+        [nzPageIndex]="q.page"
+        [nzPageSize]="q.size"
+        [nzTotal]="totalCount"
+        [nzShowSizeChanger]="true"
+        [nzShowQuickJumper]="true"
+        [nzPageSizeOptions]="[9, 12, 24, 48]"
+        [nzShowTotal]="emailTotalTemplate"
+        (nzPageIndexChange)="pageChange($event)"
+        (nzPageSizeChange)="pageSizeChange($event)"
+      />
+    </div>
+  }
+
+  <ng-template #emailTotalTemplate let-total let-range="range">
+    第 {{ range[0] }}-{{ range[1] }} 条，共 {{ total }} 条配置
+  </ng-template>
+</section>

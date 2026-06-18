@@ -1,0 +1,116 @@
+<section class="message-page">
+  <div class="message-header">
+    <title-label
+      title="发送记录"
+      description="查看邮件发送结果、SMTP 接收服务器受理状态和失败原因，失败记录最多可重试 3 次。"
+    />
+    <div class="message-header-actions">
+      <button nz-button nzType="primary" [disabled]="debugModalOpen || debugSubmitting" [nzLoading]="debugSubmitting" (click)="openDebugModal()">
+        <nz-icon nzType="bug" />
+        调试发送
+      </button>
+      <button nz-button (click)="load()">
+        <nz-icon nzType="reload" />
+        刷新
+      </button>
+    </div>
+  </div>
+
+  <nz-card class="card-border message-filter-card" [nzBordered]="false">
+    <div class="message-email-toolbar">
+      <div class="message-status-summary" aria-label="邮件发送统计">
+        <article class="message-status-summary-item">
+          <span>全部记录</span>
+          <strong>{{ totalCount }}</strong>
+        </article>
+        <article class="message-status-summary-item summary-enabled">
+          <span>当前页成功</span>
+          <strong>{{ successCount() }}</strong>
+        </article>
+        <article class="message-status-summary-item summary-failed">
+          <span>当前页失败</span>
+          <strong>{{ failedCount() }}</strong>
+        </article>
+        <article class="message-status-summary-item summary-retry">
+          <span>可重试</span>
+          <strong>{{ retryableCount() }}</strong>
+        </article>
+      </div>
+
+      <div class="message-email-filter-actions">
+        <nz-select
+          nzAllowClear
+          nzPlaceHolder="发送状态"
+          [(ngModel)]="q.sendStatus"
+          (ngModelChange)="search()"
+          class="message-filter-status"
+        >
+          <nz-option nzValue="" nzLabel="全部发送状态" />
+          <nz-option nzValue="success" nzLabel="成功" />
+          <nz-option nzValue="failed" nzLabel="失败" />
+          <nz-option nzValue="pending" nzLabel="发送中" />
+        </nz-select>
+        <nz-select
+          nzAllowClear
+          nzPlaceHolder="接收状态"
+          [(ngModel)]="q.receiveStatus"
+          (ngModelChange)="search()"
+          class="message-filter-status"
+        >
+          <nz-option nzValue="" nzLabel="全部接收状态" />
+          <nz-option nzValue="accepted" nzLabel="已受理" />
+          <nz-option nzValue="failed" nzLabel="失败" />
+          <nz-option nzValue="waiting" nzLabel="等待" />
+        </nz-select>
+        <input
+          nz-input
+          [(ngModel)]="q.templateCode"
+          placeholder="模板编码"
+          class="message-filter-code"
+          (keydown.enter)="search()"
+        />
+        <nz-input-wrapper class="message-filter-search">
+          <nz-icon nzInputPrefix nzType="search" />
+          <input nz-input [(ngModel)]="q.keyword" placeholder="搜索主题、收件人或错误" (keydown.enter)="search()" />
+        </nz-input-wrapper>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
+      </div>
+    </div>
+  </nz-card>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <st
+      [data]="data"
+      [columns]="columns"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      (change)="tableChange($event)"
+      bordered="false"
+      [scroll]="{ x: '1420px' }"
+      class="message-template-table"
+    >
+      <ng-template st-row="mailRender" let-item>
+        <div class="message-main-cell">
+          <strong>{{ item.subject || '-' }}</strong>
+          <span [title]="templateText(item)">{{ templateText(item) }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="recipientRender" let-item>
+        <div class="message-main-cell">
+          <strong>{{ item.recipientName || item.recipientEmail || '-' }}</strong>
+          <span [title]="item.recipientEmail">{{ item.recipientEmail || '-' }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="errorRender" let-item>
+        <span class="message-error-text" [nzTooltipTitle]="item.errorMessage || '无错误信息'" nz-tooltip>
+          {{ item.errorMessage || '-' }}
+        </span>
+      </ng-template>
+    </st>
+  </nz-card>
+</section>

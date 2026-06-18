@@ -101,6 +101,204 @@
   margin-bottom: 18px;
 }
 
+.device-report-card {
+  margin-bottom: 18px;
+}
+
+.device-report-card-title {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin-bottom: 20px;
+
+  nz-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    color: var(--nm-primary);
+    font-size: 19px;
+    background: rgb(var(--nm-primary-rgb) / 10%);
+  }
+
+  div {
+    min-width: 0;
+  }
+
+  h2 {
+    margin: 0;
+    color: #223047;
+    font-size: 18px;
+    font-weight: 850;
+  }
+
+  p {
+    margin: 3px 0 0;
+    color: #728196;
+    font-size: 13px;
+    font-weight: 650;
+  }
+}
+
+.device-report-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 0.86fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.device-report-section {
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid #e3ece8;
+  border-radius: 8px;
+  background: #fbfdfc;
+
+  h3 {
+    margin: 0 0 14px;
+    color: #223047;
+    font-size: 14px;
+    font-weight: 850;
+  }
+}
+
+.device-report-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+
+  div {
+    display: grid;
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 12px;
+    align-items: baseline;
+    min-width: 0;
+  }
+
+  dt,
+  dd {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  dt {
+    color: #7a8798;
+    font-size: 12px;
+    font-weight: 760;
+  }
+
+  dd {
+    color: #2d3f55;
+    font-size: 13px;
+    font-weight: 820;
+  }
+}
+
+.device-report-resource-section {
+  background: linear-gradient(180deg, #fbfdfc 0%, #f5faf8 100%);
+}
+
+.device-resource-grid {
+  display: grid;
+  gap: 12px;
+
+  article {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #dfeae6;
+    border-radius: 8px;
+    background: #fff;
+  }
+
+  article > div:first-child {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  span {
+    color: #64748b;
+    font-size: 12px;
+    font-weight: 780;
+  }
+
+  strong {
+    color: var(--nm-primary);
+    font-size: 18px;
+    font-weight: 900;
+  }
+
+  p,
+  small {
+    display: block;
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  p {
+    margin-top: 9px;
+    color: #2d3f55;
+    font-size: 13px;
+    font-weight: 820;
+  }
+
+  small {
+    margin-top: 4px;
+    color: #7a8798;
+    font-size: 12px;
+    font-weight: 720;
+  }
+}
+
+.device-resource-bar {
+  height: 8px;
+  margin-top: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #edf2f0;
+
+  i {
+    display: block;
+    width: 0;
+    height: 100%;
+    border-radius: inherit;
+    background: linear-gradient(90deg, var(--nm-primary) 0%, #16a085 100%);
+  }
+}
+
+:host-context([data-theme='dark']) .device-report-card-title h2,
+:host-context([data-theme='dark']) .device-report-section h3,
+:host-context([data-theme='dark']) .device-report-list dd,
+:host-context([data-theme='dark']) .device-resource-grid p {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+:host-context([data-theme='dark']) .device-report-card-title p,
+:host-context([data-theme='dark']) .device-report-list dt,
+:host-context([data-theme='dark']) .device-resource-grid span,
+:host-context([data-theme='dark']) .device-resource-grid small {
+  color: rgba(255, 255, 255, 0.58);
+}
+
+:host-context([data-theme='dark']) .device-report-section {
+  border-color: rgb(255 255 255 / 8%);
+  background: rgb(255 255 255 / 4%);
+}
+
+:host-context([data-theme='dark']) .device-resource-grid article {
+  border-color: rgb(255 255 255 / 8%);
+  background: rgb(17 24 39 / 72%);
+}
+
 .traffic-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -560,6 +758,10 @@
   .profile-meta-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .device-report-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 767px) {
@@ -587,4 +789,10 @@
     width: 100%;
   }
 
+  .device-report-list {
+    div {
+      grid-template-columns: 1fr;
+      gap: 4px;
+    }
+  }
 }

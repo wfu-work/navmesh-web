@@ -66,9 +66,28 @@ import { NzMenuModule } from 'ng-zorro-antd/menu';
             <i nz-icon nzType="alert"></i>
             <span>事件中心</span>
           </li>
-          <li nz-menu-item nzMatchRouter routerLink="/version/release">
-            <i nz-icon nzType="cloud-upload"></i>
-            <span>版本管理</span>
+          <li nz-submenu nzTitle="版本管理" nzIcon="cloud-upload">
+            <ul>
+              <li nz-menu-item nzMatchRouter routerLink="/version/release">
+                <span>版本列表</span>
+              </li>
+            </ul>
+          </li>
+          <li nz-submenu nzTitle="消息管理" nzIcon="mail">
+            <ul>
+              <li nz-menu-item nzMatchRouter routerLink="/messages/email-configs">
+                <span>邮件配置</span>
+              </li>
+              <li nz-menu-item nzMatchRouter routerLink="/messages/templates">
+                <span>消息模板</span>
+              </li>
+              <li nz-menu-item nzMatchRouter routerLink="/messages/recipients">
+                <span>通知人员</span>
+              </li>
+              <li nz-menu-item nzMatchRouter routerLink="/messages/send-records">
+                <span>发送记录</span>
+              </li>
+            </ul>
           </li>
           <li nz-submenu nzTitle="系统设置" nzIcon="setting">
             <ul>

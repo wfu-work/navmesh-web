@@ -321,6 +321,10 @@ export interface DeviceUpgradeTask {
   device_guid?: string;
   releaseGuid: string;
   release_guid?: string;
+  releaseType?: string;
+  release_type?: string;
+  deviceType?: string;
+  device_type?: string;
   version?: string;
   os: string;
   arch: string;
@@ -625,7 +629,10 @@ export class DevicesService {
     return this.http.delete<boolean>(`/releases/${guid}/delete`);
   }
 
-  upgradeTasks(deviceGuid: string, params?: { page?: number; size?: number; status?: string | number }): Observable<PageEntity<DeviceUpgradeTask>> {
+  upgradeTasks(
+    deviceGuid: string,
+    params?: { page?: number; size?: number; status?: string | number; releaseType?: string },
+  ): Observable<PageEntity<DeviceUpgradeTask>> {
     return this.http.get<PageEntity<DeviceUpgradeTask>>(`/devices/${deviceGuid}/upgrades`, {
       params: this.cleanParams(params),
     });

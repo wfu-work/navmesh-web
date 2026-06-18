@@ -49,6 +49,7 @@ export const WEBSOCKET_MESSAGE_EVENT_TYPES = new Set([
   'disk_usage_high',
   'client_upgrade',
   'vpn_restart',
+  'release_published',
 ]);
 
 export function isWebSocketMessageEvent(item: Partial<EventItem>): boolean {
@@ -69,6 +70,7 @@ export function eventDisplayTitle(item: Partial<EventItem>): string {
   if (type === 'open_tcp_failed' && key.includes('ssh')) return 'SSH 目标连接失败';
   if (type === 'open_tcp_failed' && key.includes('http')) return 'HTTP 映射连接失败';
   if (type === 'open_tcp_failed') return '目标服务连接失败';
+  if (type === 'release_published') return '新版本发布';
   if (type === 'auth') return '认证事件';
   if (type === 'mapping') return 'HTTP 映射事件';
   if (type === 'tunnel') return '隧道连接事件';
@@ -115,6 +117,7 @@ export function eventSourceText(source: string | undefined): string {
     open_tcp_failed: '连接失败',
     client_upgrade: '客户端升级',
     vpn_restart: 'VPN 重启',
+    release_published: '版本发布',
   };
   return map[String(source)] ?? (source || '-');
 }
@@ -133,6 +136,7 @@ export function eventSourceColor(source: string | undefined): string {
     open_tcp_failed: 'red',
     client_upgrade: 'processing',
     vpn_restart: 'purple',
+    release_published: 'cyan',
   };
   return map[String(source)] ?? 'default';
 }

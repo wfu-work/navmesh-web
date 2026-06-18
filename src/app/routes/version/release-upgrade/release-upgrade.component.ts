@@ -293,9 +293,13 @@ export class ReleaseUpgradeComponent implements OnInit {
     return deviceGuid || '-';
   }
 
+  protected candidateDeviceTitle(item: DeviceUpgradeCandidate): string {
+    return this.firstText(item.hostname, item.sncode, item.guid);
+  }
+
   protected deviceMeta(item: DeviceUpgradeCandidate): string {
     return [
-      this.firstText(item.hostname, item.sncode, item.guid),
+      this.firstText(item.alias, item.name, '-'),
       this.firstText(item.os, 'unknown') + '/' + this.firstText(item.arch, 'unknown'),
       this.firstText(item.clientVersion, item.client_version, '未上报版本'),
     ].join(' · ');

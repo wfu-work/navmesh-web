@@ -1,0 +1,34 @@
+<form nz-form [formGroup]="form" class="message-edit-form">
+  <se-container col="2" nzLayout="vertical">
+    <se label="姓名" required error="请输入姓名">
+      <input nz-input formControlName="name" placeholder="例如 运维值班" />
+    </se>
+
+    <se label="邮箱" required error="请输入有效邮箱">
+      <input nz-input formControlName="email" placeholder="ops@example.com" />
+    </se>
+
+    <se label="消息类型" required error="请选择消息类型" col="1">
+      <nz-select formControlName="messageTypes" nzMode="multiple" nzPlaceHolder="选择该人员接收的消息类型">
+        @for (option of messageTypeOptions; track option.value) {
+          <nz-option [nzValue]="option.value" [nzLabel]="option.label" />
+        }
+      </nz-select>
+    </se>
+
+    <se label="标签" col="1">
+      <input nz-input formControlName="tags" placeholder="多个标签用逗号分隔，例如 offline,upgrade" />
+    </se>
+
+    <se label="备注" col="1">
+      <textarea nz-input rows="3" formControlName="remark" placeholder="记录通知范围、值班时间或团队信息"></textarea>
+    </se>
+
+    <se label="状态">
+      <nz-select formControlName="status">
+        <nz-option [nzValue]="1" nzLabel="启用" />
+        <nz-option [nzValue]="0" nzLabel="禁用" />
+      </nz-select>
+    </se>
+  </se-container>
+</form>

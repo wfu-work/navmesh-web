@@ -1,0 +1,67 @@
+<section class="message-page">
+  <div class="message-header">
+    <title-label title="消息模板" description="维护邮件通知主题和正文模板，用变量组合出设备离线、版本发布等通知内容。" />
+    <button nz-button nzType="primary" (click)="create()">
+      <nz-icon nzType="plus" />
+      新增模板
+    </button>
+  </div>
+
+  <nz-card class="card-border" [nzBordered]="false">
+    <div class="message-toolbar">
+      <h2>模板列表</h2>
+      <div class="message-toolbar-actions">
+        <nz-input-wrapper>
+          <nz-icon nzInputPrefix nzType="search" />
+          <input nz-input [(ngModel)]="q.keyword" placeholder="搜索通知场景、编码或主题" (keydown.enter)="search()" />
+        </nz-input-wrapper>
+        <nz-select nzAllowClear nzPlaceHolder="渠道" [(ngModel)]="q.channel" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部渠道" />
+          <nz-option nzValue="email" nzLabel="邮件" />
+        </nz-select>
+        <nz-select nzAllowClear nzPlaceHolder="状态" [(ngModel)]="q.status" (ngModelChange)="search()">
+          <nz-option nzValue="" nzLabel="全部状态" />
+          <nz-option [nzValue]="1" nzLabel="启用" />
+          <nz-option [nzValue]="0" nzLabel="禁用" />
+        </nz-select>
+        <button nz-button nzType="primary" (click)="search()">查询</button>
+        <button nz-button (click)="reset()">重置</button>
+      </div>
+    </div>
+
+    <st
+      [data]="data"
+      [columns]="columns"
+      [loading]="loading"
+      [pi]="q.page"
+      [ps]="q.size"
+      [total]="totalCount"
+      (change)="tableChange($event)"
+      bordered="false"
+      [scroll]="{ x: '1450px' }"
+      class="message-template-table"
+    >
+      <ng-template st-row="nameRender" let-item>
+        <div class="message-main-cell">
+          <strong>{{ item.name }}</strong>
+          <span>{{ item.description || '邮件内容模板' }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="codeRender" let-item>
+        <code class="message-code">{{ item.code }}</code>
+      </ng-template>
+
+      <ng-template st-row="subjectRender" let-item>
+        <div class="message-template-cell">
+          <strong>{{ item.subject }}</strong>
+          <span [nzTooltipTitle]="item.content" nz-tooltip>{{ preview(item.content) }}</span>
+        </div>
+      </ng-template>
+
+      <ng-template st-row="channelRender" let-item>
+        <nz-tag nzColor="blue">{{ item.channel || 'email' }}</nz-tag>
+      </ng-template>
+    </st>
+  </nz-card>
+</section>

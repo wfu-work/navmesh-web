@@ -79,12 +79,12 @@ export class EventListComponent implements OnInit {
 
   protected readonly columns: STColumn<EventRow>[] = [
     { title: '事件', index: 'title', render: 'titleRender', fixed: 'left', width: 280 },
+    { title: '发生时间', index: 'occurredAt', render: 'timeRender', width: 180 },
     { title: '等级', index: 'level', type: 'tag', tag: this.levelTag, width: 100 },
     { title: '来源', index: 'source', render: 'sourceRender', width: 140 },
     { title: '设备', index: 'deviceName', width: 120, default: '-' },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 110 },
     { title: '消息', index: 'message', render: 'messageRender', width: 360 },
-    { title: '发生时间', index: 'occurredAt', render: 'timeRender', width: 180 },
     { title: '关闭时间', index: 'closedAt', render: 'timeRender', width: 180 },
     {
       title: '操作',
@@ -215,9 +215,21 @@ export class EventListComponent implements OnInit {
   protected summaryItems(): MetricSummaryItem[] {
     return [
       { label: '本页未处理', value: this.openCount(), tone: this.openCount() ? 'danger' : 'muted' },
-      { label: '本页已处理', value: this.ackedCount(), tone: this.ackedCount() ? 'warning' : 'muted' },
-      { label: '本页已关闭', value: this.closedCount(), tone: this.closedCount() ? 'success' : 'muted' },
-      { label: '本页严重', value: this.severeCount(), tone: this.severeCount() ? 'danger' : 'muted' },
+      {
+        label: '本页已处理',
+        value: this.ackedCount(),
+        tone: this.ackedCount() ? 'warning' : 'muted',
+      },
+      {
+        label: '本页已关闭',
+        value: this.closedCount(),
+        tone: this.closedCount() ? 'success' : 'muted',
+      },
+      {
+        label: '本页严重',
+        value: this.severeCount(),
+        tone: this.severeCount() ? 'danger' : 'muted',
+      },
     ];
   }
 
@@ -268,7 +280,9 @@ export class EventListComponent implements OnInit {
   }
 
   private toRows(items: EventItem[]): EventRow[] {
-    const deviceMap = new Map(this.devices.map((device) => [device.guid, this.deviceLabel(device)]));
+    const deviceMap = new Map(
+      this.devices.map((device) => [device.guid, this.deviceLabel(device)]),
+    );
     return items.map((item) => {
       const eventType = this.firstText(item.eventType, item.event_type);
       const deviceGuid = this.firstText(item.deviceGuid, item.device_guid);
@@ -284,7 +298,12 @@ export class EventListComponent implements OnInit {
         title,
         message: eventDisplayMessage({ ...item, eventType, title }),
         payload: this.firstText(item.payload, item.payload_json),
-        occurredAt: this.firstNumber(item.occurredAt, item.occurred_at, item.createTime, item.create_time),
+        occurredAt: this.firstNumber(
+          item.occurredAt,
+          item.occurred_at,
+          item.createTime,
+          item.create_time,
+        ),
         closedAt: this.firstNumber(item.closedAt, item.closed_at),
         createTime: this.firstNumber(item.createTime, item.create_time),
         updateTime: this.firstNumber(item.updateTime, item.update_time),

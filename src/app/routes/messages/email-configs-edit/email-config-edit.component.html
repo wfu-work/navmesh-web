@@ -1,0 +1,54 @@
+<form nz-form [formGroup]="form" class="message-edit-form">
+  <se-container col="2" nzLayout="vertical">
+    <se label="配置名称" required error="请输入配置名称">
+      <input nz-input formControlName="name" placeholder="例如 默认邮件服务器" />
+    </se>
+
+    <se label="状态">
+      <nz-select formControlName="status">
+        <nz-option [nzValue]="1" nzLabel="启用" />
+        <nz-option [nzValue]="0" nzLabel="禁用" />
+      </nz-select>
+    </se>
+
+    <se label="SMTP 服务器" required error="请输入 SMTP 服务器">
+      <input nz-input formControlName="host" placeholder="smtp.example.com" />
+    </se>
+
+    <se label="端口" required error="请输入有效端口">
+      <nz-input-number class="w-100" formControlName="port" [nzMin]="1" [nzMax]="65535" />
+    </se>
+
+    <se label="账号">
+      <input nz-input formControlName="username" autocomplete="off" placeholder="SMTP 登录账号" />
+    </se>
+
+    <se label="密码或授权码">
+      <input nz-input type="password" formControlName="password" autocomplete="new-password" placeholder="留空则不修改已有密码" />
+    </se>
+
+    <se label="发件邮箱" required error="请输入有效邮箱">
+      <input nz-input formControlName="fromEmail" placeholder="notice@example.com" />
+    </se>
+
+    <se label="发件名称">
+      <input nz-input formControlName="fromName" placeholder="NavMesh" />
+    </se>
+
+    <se label="加密方式">
+      <nz-select formControlName="encryption">
+        <nz-option nzValue="ssl" nzLabel="SSL/TLS" />
+        <nz-option nzValue="starttls" nzLabel="STARTTLS" />
+        <nz-option nzValue="none" nzLabel="无加密" />
+      </nz-select>
+    </se>
+
+    <se label="默认配置">
+      <label nz-checkbox formControlName="isDefault">作为默认发件配置</label>
+    </se>
+
+    <se label="备注" col="1">
+      <textarea nz-input rows="3" formControlName="remark" placeholder="记录用途、供应商或证书说明"></textarea>
+    </se>
+  </se-container>
+</form>
