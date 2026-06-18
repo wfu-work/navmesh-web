@@ -44,6 +44,18 @@ export interface EventItem {
   update_time?: number;
 }
 
+export const WEBSOCKET_MESSAGE_EVENT_TYPES = new Set([
+  'device_offline',
+  'disk_usage_high',
+  'client_upgrade',
+  'vpn_restart',
+]);
+
+export function isWebSocketMessageEvent(item: Partial<EventItem>): boolean {
+  const type = firstEventText(item.eventType, item.event_type, item.source).toLowerCase();
+  return WEBSOCKET_MESSAGE_EVENT_TYPES.has(type);
+}
+
 export function eventDisplayTitle(item: Partial<EventItem>): string {
   const type = firstEventText(item.eventType, item.event_type, item.source).toLowerCase();
   const title = firstEventText(item.title).toLowerCase();

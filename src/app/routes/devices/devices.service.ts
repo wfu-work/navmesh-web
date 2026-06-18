@@ -17,6 +17,7 @@ export interface DeviceQuery {
 export interface DeviceStatsQuery {
   keyword?: string;
   content?: string;
+  status?: string;
   type?: string;
   groupGuid?: string;
   tag?: string;
@@ -28,6 +29,54 @@ export interface DeviceStats {
   online: number;
   offline: number;
   disabled: number;
+}
+
+export interface DeviceTrafficQuery {
+  deviceGuid?: string;
+  iface?: string;
+  from?: string;
+  to?: string;
+  days?: number;
+}
+
+export interface DeviceTrafficSummary {
+  rxBytes: number;
+  rx_bytes?: number;
+  txBytes: number;
+  tx_bytes?: number;
+  totalBytes: number;
+  total_bytes?: number;
+}
+
+export interface DeviceTrafficDay {
+  id: number;
+  deviceGuid: string;
+  device_guid?: string;
+  iface: string;
+  day: string;
+  rxBytes: number;
+  rx_bytes?: number;
+  txBytes: number;
+  tx_bytes?: number;
+  totalBytes: number;
+  total_bytes?: number;
+  sampleCount: number;
+  sample_count?: number;
+  resetCount: number;
+  reset_count?: number;
+  firstSeenTime: number;
+  first_seen_time?: number;
+  lastSeenTime: number;
+  last_seen_time?: number;
+  createTime: number;
+  create_time?: number;
+  updateTime: number;
+  update_time?: number;
+}
+
+export interface DeviceTrafficDailyResult {
+  items: DeviceTrafficDay[];
+  summary: DeviceTrafficSummary;
 }
 
 export interface DeviceVPNRestartCommand {
@@ -359,6 +408,9 @@ function upgradeDisplayText(value: string): string {
   if (key === 'rain upgrade only supports linux hosts') {
     return '北斗降雨升级仅支持 Linux 主机';
   }
+  if (key === 'hipnames upgrade only supports linux hosts') {
+    return '单机版解算升级仅支持 Linux 主机';
+  }
   if (key.startsWith('systemctl not found')) {
     return `未找到 systemctl，${text}`;
   }
@@ -467,6 +519,18 @@ export class DevicesService {
 
   stats(params?: DeviceStatsQuery): Observable<DeviceStats> {
     return this.http.get<DeviceStats>('/devices/stats', { params: { ...params } });
+  }
+
+  trafficDaily(params?: DeviceTrafficQuery): Observable<DeviceTrafficDailyResult> {
+    return this.http.get<DeviceTrafficDailyResult>('/devices/traffic/daily', {
+      params: this.cleanParams(params),
+    });
+  }
+
+  deviceTrafficDaily(guid: string, params?: DeviceTrafficQuery): Observable<DeviceTrafficDailyResult> {
+    return this.http.get<DeviceTrafficDailyResult>(`/devices/${guid}/traffic/daily`, {
+      params: this.cleanParams(params),
+    });
   }
 
   get(guid: string): Observable<DeviceDetail> {

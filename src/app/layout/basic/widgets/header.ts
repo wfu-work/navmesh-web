@@ -12,15 +12,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { LayoutDefaultModule } from '@delon/theme/layout-default';
 import { NzIconModule } from 'ng-zorro-antd/icon';
+import { NzNotificationService } from 'ng-zorro-antd/notification';
 import { auditTime, filter, forkJoin } from 'rxjs';
 
 import { EventWebSocketService } from '../../../core/net';
+import type { EventNotification } from '../../../core/net';
 import { Device, DevicesService } from '../../../routes/devices/devices.service';
 import {
   EventItem,
   EventsService,
   eventDisplayMessage,
   eventDisplayTitle,
+  isWebSocketMessageEvent,
   isOpenEventStatus,
 } from '../../../routes/events/events.service';
 import { AvatarComponent } from './avatar';
@@ -210,6 +213,8 @@ export class BasicHeaderComponent implements OnInit {
   private readonly eventsService = inject(EventsService);
   private readonly eventWebSocketService = inject(EventWebSocketService);
   private readonly devicesService = inject(DevicesService);
+  private readonly notification = inject(NzNotificationService);
+  private readonly notifiedEventGuids = new Set<string>();
 
   @Output() public readonly collapsClick = new EventEmitter<boolean>();
 
@@ -224,6 +229,9 @@ export class BasicHeaderComponent implements OnInit {
     this.loadMessages();
     this.eventWebSocketService.connect();
     this.destroyRef.onDestroy(() => this.eventWebSocketService.disconnect());
+    this.eventWebSocketService.notifications$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((notification) => this.handleEventNotification(notification));
     this.eventWebSocketService.notifications$
       .pipe(auditTime(300), takeUntilDestroyed(this.destroyRef))
       .subscribe(() => this.loadMessages());
@@ -321,6 +329,32 @@ export class BasicHeaderComponent implements OnInit {
     };
   }
 
+  private handleEventNotification(notification: EventNotification): void {
+    if (notification.type !== 'event.created' || !notification.data) return;
+    const item = notification.data as Partial<EventItem>;
+    if (!isWebSocketMessageEvent(item)) return;
+    if (item.guid && this.notifiedEventGuids.has(item.guid)) return;
+    if (item.guid) {
+      if (this.notifiedEventGuids.size > 200) this.notifiedEventGuids.clear();
+      this.notifiedEventGuids.add(item.guid);
+    }
+
+    const title = eventDisplayTitle(item);
+    const message = eventDisplayMessage(item);
+    const options = { nzDuration: this.notificationDuration(item.level) };
+    switch (this.messageLevel(item.level)) {
+      case 'error':
+        this.notification.error(title, message, options);
+        break;
+      case 'warning':
+        this.notification.warning(title, message, options);
+        break;
+      default:
+        this.notification.info(title, message, options);
+        break;
+    }
+  }
+
   private deviceLabel(device: Device): string {
     return this.firstText(device.sncode, device.alias, device.name, device.hostname, device.guid);
   }
@@ -330,6 +364,10 @@ export class BasicHeaderComponent implements OnInit {
     if (['critical', 'error', 'high'].includes(value)) return 'error';
     if (['warn', 'warning', 'medium'].includes(value)) return 'warning';
     return 'info';
+  }
+
+  private notificationDuration(level: string | undefined): number {
+    return this.messageLevel(level) === 'error' ? 0 : 5000;
   }
 
   private normalizeTimestamp(time: number): number {

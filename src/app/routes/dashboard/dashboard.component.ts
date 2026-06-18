@@ -5,7 +5,7 @@ import { finalize, forkJoin } from 'rxjs';
 import { PanelComponent } from 'src/app/shared/components/panel/panel.component';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
-import { Device, DevicesService } from '../devices/devices.service';
+import { Device, DeviceTrafficDay, DevicesService } from '../devices/devices.service';
 import { HTTPAccessLog, HttpAccessService, PortMapping } from '../devices/http-access.service';
 import { EventItem, EventsService, isOpenEventStatus } from '../events/events.service';
 import { DashboardActiveRulesComponent } from './widgets/active-rules';
@@ -48,12 +48,12 @@ export class DashboardComponent implements OnInit {
   protected mappings: PortMapping[] = [];
   protected events: EventItem[] = [];
   protected accessLogs: HTTPAccessLog[] = [];
-  protected trafficWindow = '24h';
+  protected trafficDays: DeviceTrafficDay[] = [];
+  protected trafficWindow = '7d';
   protected readonly trafficWindowOptions: TrafficWindowOption[] = [
-    { value: '1h', label: '过去 1 小时', hours: 1 },
-    { value: '6h', label: '过去 6 小时', hours: 6 },
-    { value: '24h', label: '过去 24 小时', hours: 24 },
-    { value: '7d', label: '过去 7 天', hours: 24 * 7 },
+    { value: '1d', label: '今日', days: 1 },
+    { value: '7d', label: '近 7 天', days: 7 },
+    { value: '30d', label: '近 30 天', days: 30 },
   ];
   ngOnInit(): void {
     this.load();
@@ -66,6 +66,7 @@ export class DashboardComponent implements OnInit {
       mappings: this.httpAccessService.list({ page: 1, size: 500 }),
       events: this.eventsService.list({ page: 1, size: 100 }),
       accessLogs: this.httpAccessService.accessLogs({ page: 1, size: 1000 }),
+      trafficDaily: this.devicesService.trafficDaily({ days: 30 }),
     })
       .pipe(
         finalize(() => {
@@ -74,11 +75,12 @@ export class DashboardComponent implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ devices, mappings, events, accessLogs }) => {
+        next: ({ devices, mappings, events, accessLogs, trafficDaily }) => {
           this.devices = devices.data ?? [];
           this.mappings = mappings.data ?? [];
           this.events = events.data ?? [];
           this.accessLogs = accessLogs.data ?? [];
+          this.trafficDays = (trafficDaily.items ?? []).map((item) => this.normalizeTrafficDay(item));
         },
         error: () => this.message.error('工作台数据加载失败'),
       });
@@ -101,10 +103,10 @@ export class DashboardComponent implements OnInit {
   }
 
   protected trafficSummary(): TrafficSummary {
-    return this.filteredAccessLogs().reduce(
+    return this.filteredTrafficDays().reduce(
       (summary, item) => {
-        summary.inbound += this.bytesIn(item);
-        summary.outbound += this.bytesOut(item);
+        summary.inbound += this.trafficRX(item);
+        summary.outbound += this.trafficTX(item);
         summary.total = summary.inbound + summary.outbound;
         return summary;
       },
@@ -113,29 +115,22 @@ export class DashboardComponent implements OnInit {
   }
 
   protected trafficDistribution(): TrafficDistributionBucket[] {
-    const bucketCount = 8;
+    const windowOption = this.selectedTrafficWindow();
+    const bucketCount = windowOption.days;
+    const today = this.startOfLocalDay(Date.now());
+    const start = today - (bucketCount - 1) * this.dayMs();
     const buckets = Array.from({ length: bucketCount }, (_, index) => ({
-      label: '',
+      label: this.formatDayLabel(start + index * this.dayMs(), bucketCount),
       inbound: 0,
       outbound: 0,
       index,
     }));
-    const now = Date.now();
-    const windowOption = this.selectedTrafficWindow();
-    const windowMs = windowOption.hours * 60 * 60 * 1000;
-    const bucketMs = windowMs / bucketCount;
 
-    buckets.forEach((bucket) => {
-      const time = now - windowMs + bucket.index * bucketMs;
-      bucket.label = this.formatBucketLabel(time, windowOption.hours);
-    });
-
-    this.filteredAccessLogs(now, windowMs).forEach((item) => {
-      const time = this.logTime(item);
-      const age = now - time;
-      const index = Math.min(bucketCount - 1, Math.floor((windowMs - age) / bucketMs));
-      buckets[index].inbound += this.bytesIn(item);
-      buckets[index].outbound += this.bytesOut(item);
+    this.filteredTrafficDays().forEach((item) => {
+      const index = Math.round((this.dayTime(item.day) - start) / this.dayMs());
+      if (index < 0 || index >= buckets.length) return;
+      buckets[index].inbound += this.trafficRX(item);
+      buckets[index].outbound += this.trafficTX(item);
     });
 
     return buckets;
@@ -177,11 +172,11 @@ export class DashboardComponent implements OnInit {
         tone: openEvents > 0 ? 'warning' : 'success',
       },
       {
-        title: '流量观察',
+        title: '4G 流量',
         content:
           traffic.total > 0
-            ? `${this.trafficWindowLabel()}累计 ${this.formatBytes(traffic.total)}，入站 ${this.formatBytes(traffic.inbound)}，出站 ${this.formatBytes(traffic.outbound)}。`
-            : `${this.trafficWindowLabel()}暂未统计到访问流量，若设备已开放服务，请确认映射域名和访问入口。`,
+            ? `${this.trafficWindowLabel()}累计 ${this.formatBytes(traffic.total)}，接收 ${this.formatBytes(traffic.inbound)}，发送 ${this.formatBytes(traffic.outbound)}。`
+            : `${this.trafficWindowLabel()}暂未统计到 4G 卡流量，请确认客户端版本已支持网卡采集并能识别蜂窝网卡。`,
         tone: traffic.total > 0 ? 'neutral' : 'warning',
       },
     ];
@@ -195,10 +190,14 @@ export class DashboardComponent implements OnInit {
     return `${(value / 1024 / 1024 / 1024).toFixed(1)} GB`;
   }
 
-  private filteredAccessLogs(now = Date.now(), windowMs = this.selectedTrafficWindow().hours * 60 * 60 * 1000): HTTPAccessLog[] {
-    return this.accessLogs.filter((item) => {
-      const age = now - this.logTime(item);
-      return age >= 0 && age <= windowMs;
+  private filteredTrafficDays(): DeviceTrafficDay[] {
+    const option = this.selectedTrafficWindow();
+    const today = this.startOfLocalDay(Date.now());
+    const start = today - (option.days - 1) * this.dayMs();
+    const end = today + this.dayMs();
+    return this.trafficDays.filter((item) => {
+      const time = this.dayTime(item.day);
+      return time >= start && time < end;
     });
   }
 
@@ -210,24 +209,47 @@ export class DashboardComponent implements OnInit {
     return Number(item.statusCode ?? item.status_code ?? 0);
   }
 
-  private logTime(item: HTTPAccessLog): number {
-    const time = Number(item.createTime ?? item.create_time ?? 0);
-    return time > 0 && time < 1000000000000 ? time * 1000 : time;
+  private normalizeTrafficDay(item: DeviceTrafficDay): DeviceTrafficDay {
+    return {
+      ...item,
+      deviceGuid: item.deviceGuid ?? item.device_guid ?? '',
+      rxBytes: Number(item.rxBytes ?? item.rx_bytes ?? 0),
+      txBytes: Number(item.txBytes ?? item.tx_bytes ?? 0),
+      totalBytes: Number(item.totalBytes ?? item.total_bytes ?? 0),
+      sampleCount: Number(item.sampleCount ?? item.sample_count ?? 0),
+      resetCount: Number(item.resetCount ?? item.reset_count ?? 0),
+      firstSeenTime: Number(item.firstSeenTime ?? item.first_seen_time ?? 0),
+      lastSeenTime: Number(item.lastSeenTime ?? item.last_seen_time ?? 0),
+      createTime: Number(item.createTime ?? item.create_time ?? 0),
+      updateTime: Number(item.updateTime ?? item.update_time ?? 0),
+    };
   }
 
-  private bytesIn(item: HTTPAccessLog): number {
-    return Number(item.bytesIn ?? item.bytes_in ?? 0);
+  private trafficRX(item: DeviceTrafficDay): number {
+    return Number(item.rxBytes ?? item.rx_bytes ?? 0);
   }
 
-  private bytesOut(item: HTTPAccessLog): number {
-    return Number(item.bytesOut ?? item.bytes_out ?? 0);
+  private trafficTX(item: DeviceTrafficDay): number {
+    return Number(item.txBytes ?? item.tx_bytes ?? 0);
   }
 
-  private formatBucketLabel(time: number, hours: number): string {
+  private dayTime(day: string): number {
+    const [year, month, date] = day.split('-').map((item) => Number(item));
+    if (!year || !month || !date) return 0;
+    return new Date(year, month - 1, date).getTime();
+  }
+
+  private startOfLocalDay(time: number): number {
     const date = new Date(time);
-    if (hours > 24) {
-      return `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    }
-    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  }
+
+  private dayMs(): number {
+    return 24 * 60 * 60 * 1000;
+  }
+
+  private formatDayLabel(time: number, dayCount: number): string {
+    const date = new Date(time);
+    return dayCount === 1 ? '今日' : `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 }

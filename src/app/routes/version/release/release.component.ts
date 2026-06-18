@@ -226,7 +226,7 @@ export class ReleaseComponent implements OnInit {
     const releaseType = this.normalizeReleaseType(
       this.firstText(item.releaseType, item.release_type, this.activeReleaseType),
     );
-    return item.status === 1 && (releaseType === 'navmesh' || releaseType === 'rain');
+    return item.status === 1 && (releaseType === 'navmesh' || releaseType === 'rain' || releaseType === 'hipnames');
   }
 
   protected onCopyRainInstallCommand(copied: boolean, label = 'raind在线安装命令'): void {

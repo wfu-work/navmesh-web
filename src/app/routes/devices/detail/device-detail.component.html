@@ -77,8 +77,8 @@
         <nz-card class="card-border traffic-card" [nzBordered]="false">
           <div class="detail-card-title">
             <div>
-              <h2>流量统计</h2>
-              <p>基于 {{ trafficWindowLabel() }} 的隧道会话和 HTTP 访问日志汇总入站、出站、峰值和错误请求。</p>
+              <h2>4G 卡流量</h2>
+              <p>基于客户端心跳上报的物理网卡计数器，按天汇总接收、发送、峰值和计数器重置。</p>
             </div>
             <nz-select
               class="traffic-window-select"
@@ -92,11 +92,11 @@
           </div>
           <div class="traffic-stats">
             <article>
-              <span>入站</span>
+              <span>接收</span>
               <strong>{{ formatBytes(inboundTraffic()) }}</strong>
             </article>
             <article>
-              <span>出站</span>
+              <span>发送</span>
               <strong>{{ formatBytes(outboundTraffic()) }}</strong>
             </article>
             <article>
@@ -104,8 +104,8 @@
               <strong>{{ formatBytes(trafficTotal()) }}</strong>
             </article>
             <article>
-              <span>错误请求</span>
-              <strong>{{ errorLogCount() }}</strong>
+              <span>计数重置</span>
+              <strong>{{ trafficResetCount() }}</strong>
             </article>
             <article>
               <span>统计记录</span>
@@ -118,8 +118,8 @@
           </div>
           <div class="traffic-chart-head">
             <div class="traffic-legend">
-              <span class="traffic-legend-in">入站</span>
-              <span class="traffic-legend-out">出站</span>
+              <span class="traffic-legend-in">接收</span>
+              <span class="traffic-legend-out">发送</span>
             </div>
             <span>{{ trafficWindowLabel() }}</span>
           </div>
@@ -142,8 +142,8 @@
                   <span>{{ bar.label }}</span>
                   <div class="traffic-tooltip">
                     <strong>{{ bar.label }}</strong>
-                    <span>入站 {{ formatBytes(bar.inbound) }}</span>
-                    <span>出站 {{ formatBytes(bar.outbound) }}</span>
+                    <span>接收 {{ formatBytes(bar.inbound) }}</span>
+                    <span>发送 {{ formatBytes(bar.outbound) }}</span>
                     <span>合计 {{ formatBytes(bar.total) }}</span>
                     <span>记录 {{ bar.count }} 条</span>
                   </div>

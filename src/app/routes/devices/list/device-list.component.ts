@@ -370,9 +370,10 @@ export class DeviceListComponent implements OnInit {
     this.searchCache.setCache<DeviceListQuery>(DEVICE_LIST_SEARCH_CACHE_KEY, { ...this.q });
   }
 
-  private statsQuery(): Omit<DeviceListQuery, 'page' | 'size' | 'status'> {
+  private statsQuery(): Omit<DeviceListQuery, 'page' | 'size'> {
     return {
       content: this.q.content,
+      status: this.q.status,
       type: this.q.type,
     };
   }

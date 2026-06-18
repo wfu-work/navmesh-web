@@ -11,14 +11,13 @@ import { TitleLabelComponent } from 'src/app/shared/components/title-label/title
 
 import { SessionsService, TunnelSession } from '../../sessions/sessions.service';
 import { TunnelConnection, TunnelsService } from '../../tunnels/tunnels.service';
-import { DeviceStatus, DeviceTypeDefault } from '../devices.service';
+import { DeviceStatus, DeviceTrafficDay, DeviceTypeDefault } from '../devices.service';
 import { DevicePageBase } from '../device-page-base';
-import { HTTPAccessLog, HttpAccessService } from '../http-access.service';
 
 interface TrafficWindowOption {
   label: string;
   value: string;
-  duration: number;
+  days: number;
   buckets: number;
 }
 
@@ -46,21 +45,19 @@ interface TrafficPoint {
   imports: [...SHARED_IMPORTS, TitleLabelComponent, NzEmptyModule, MetricSummaryComponent],
 })
 export class DeviceDetailComponent extends DevicePageBase implements OnInit {
-  private readonly httpAccessService = inject(HttpAccessService);
   private readonly sessionsService = inject(SessionsService);
   private readonly tunnelsService = inject(TunnelsService);
 
   protected sessions: TunnelSession[] = [];
-  protected accessLogs: HTTPAccessLog[] = [];
+  protected trafficDays: DeviceTrafficDay[] = [];
   protected connections: TunnelConnection[] = [];
   protected types: DeviceTypeDefault[] = [];
-  protected trafficWindow = '24h';
+  protected trafficWindow = '7d';
 
   protected readonly trafficWindowOptions: TrafficWindowOption[] = [
-    { label: '过去 1 小时', value: '1h', duration: 60 * 60 * 1000, buckets: 6 },
-    { label: '过去 6 小时', value: '6h', duration: 6 * 60 * 60 * 1000, buckets: 6 },
-    { label: '过去 24 小时', value: '24h', duration: 24 * 60 * 60 * 1000, buckets: 8 },
-    { label: '过去 7 天', value: '7d', duration: 7 * 24 * 60 * 60 * 1000, buckets: 7 },
+    { label: '今日', value: '1d', days: 1, buckets: 1 },
+    { label: '近 7 天', value: '7d', days: 7, buckets: 7 },
+    { label: '近 30 天', value: '30d', days: 30, buckets: 30 },
   ];
 
   ngOnInit(): void {
@@ -77,7 +74,7 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     forkJoin({
       detail: this.devicesService.get(this.guid),
       sessions: this.sessionsService.list({ page: 1, size: 100, deviceGuid: this.guid }),
-      accessLogs: this.httpAccessService.accessLogs({ page: 1, size: 100, deviceGuid: this.guid }),
+      trafficDaily: this.devicesService.deviceTrafficDaily(this.guid, { days: 30 }),
       connections: this.tunnelsService.connections(),
       types: this.devicesService.typeDefaults().pipe(catchError(() => of([] as DeviceTypeDefault[]))),
     })
@@ -88,11 +85,11 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
         }),
       )
       .subscribe({
-        next: ({ detail, sessions, accessLogs, connections, types }) => {
+        next: ({ detail, sessions, trafficDaily, connections, types }) => {
           this.device = this.normalizeDevice(detail.device);
           this.types = (types ?? []).map((item) => this.normalizeType(item));
           this.sessions = (sessions.data ?? []).map((item) => this.normalizeSession(item));
-          this.accessLogs = (accessLogs.data ?? []).map((item) => this.normalizeLog(item));
+          this.trafficDays = (trafficDaily.items ?? []).map((item) => this.normalizeTrafficDay(item));
           this.connections = (connections ?? []).filter((item) => item.deviceGuid === this.guid);
         },
         error: () => this.message.error('设备详情加载失败'),
@@ -117,8 +114,8 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     return this.sessions.filter((item) => item.status === 1).length;
   }
 
-  protected totalTraffic(): number {
-    return this.sessions.reduce((sum, item) => sum + item.bytesIn + item.bytesOut, 0);
+  protected todayTraffic(): number {
+    return this.trafficPointsForDays(1).reduce((sum, item) => sum + item.inbound + item.outbound, 0);
   }
 
   protected summaryItems(item: { status?: DeviceStatus }): MetricSummaryItem[] {
@@ -126,7 +123,7 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
       { label: '在线状态', value: this.statusText(item.status), tone: this.statusTone(item.status) },
       { label: '当前连接', value: this.activeConnectionCount(), tone: this.activeConnectionCount() ? 'primary' : 'muted' },
       { label: '进行中会话', value: this.activeSessionCount(), tone: this.activeSessionCount() ? 'success' : 'muted' },
-      { label: '累计流量', value: this.formatBytes(this.totalTraffic()), tone: this.totalTraffic() ? 'primary' : 'muted' },
+      { label: '今日 4G', value: this.formatBytes(this.todayTraffic()), tone: this.todayTraffic() ? 'primary' : 'muted' },
     ];
   }
 
@@ -138,12 +135,8 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     return this.trafficPoints().reduce((sum, item) => sum + item.outbound, 0);
   }
 
-  protected errorLogCount(): number {
-    const minTime = Date.now() - this.trafficWindowOption().duration;
-    return this.accessLogs.filter((item) => {
-      const time = this.logTime(item);
-      return time >= minTime && (item.statusCode >= 500 || item.errorMessage);
-    }).length;
+  protected trafficResetCount(): number {
+    return this.trafficDaysInWindow().reduce((sum, item) => sum + this.firstNumber(item.resetCount, item.reset_count), 0);
   }
 
   protected recentSessions(): TunnelSession[] {
@@ -155,7 +148,7 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
   }
 
   protected trafficRecordCount(): number {
-    return this.trafficPoints().length;
+    return this.trafficDaysInWindow().reduce((sum, item) => sum + this.firstNumber(item.sampleCount, item.sample_count), 0);
   }
 
   protected trafficWindowLabel(): string {
@@ -176,12 +169,11 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
   protected trafficBars(): TrafficBucket[] {
     const option = this.trafficWindowOption();
     const buckets = Array.from({ length: option.buckets }, () => ({ inbound: 0, outbound: 0, count: 0 }));
-    const now = Date.now();
-    const bucketMs = option.duration / buckets.length;
+    const today = this.startOfLocalDay(Date.now());
+    const start = today - (option.buckets - 1) * this.dayMs();
     this.trafficPoints().forEach((item) => {
-      const age = now - item.time;
-      if (age < 0 || age > option.duration) return;
-      const index = Math.min(buckets.length - 1, Math.floor((option.duration - age) / bucketMs));
+      const index = Math.round((item.time - start) / this.dayMs());
+      if (index < 0 || index >= buckets.length) return;
       buckets[index].inbound += item.inbound;
       buckets[index].outbound += item.outbound;
       buckets[index].count += 1;
@@ -191,7 +183,7 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
       const inboundHeight = item.inbound > 0 ? Math.max(6, Math.round((item.inbound / max) * 100)) : 0;
       const outboundHeight = item.outbound > 0 ? Math.max(6, Math.round((item.outbound / max) * 100)) : 0;
       return {
-        label: this.trafficBucketLabel(index, option, now, bucketMs),
+        label: this.trafficBucketLabel(index, option, start),
         inbound: item.inbound,
         outbound: item.outbound,
         total: item.inbound + item.outbound,
@@ -248,22 +240,19 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     };
   }
 
-  private normalizeLog(item: HTTPAccessLog): HTTPAccessLog {
+  private normalizeTrafficDay(item: DeviceTrafficDay): DeviceTrafficDay {
     return {
       ...item,
-      mappingGuid: this.firstText(item.mappingGuid, item.mapping_guid),
       deviceGuid: this.firstText(item.deviceGuid, item.device_guid),
-      sourceIp: this.firstText(item.sourceIp, item.source_ip),
-      statusCode: this.firstNumber(item.statusCode, item.status_code),
-      durationMs: this.firstNumber(item.durationMs, item.duration_ms),
-      tunnelOpenMs: this.firstNumber(item.tunnelOpenMs, item.tunnel_open_ms),
-      upstreamMs: this.firstNumber(item.upstreamMs, item.upstream_ms),
-      firstByteMs: this.firstNumber(item.firstByteMs, item.first_byte_ms),
-      reusedConn: this.firstBoolean(item.reusedConn, item.reused_conn),
-      bytesIn: this.firstNumber(item.bytesIn, item.bytes_in),
-      bytesOut: this.firstNumber(item.bytesOut, item.bytes_out),
-      errorMessage: this.firstText(item.errorMessage, item.error_message),
+      rxBytes: this.firstNumber(item.rxBytes, item.rx_bytes),
+      txBytes: this.firstNumber(item.txBytes, item.tx_bytes),
+      totalBytes: this.firstNumber(item.totalBytes, item.total_bytes),
+      sampleCount: this.firstNumber(item.sampleCount, item.sample_count),
+      resetCount: this.firstNumber(item.resetCount, item.reset_count),
+      firstSeenTime: this.firstNumber(item.firstSeenTime, item.first_seen_time),
+      lastSeenTime: this.firstNumber(item.lastSeenTime, item.last_seen_time),
       createTime: this.firstNumber(item.createTime, item.create_time),
+      updateTime: this.firstNumber(item.updateTime, item.update_time),
     };
   }
 
@@ -292,59 +281,54 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     return map[value] || value;
   }
 
-  private trafficSessions(): TunnelSession[] {
-    const minTime = Date.now() - this.trafficWindowOption().duration;
-    return this.sessions.filter((item) => {
-      const time = this.sessionTime(item);
-      return time >= minTime;
-    });
-  }
-
-  private trafficLogs(): HTTPAccessLog[] {
-    const minTime = Date.now() - this.trafficWindowOption().duration;
-    return this.accessLogs.filter((item) => this.logTime(item) >= minTime);
-  }
-
   private trafficPoints(): TrafficPoint[] {
-    return [
-      ...this.trafficSessions().map((item) => ({
-        time: this.sessionTime(item),
-        inbound: item.bytesIn,
-        outbound: item.bytesOut,
-      })),
-      ...this.trafficLogs().map((item) => ({
-        time: this.logTime(item),
-        inbound: item.bytesIn,
-        outbound: item.bytesOut,
-      })),
-    ];
+    return this.trafficPointsForDays(this.trafficWindowOption().days);
+  }
+
+  private trafficPointsForDays(days: number): TrafficPoint[] {
+    return this.trafficDaysForWindow(days).map((item) => ({
+      time: this.dayTime(item.day),
+      inbound: this.firstNumber(item.rxBytes, item.rx_bytes),
+      outbound: this.firstNumber(item.txBytes, item.tx_bytes),
+    }));
   }
 
   private trafficWindowOption(): TrafficWindowOption {
-    return this.trafficWindowOptions.find((item) => item.value === this.trafficWindow) ?? this.trafficWindowOptions[2];
+    return this.trafficWindowOptions.find((item) => item.value === this.trafficWindow) ?? this.trafficWindowOptions[1];
   }
 
-  private sessionTime(item: TunnelSession): number {
-    return this.normalizeTimestamp(item.startTime || item.createTime || 0);
+  private trafficDaysInWindow(): DeviceTrafficDay[] {
+    return this.trafficDaysForWindow(this.trafficWindowOption().days);
   }
 
-  private logTime(item: HTTPAccessLog): number {
-    return this.normalizeTimestamp(item.createTime || 0);
+  private trafficDaysForWindow(days: number): DeviceTrafficDay[] {
+    const today = this.startOfLocalDay(Date.now());
+    const start = today - (days - 1) * this.dayMs();
+    const end = today + this.dayMs();
+    return this.trafficDays.filter((item) => {
+      const time = this.dayTime(item.day);
+      return time >= start && time < end;
+    });
   }
 
-  private normalizeTimestamp(time: number): number {
-    return time > 0 && time < 1000000000000 ? time * 1000 : time;
+  private dayTime(day: string): number {
+    const [year, month, date] = day.split('-').map((item) => Number(item));
+    if (!year || !month || !date) return 0;
+    return new Date(year, month - 1, date).getTime();
   }
 
-  private trafficBucketLabel(index: number, option: TrafficWindowOption, now: number, bucketMs: number): string {
-    const bucketStart = now - option.duration + index * bucketMs;
+  private startOfLocalDay(time: number): number {
+    const date = new Date(time);
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
+  }
+
+  private dayMs(): number {
+    return 24 * 60 * 60 * 1000;
+  }
+
+  private trafficBucketLabel(index: number, option: TrafficWindowOption, start: number): string {
+    const bucketStart = start + index * this.dayMs();
     const date = new Date(bucketStart);
-    if (option.value === '7d') {
-      return `${date.getMonth() + 1}/${date.getDate()}`;
-    }
-    if (option.value === '1h') {
-      return `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`;
-    }
-    return `${date.getHours()}h`;
+    return option.value === '1d' ? '今日' : `${date.getMonth() + 1}/${date.getDate()}`;
   }
 }

@@ -1,5 +1,5 @@
 <section class="dashboard-page">
-  <title-label title="工作台" description="实时掌握设备在线、流量统计、HTTP 映射、访问会话与运行事件。" />
+  <title-label title="工作台" description="实时掌握设备在线、4G 卡流量、HTTP 映射、访问会话与运行事件。" />
 
   <div class="dashboard-actions">
     <button nz-button [nzLoading]="loading" (click)="load()">
@@ -18,9 +18,9 @@
     />
     <app-panel
       icon="bar-chart"
-      title="流量统计"
+      title="4G 卡流量"
       [value]="formatBytes(trafficSummary().total)"
-      [trend]="'入 ' + formatBytes(trafficSummary().inbound) + ' / 出 ' + formatBytes(trafficSummary().outbound)"
+      [trend]="'收 ' + formatBytes(trafficSummary().inbound) + ' / 发 ' + formatBytes(trafficSummary().outbound)"
       trendType="neutral"
     />
     <app-panel

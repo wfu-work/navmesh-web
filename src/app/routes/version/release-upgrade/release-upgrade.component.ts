@@ -303,7 +303,7 @@ export class ReleaseUpgradeComponent implements OnInit {
 
   protected taskDeviceMeta(item: DeviceUpgradeTask): string {
     const releaseType = this.firstText(this.release?.releaseType, this.release?.release_type);
-    if (releaseType === 'rain' || releaseType === 'device_software') {
+    if (releaseType === 'rain' || releaseType === 'device_software' || releaseType === 'hipnames') {
       return `目标版本 ${upgradeTaskTargetVersionText(item) || '-'}`;
     }
     const fromVersion = this.firstText(item.fromVersion, item.from_version, '-');

@@ -11,7 +11,7 @@ export interface TrafficDistributionBucket {
 export interface TrafficWindowOption {
   value: string;
   label: string;
-  hours: number;
+  days: number;
 }
 
 interface TrafficDistributionBar extends TrafficDistributionBucket {
@@ -28,12 +28,12 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
     <section class="trend-card">
       <div class="trend-card-header">
         <div>
-          <h2>流量统计分布</h2>
+          <h2>4G 卡流量分布</h2>
           <p>{{ totalLabel }}</p>
         </div>
         <div class="trend-meta">
-          <span class="trend-legend trend-legend-in">入站</span>
-          <span class="trend-legend trend-legend-out">出站</span>
+          <span class="trend-legend trend-legend-in">接收</span>
+          <span class="trend-legend trend-legend-out">发送</span>
           <nz-select
             class="trend-window-select"
             [ngModel]="windowValue"
@@ -48,7 +48,7 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
         </div>
       </div>
 
-      <div class="trend-chart" [attr.aria-label]="windowLabel + '流量统计分布柱状图'">
+      <div class="trend-chart" [style.--trend-columns]="bars.length" [attr.aria-label]="windowLabel + '流量统计分布柱状图'">
         @for (item of bars; track item.label) {
           <div class="trend-bar-wrap">
             <div
@@ -67,8 +67,8 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
             <div class="trend-tooltip" role="tooltip" [style.bottom.%]="item.height">
               <strong>{{ item.label }}</strong>
               <span>总计 {{ formatBytes(item.total) }}</span>
-              <span>入站 {{ formatBytes(item.inbound) }}</span>
-              <span>出站 {{ formatBytes(item.outbound) }}</span>
+              <span>接收 {{ formatBytes(item.inbound) }}</span>
+              <span>发送 {{ formatBytes(item.outbound) }}</span>
             </div>
           </div>
         }
@@ -197,7 +197,7 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
       .trend-chart {
         position: relative;
         display: grid;
-        grid-template-columns: repeat(8, minmax(0, 1fr));
+        grid-template-columns: repeat(var(--trend-columns, 8), minmax(0, 1fr));
         align-items: end;
         gap: 34px;
         height: 218px;
@@ -410,8 +410,8 @@ interface TrafficDistributionBar extends TrafficDistributionBucket {
 })
 export class DashboardTrafficTrendComponent {
   @Input() buckets: TrafficDistributionBucket[] = [];
-  @Input() windowLabel = '过去 1 小时';
-  @Input() windowValue = '1h';
+  @Input() windowLabel = '近 7 天';
+  @Input() windowValue = '7d';
   @Input() windowOptions: TrafficWindowOption[] = [];
   @Output() windowValueChange = new EventEmitter<string>();
 
@@ -443,7 +443,11 @@ export class DashboardTrafficTrendComponent {
   protected get axisLabels(): string[] {
     const bars = this.bars;
     if (!bars.length) return [];
-    return [bars[0], bars[2], bars[4], bars[6], bars[7]].filter(Boolean).map((item) => item.label);
+    if (bars.length <= 7) {
+      return bars.map((item) => item.label);
+    }
+    const indexes = [0, Math.floor((bars.length - 1) / 3), Math.floor(((bars.length - 1) * 2) / 3), bars.length - 1];
+    return [...new Set(indexes)].map((index) => bars[index].label);
   }
 
   protected get totalLabel(): string {

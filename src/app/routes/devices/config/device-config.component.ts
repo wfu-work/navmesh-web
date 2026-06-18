@@ -88,7 +88,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   protected serviceLogError = '';
   protected readonly upgradeTaskPageSizeOptions = [5, 8, 10, 20];
   protected readonly serviceLogTailOptions = [50, 100, 200, 500, 1000, 2000, 5000, 10000];
-  protected readonly serviceLogSuggestions = ['navmesh-client.service', 'raind.service'];
+  protected readonly serviceLogSuggestions = ['navmesh-client.service', 'raind.service', 'hipnames.service'];
 
   protected readonly tokenStatusTag: STColumnTag = {
     1: { text: '启用', color: 'green' },
@@ -175,7 +175,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         .pipe(catchError(() => of([] as DeviceTypeDefault[]))),
       settings: this.settingsService.list().pipe(catchError(() => of([] as NavMeshSetting[]))),
       releases: this.devicesService
-        .releases({ page: 1, size: 100, status: 1, releaseType: 'navmesh' })
+        .releases({ page: 1, size: 100, status: 1 })
         .pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 100 }))),
       upgrades: this.devicesService
         .upgradeTasks(this.guid, this.upgradeTaskQuery)
@@ -629,6 +629,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       this.device?.groupGuid,
       this.device?.group_guid,
     );
+    const expectedReleaseType = this.upgradeReleaseTypeForDevice();
     return this.releases.filter((item) => {
       const releaseType = this.normalizeReleaseType(
         this.firstText(item.releaseType, item.release_type, 'navmesh'),
@@ -642,7 +643,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         !deviceType ||
         releaseDeviceType === deviceType;
       return (
-        releaseType === 'navmesh' &&
+        releaseType === expectedReleaseType &&
         matchDeviceType &&
         (!os || !releaseOS || releaseOS === 'all' || os === releaseOS) &&
         (!arch || !releaseArch || releaseArch === 'all' || arch === releaseArch)
@@ -651,10 +652,25 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   private normalizeReleaseType(value: string): string {
+    value = this.firstText(value).trim().toLowerCase();
     const map: Record<string, string> = {
       navmesh_client: 'navmesh',
+      device_software: 'rain',
+      standalone: 'hipnames',
     };
     return map[value] ?? value;
+  }
+
+  private upgradeReleaseTypeForDevice(): string {
+    const deviceType = this.firstText(
+      this.device?.deviceType,
+      this.device?.device_type,
+      this.device?.groupGuid,
+      this.device?.group_guid,
+    ).toLowerCase();
+    if (deviceType.includes('rain')) return 'rain';
+    if (deviceType.includes('hipnames') || deviceType.includes('standalone')) return 'hipnames';
+    return 'navmesh';
   }
 
   protected devicePlatformText(): string {
@@ -665,7 +681,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
 
   protected releaseNotFoundText(): string {
     if (!this.releases.length) {
-      return '暂无已启用的客户端发布包';
+      return '暂无已启用的发布包';
     }
     return `暂无匹配 ${this.devicePlatformText()} 的发布包`;
   }
@@ -1071,6 +1087,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       this.device?.device_type,
     ).toLowerCase();
     if (deviceType.includes('rain')) return 'raind.service';
+    if (deviceType.includes('hipnames') || deviceType.includes('standalone')) return 'hipnames.service';
     return 'navmesh-client.service';
   }
 
