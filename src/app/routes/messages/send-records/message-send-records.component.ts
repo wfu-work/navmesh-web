@@ -51,13 +51,19 @@ export class MessageSendRecordsComponent implements OnInit {
     {
       title: '操作',
       fixed: 'right',
-      width: 96,
+      width: 120,
       buttons: [
         {
           icon: 'redo',
           iif: (item) => this.retryable(item),
           click: (item) => this.retry(item),
           pop: { title: '重新发送该邮件？', okType: 'primary', icon: 'redo' },
+        },
+        {
+          icon: 'delete',
+          className: 'text-error',
+          click: (item) => this.delete(item),
+          pop: { title: '删除后该发送记录无法恢复，确认删除？', okType: 'danger', icon: 'delete' },
         },
       ],
     },
@@ -161,6 +167,23 @@ export class MessageSendRecordsComponent implements OnInit {
         this.message.error(error?.message || '邮件重试发送失败');
         this.load();
       },
+    });
+  }
+
+  protected delete(item: MessageSendRecord): void {
+    if (!item.guid) {
+      this.message.error('发送记录缺少标识，无法删除');
+      return;
+    }
+    this.messagesService.deleteSendRecord(item.guid).subscribe({
+      next: () => {
+        this.message.success('发送记录已删除');
+        if (this.data.length === 1 && this.q.page > 1) {
+          this.q.page -= 1;
+        }
+        this.load();
+      },
+      error: () => this.message.error('发送记录删除失败'),
     });
   }
 

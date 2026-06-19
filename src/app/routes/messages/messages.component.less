@@ -104,18 +104,6 @@
     .ant-table-tbody > tr > td {
       overflow: hidden;
     }
-
-    .ant-table-cell-fix-right {
-      background: #fff;
-    }
-  }
-}
-
-:host-context([data-theme='dark']) ::ng-deep {
-  .message-template-table {
-    .ant-table-cell-fix-right {
-      background: #141414;
-    }
   }
 }
 
@@ -221,6 +209,59 @@
 
 .message-filter-search {
   width: min(360px, 38vw);
+}
+
+.message-send-record-filter {
+  .message-email-toolbar {
+    align-items: center;
+    gap: 14px;
+  }
+
+  .message-status-summary {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    width: auto;
+    white-space: nowrap;
+  }
+
+  .message-status-summary-item {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+    min-width: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+
+    &::after {
+      color: #c5ced8;
+      content: '/';
+      font-weight: 700;
+    }
+
+    &:last-child::after {
+      content: '';
+    }
+
+    span {
+      color: #6b7788;
+      font-size: 13px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    strong {
+      font-size: 18px;
+      font-weight: 850;
+      line-height: 1;
+    }
+  }
+
+  .message-email-filter-actions {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 .message-retry-cell {

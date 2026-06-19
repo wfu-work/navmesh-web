@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
-import { finalize } from 'rxjs';
+import { debounceTime, finalize } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
 import { MessageTemplate, MessagesService } from '../messages.service';
@@ -15,6 +16,8 @@ interface TemplatePreset {
   content: string;
   description: string;
 }
+
+type PreviewMode = 'desktop' | 'mobile';
 
 @Component({
   selector: 'app-message-template-edit',
@@ -30,6 +33,8 @@ export class MessageTemplateEditComponent implements OnInit {
   private readonly messagesService = inject(MessagesService);
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly destroyRef = inject(DestroyRef);
+  private previewRequestSeq = 0;
 
   protected readonly identity = this.route.snapshot.paramMap.get('identity') ?? this.route.snapshot.paramMap.get('guid') ?? '';
   protected readonly subjectPlaceholder = '例如 {{deviceAlias}} 已离线';
@@ -106,6 +111,11 @@ export class MessageTemplateEditComponent implements OnInit {
   ];
   protected loading = false;
   protected saving = false;
+  protected previewLoading = false;
+  protected previewSubject = '';
+  protected previewHtml = '';
+  protected previewError = '';
+  protected previewMode: PreviewMode = 'desktop';
   protected template?: MessageTemplate;
 
   protected readonly form = this.fb.group({
@@ -118,6 +128,9 @@ export class MessageTemplateEditComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.form.valueChanges.pipe(debounceTime(500), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      this.loadPreview();
+    });
     if (this.identity) {
       this.load();
     } else {
@@ -172,6 +185,14 @@ export class MessageTemplateEditComponent implements OnInit {
     this.router.navigate(['/messages/templates']);
   }
 
+  protected refreshPreview(): void {
+    this.loadPreview();
+  }
+
+  protected setPreviewMode(mode: PreviewMode): void {
+    this.previewMode = mode;
+  }
+
   protected applySelectedTemplate(code: string): void {
     if (this.identity) return;
     const preset = this.templatePresets.find((item) => item.code === code);
@@ -210,6 +231,48 @@ export class MessageTemplateEditComponent implements OnInit {
           });
         },
         error: () => this.message.error('消息模板详情加载失败'),
+      });
+  }
+
+  private loadPreview(): void {
+    const value = this.form.getRawValue();
+    const code = value.code.trim();
+    const subject = value.subject.trim();
+    const content = value.content.trim();
+    const requestSeq = ++this.previewRequestSeq;
+    if (!code || !subject || !content) {
+      this.previewSubject = '';
+      this.previewHtml = '';
+      this.previewError = '';
+      this.previewLoading = false;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.previewLoading = true;
+    this.previewError = '';
+    this.messagesService
+      .previewTemplate({ code, subject, content })
+      .pipe(
+        finalize(() => {
+          if (requestSeq === this.previewRequestSeq) {
+            this.previewLoading = false;
+            this.cdr.markForCheck();
+          }
+        }),
+      )
+      .subscribe({
+        next: (result) => {
+          if (requestSeq !== this.previewRequestSeq) return;
+          this.previewSubject = result.subject || subject;
+          this.previewHtml = result.html || '';
+          this.previewError = '';
+        },
+        error: (error) => {
+          if (requestSeq !== this.previewRequestSeq) return;
+          this.previewSubject = '';
+          this.previewHtml = '';
+          this.previewError = error?.message || '邮件预览生成失败';
+        },
       });
   }
 

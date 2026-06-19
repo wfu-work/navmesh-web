@@ -21,48 +21,96 @@
       </div>
 
       <div class="message-template-edit-layout">
-        <form nz-form [formGroup]="form" class="message-template-edit-form" (ngSubmit)="submit()">
-          <se-container col="2" nzLayout="vertical">
-            <se label="模板编码" required error="请输入模板编码" col="1">
-              <nz-select
-                formControlName="code"
-                nzShowSearch
-                nzPlaceHolder="请选择通知场景"
-                [nzDisabled]="!!identity"
-                (ngModelChange)="applySelectedTemplate($event)"
-              >
-                @for (preset of templatePresets; track preset.code) {
-                  <nz-option [nzValue]="preset.code" [nzLabel]="preset.label + ' · ' + preset.code" />
-                }
-              </nz-select>
-            </se>
+        <div class="message-template-main">
+          <form nz-form [formGroup]="form" class="message-template-edit-form" (ngSubmit)="submit()">
+            <se-container col="2" nzLayout="vertical">
+              <se label="模板编码" required error="请输入模板编码" col="1">
+                <nz-select
+                  formControlName="code"
+                  nzShowSearch
+                  nzPlaceHolder="请选择通知场景"
+                  [nzDisabled]="!!identity"
+                  (ngModelChange)="applySelectedTemplate($event)"
+                >
+                  @for (preset of templatePresets; track preset.code) {
+                    <nz-option [nzValue]="preset.code" [nzLabel]="preset.label + ' · ' + preset.code" />
+                  }
+                </nz-select>
+              </se>
 
-            <se label="通知渠道">
-              <nz-select formControlName="channel">
-                <nz-option nzValue="email" nzLabel="邮件" />
-              </nz-select>
-            </se>
+              <se label="通知渠道">
+                <nz-select formControlName="channel">
+                  <nz-option nzValue="email" nzLabel="邮件" />
+                </nz-select>
+              </se>
 
-            <se label="状态">
-              <nz-select formControlName="status">
-                <nz-option [nzValue]="1" nzLabel="启用" />
-                <nz-option [nzValue]="0" nzLabel="禁用" />
-              </nz-select>
-            </se>
+              <se label="状态">
+                <nz-select formControlName="status">
+                  <nz-option [nzValue]="1" nzLabel="启用" />
+                  <nz-option [nzValue]="0" nzLabel="禁用" />
+                </nz-select>
+              </se>
 
-            <se label="邮件主题" required error="请输入邮件主题" col="1">
-              <input nz-input formControlName="subject" [placeholder]="subjectPlaceholder" />
-            </se>
+              <se label="邮件主题" required error="请输入邮件主题" col="1">
+                <input nz-input formControlName="subject" [placeholder]="subjectPlaceholder" />
+              </se>
 
-            <se label="模板内容" required error="请输入模板内容" col="1">
-              <textarea nz-input rows="10" formControlName="content" [placeholder]="contentPlaceholder"></textarea>
-            </se>
+              <se label="模板内容" required error="请输入模板内容" col="1">
+                <textarea nz-input rows="10" formControlName="content" [placeholder]="contentPlaceholder"></textarea>
+              </se>
 
-            <se label="说明" col="1">
-              <textarea nz-input rows="3" formControlName="description" placeholder="记录模板用途、变量说明或触发场景"></textarea>
-            </se>
-          </se-container>
-        </form>
+              <se label="说明" col="1">
+                <textarea nz-input rows="3" formControlName="description" placeholder="记录模板用途、变量说明或触发场景"></textarea>
+              </se>
+            </se-container>
+          </form>
+
+          <section class="message-template-preview">
+            <div class="message-template-preview-head">
+              <div>
+                <h3>邮件预览</h3>
+                <p>使用示例变量渲染完整邮件 HTML，实际发送时会替换为真实设备或事件数据。</p>
+              </div>
+              <div class="message-template-preview-actions">
+                <button
+                  nz-button
+                  type="button"
+                  nz-tooltip
+                  nzTooltipTitle="电脑预览"
+                  [nzType]="previewMode === 'desktop' ? 'primary' : 'default'"
+                  (click)="setPreviewMode('desktop')"
+                >
+                  <nz-icon nzType="desktop" />
+                </button>
+                <button
+                  nz-button
+                  type="button"
+                  nz-tooltip
+                  nzTooltipTitle="手机预览"
+                  [nzType]="previewMode === 'mobile' ? 'primary' : 'default'"
+                  (click)="setPreviewMode('mobile')"
+                >
+                  <nz-icon nzType="mobile" />
+                </button>
+                <button nz-button type="button" [nzLoading]="previewLoading" (click)="refreshPreview()">
+                  <nz-icon nzType="reload" />
+                  刷新预览
+                </button>
+              </div>
+            </div>
+
+            @if (previewError) {
+              <nz-alert nzType="warning" [nzMessage]="previewError" nzShowIcon />
+            } @else if (previewHtml) {
+              <div class="message-template-preview-subject">主题：{{ previewSubject }}</div>
+              <div class="message-template-preview-frame" [class.is-mobile]="previewMode === 'mobile'">
+                <iframe sandbox title="邮件预览" [attr.srcdoc]="previewHtml"></iframe>
+              </div>
+            } @else {
+              <div class="message-template-preview-empty">填写模板编码、邮件主题和模板内容后显示预览</div>
+            }
+          </section>
+        </div>
 
         <aside class="message-template-help">
           <section>

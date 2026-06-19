@@ -68,6 +68,17 @@ export interface MessageDebugSendResult {
   failures: number;
 }
 
+export interface MessageTemplatePreviewRequest {
+  code: string;
+  subject: string;
+  content: string;
+}
+
+export interface MessageTemplatePreviewResult {
+  subject: string;
+  html: string;
+}
+
 export interface MessageRecipient {
   guid: string;
   name: string;
@@ -165,6 +176,10 @@ export class MessagesService {
     return this.http.post<MessageTemplate>('/messages/templates', payload);
   }
 
+  previewTemplate(payload: MessageTemplatePreviewRequest): Observable<MessageTemplatePreviewResult> {
+    return this.http.post<MessageTemplatePreviewResult>('/messages/templates/preview', payload);
+  }
+
   disableTemplate(guid: string): Observable<boolean> {
     return this.http.delete<boolean>(`/messages/templates/${guid}`);
   }
@@ -203,6 +218,10 @@ export class MessagesService {
 
   retrySendRecord(guid: string): Observable<MessageSendRecord> {
     return this.http.post<MessageSendRecord>(`/messages/send-records/${guid}/retry`, {});
+  }
+
+  deleteSendRecord(guid: string): Observable<boolean> {
+    return this.http.delete<boolean>(`/messages/send-records/${guid}/delete`);
   }
 
   debugSend(payload: MessageDebugSendRequest): Observable<MessageDebugSendResult> {

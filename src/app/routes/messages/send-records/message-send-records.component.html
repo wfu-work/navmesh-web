@@ -16,25 +16,25 @@
     </div>
   </div>
 
-  <nz-card class="card-border message-filter-card" [nzBordered]="false">
+  <nz-card class="card-border message-filter-card message-send-record-filter" [nzBordered]="false">
     <div class="message-email-toolbar">
       <div class="message-status-summary" aria-label="邮件发送统计">
-        <article class="message-status-summary-item">
-          <span>全部记录</span>
+        <span class="message-status-summary-item">
+          <span>总数</span>
           <strong>{{ totalCount }}</strong>
-        </article>
-        <article class="message-status-summary-item summary-enabled">
-          <span>当前页成功</span>
+        </span>
+        <span class="message-status-summary-item summary-enabled">
+          <span>成功</span>
           <strong>{{ successCount() }}</strong>
-        </article>
-        <article class="message-status-summary-item summary-failed">
-          <span>当前页失败</span>
+        </span>
+        <span class="message-status-summary-item summary-failed">
+          <span>失败</span>
           <strong>{{ failedCount() }}</strong>
-        </article>
-        <article class="message-status-summary-item summary-retry">
+        </span>
+        <span class="message-status-summary-item summary-retry">
           <span>可重试</span>
           <strong>{{ retryableCount() }}</strong>
-        </article>
+        </span>
       </div>
 
       <div class="message-email-filter-actions">
@@ -89,7 +89,7 @@
       [total]="totalCount"
       (change)="tableChange($event)"
       bordered="false"
-      [scroll]="{ x: '1420px' }"
+      [scroll]="{ x: '1440px' }"
       class="message-template-table"
     >
       <ng-template st-row="mailRender" let-item>
