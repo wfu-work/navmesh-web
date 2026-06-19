@@ -104,7 +104,7 @@
             } @else if (previewHtml) {
               <div class="message-template-preview-subject">主题：{{ previewSubject }}</div>
               <div class="message-template-preview-frame" [class.is-mobile]="previewMode === 'mobile'">
-                <iframe sandbox title="邮件预览" [attr.srcdoc]="previewHtml"></iframe>
+                <iframe sandbox title="邮件预览" [src]="previewUrl"></iframe>
               </div>
             } @else {
               <div class="message-template-preview-empty">填写模板编码、邮件主题和模板内容后显示预览</div>

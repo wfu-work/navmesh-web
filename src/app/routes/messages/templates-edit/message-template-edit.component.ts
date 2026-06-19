@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, NonNullableFormBuilder, Validators } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
@@ -34,7 +35,9 @@ export class MessageTemplateEditComponent implements OnInit {
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly sanitizer = inject(DomSanitizer);
   private previewRequestSeq = 0;
+  private previewObjectUrl = '';
 
   protected readonly identity = this.route.snapshot.paramMap.get('identity') ?? this.route.snapshot.paramMap.get('guid') ?? '';
   protected readonly subjectPlaceholder = '例如 {{deviceAlias}} 已离线';
@@ -114,6 +117,7 @@ export class MessageTemplateEditComponent implements OnInit {
   protected previewLoading = false;
   protected previewSubject = '';
   protected previewHtml = '';
+  protected previewUrl?: SafeResourceUrl;
   protected previewError = '';
   protected previewMode: PreviewMode = 'desktop';
   protected template?: MessageTemplate;
@@ -128,6 +132,7 @@ export class MessageTemplateEditComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.destroyRef.onDestroy(() => this.clearPreviewUrl());
     this.form.valueChanges.pipe(debounceTime(500), takeUntilDestroyed(this.destroyRef)).subscribe(() => {
       this.loadPreview();
     });
@@ -243,6 +248,7 @@ export class MessageTemplateEditComponent implements OnInit {
     if (!code || !subject || !content) {
       this.previewSubject = '';
       this.previewHtml = '';
+      this.clearPreviewUrl();
       this.previewError = '';
       this.previewLoading = false;
       this.cdr.markForCheck();
@@ -264,16 +270,33 @@ export class MessageTemplateEditComponent implements OnInit {
         next: (result) => {
           if (requestSeq !== this.previewRequestSeq) return;
           this.previewSubject = result.subject || subject;
-          this.previewHtml = result.html || '';
+          this.setPreviewHtml(result.html || '');
           this.previewError = '';
         },
         error: (error) => {
           if (requestSeq !== this.previewRequestSeq) return;
           this.previewSubject = '';
           this.previewHtml = '';
+          this.clearPreviewUrl();
           this.previewError = error?.message || '邮件预览生成失败';
         },
       });
+  }
+
+  private setPreviewHtml(html: string): void {
+    this.previewHtml = html;
+    this.clearPreviewUrl();
+    if (!html) return;
+    this.previewObjectUrl = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
+    this.previewUrl = this.sanitizer.bypassSecurityTrustResourceUrl(this.previewObjectUrl);
+  }
+
+  private clearPreviewUrl(): void {
+    if (this.previewObjectUrl) {
+      URL.revokeObjectURL(this.previewObjectUrl);
+      this.previewObjectUrl = '';
+    }
+    this.previewUrl = undefined;
   }
 
   private applyTemplatePreset(preset: TemplatePreset): void {
