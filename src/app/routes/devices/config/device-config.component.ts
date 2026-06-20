@@ -188,8 +188,8 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
         .pipe(catchError(() => of([] as DeviceTypeDefault[]))),
       settings: this.settingsService.list().pipe(catchError(() => of([] as NavMeshSetting[]))),
       releases: this.devicesService
-        .releases({ page: 1, size: 100, status: 1 })
-        .pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 100 }))),
+        .releases({ page: 1, size: 500, status: 1 })
+        .pipe(catchError(() => of({ data: [], total: 0, page: 1, size: 500 }))),
     })
       .pipe(
         finalize(() => {
@@ -679,8 +679,8 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   protected compatibleReleases(releaseType: UpgradeReleaseType): Release[] {
-    const os = this.normalizePlatformValue(this.device?.os);
-    const arch = this.normalizePlatformValue(this.device?.arch);
+    const os = this.device?.os;
+    const arch = this.device?.arch;
     const deviceType = this.deviceTypeKey();
     return this.releases.filter((item) => {
       const itemReleaseType = this.normalizeReleaseType(
@@ -697,8 +697,8 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       return (
         itemReleaseType === releaseType &&
         matchDeviceType &&
-        (!os || !releaseOS || releaseOS === 'all' || os === releaseOS) &&
-        (!arch || !releaseArch || releaseArch === 'all' || arch === releaseArch)
+        this.samePlatform(os, releaseOS) &&
+        this.samePlatform(arch, releaseArch)
       );
     });
   }
@@ -730,9 +730,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
   }
 
   protected devicePlatformText(): string {
-    const os = this.firstText(this.device?.os);
-    const arch = this.firstText(this.device?.arch);
-    return [os || '未知系统', arch || '未知架构'].join('/');
+    return this.platformPairText(this.device?.os, this.device?.arch);
   }
 
   protected upgradeSectionMetaText(section: UpgradeSection): string {
@@ -747,6 +745,10 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       return '暂无已启用的发布包';
     }
     return `暂无匹配 ${this.devicePlatformText()} 的${section.title}发布包`;
+  }
+
+  protected releasePlatformText(release: Release): string {
+    return this.platformPairText(release.os, release.arch);
   }
 
   protected isCreatingUpgrade(section: UpgradeSection): boolean {
@@ -1141,6 +1143,7 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       osx: 'darwin',
       win32: 'windows',
       win64: 'windows',
+      linux: 'linux',
       ubuntu: 'linux',
       debian: 'linux',
       centos: 'linux',
@@ -1161,6 +1164,18 @@ export class DeviceConfigComponent extends DevicePageBase implements OnInit {
       }
     }
     return normalized;
+  }
+
+  private samePlatform(current: string | undefined, target: string | undefined): boolean {
+    current = this.normalizePlatformValue(current);
+    target = this.normalizePlatformValue(target);
+    return !current || !target || target === 'all' || current === target;
+  }
+
+  private platformPairText(os: string | undefined, arch: string | undefined): string {
+    const normalizedOS = this.normalizePlatformValue(os);
+    const normalizedArch = this.normalizePlatformValue(arch);
+    return [normalizedOS || '未知系统', normalizedArch || '未知架构'].join('/');
   }
 
   private platformNameContainsToken(value: string, token: string): boolean {

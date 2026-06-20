@@ -294,12 +294,12 @@ export class ReleaseUpgradeComponent implements OnInit {
   }
 
   protected candidateDeviceTitle(item: DeviceUpgradeCandidate): string {
-    return this.firstText(item.hostname, item.sncode, item.guid);
+    return this.firstText(item.sncode, item.guid);
   }
 
   protected deviceMeta(item: DeviceUpgradeCandidate): string {
     return [
-      this.firstText(item.alias, item.name, '-'),
+      this.candidateDeviceSubtitle(item),
       this.firstText(item.os, 'unknown') + '/' + this.firstText(item.arch, 'unknown'),
       this.firstText(item.clientVersion, item.client_version, '未上报版本'),
     ].join(' · ');
@@ -600,6 +600,16 @@ export class ReleaseUpgradeComponent implements OnInit {
       createTime: this.firstNumber(item.createTime, item.create_time),
       updateTime: this.firstNumber(item.updateTime, item.update_time),
     };
+  }
+
+  private candidateDeviceSubtitle(item: DeviceUpgradeCandidate): string {
+    const sncode = this.firstText(item.sncode);
+    const guid = this.firstText(item.guid);
+    for (const value of [item.alias, item.name, item.hostname]) {
+      const text = this.firstText(value);
+      if (text && text !== sncode && text !== guid) return text;
+    }
+    return '-';
   }
 
   private firstText(...values: Array<string | undefined | null>): string {

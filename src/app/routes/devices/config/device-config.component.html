@@ -97,9 +97,7 @@
                       [nzLabel]="
                         (release.version || release.fileName) +
                         ' · ' +
-                        release.os +
-                        '/' +
-                        release.arch
+                        releasePlatformText(release)
                       "
                     />
                   }
