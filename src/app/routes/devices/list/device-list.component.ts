@@ -320,6 +320,68 @@ export class DeviceListComponent implements OnInit {
     return Array.from(new Set(parts)).join(' ');
   }
 
+  protected hasNetworkSnapshot(item: Device): boolean {
+    return Boolean(
+      this.firstText(item.networkType, item.network_type, item.networkIface, item.network_iface) ||
+        this.firstNumber(item.signalPct, item.signal_pct, item.signalDbm, item.signal_dbm) ||
+        this.firstNumber(item.rxRateBps, item.rx_rate_bps, item.txRateBps, item.tx_rate_bps) ||
+        this.firstNumber(item.pingLatencyMs, item.ping_latency_ms),
+    );
+  }
+
+  protected networkLabel(item: Device): string {
+    const type = this.networkTypeLabel(item.networkType);
+    const iface = this.firstText(item.networkIface, item.network_iface);
+    if (!type && !iface) return '-';
+    return [type || '未知链路', iface].filter(Boolean).join(' / ');
+  }
+
+  protected networkIcon(item: Device): string {
+    switch (this.firstText(item.networkType, item.network_type).toLowerCase()) {
+      case 'cellular':
+        return 'mobile';
+      case 'wifi':
+        return 'wifi';
+      case 'ethernet':
+        return 'gateway';
+      default:
+        return 'global';
+    }
+  }
+
+  protected signalText(item: Device): string {
+    const pct = this.signalPercent(item);
+    const dbm = this.firstNumber(item.signalDbm, item.signal_dbm);
+    if (pct > 0 && dbm !== 0) return `${pct}% / ${dbm} dBm`;
+    if (pct > 0) return `${pct}%`;
+    if (dbm !== 0) return `${dbm} dBm`;
+    return '-';
+  }
+
+  protected signalPercent(item: Device): number {
+    return Math.min(100, Math.max(0, Math.round(this.firstNumber(item.signalPct, item.signal_pct))));
+  }
+
+  protected rateText(item: Device): string {
+    const rx = this.firstNumber(item.rxRateBps, item.rx_rate_bps);
+    const tx = this.firstNumber(item.txRateBps, item.tx_rate_bps);
+    if (rx <= 0 && tx <= 0) return '-';
+    return `↓ ${this.formatBitRate(rx)} / ↑ ${this.formatBitRate(tx)}`;
+  }
+
+  protected networkTooltip(item: Device): string {
+    const latency = this.firstNumber(item.pingLatencyMs, item.ping_latency_ms);
+    const loss = this.firstNumber(item.pingLossPct, item.ping_loss_pct);
+    const parts = [
+      this.networkLabel(item),
+      `信号 ${this.signalText(item)}`,
+      this.rateText(item),
+      latency > 0 ? `延迟 ${latency} ms` : '',
+      loss > 0 ? `丢包 ${this.formatPercent(loss)}` : '',
+    ].filter((value) => value && value !== '-');
+    return parts.join(' · ') || '-';
+  }
+
   private normalizeDevice(item: Device): Device {
     return {
       ...item,
@@ -344,6 +406,20 @@ export class DeviceListComponent implements OnInit {
       diskUsed: this.firstNumber(item.diskUsed, item.disk_used),
       diskFree: this.firstNumber(item.diskFree, item.disk_free),
       diskUsedPct: this.firstNumber(item.diskUsedPct, item.disk_used_pct),
+      networkType: this.firstText(item.networkType, item.network_type),
+      networkIface: this.firstText(item.networkIface, item.network_iface),
+      signalDbm: this.firstNumber(item.signalDbm, item.signal_dbm),
+      signalPct: this.firstNumber(item.signalPct, item.signal_pct),
+      cellularRsrp: this.firstNumber(item.cellularRsrp, item.cellular_rsrp),
+      cellularRsrq: this.firstNumber(item.cellularRsrq, item.cellular_rsrq),
+      cellularSinr: this.firstNumber(item.cellularSinr, item.cellular_sinr),
+      wifiSsid: this.firstText(item.wifiSsid, item.wifi_ssid),
+      wifiRssi: this.firstNumber(item.wifiRssi, item.wifi_rssi),
+      pingTarget: this.firstText(item.pingTarget, item.ping_target),
+      pingLatencyMs: this.firstNumber(item.pingLatencyMs, item.ping_latency_ms),
+      pingLossPct: this.firstNumber(item.pingLossPct, item.ping_loss_pct),
+      rxRateBps: this.firstNumber(item.rxRateBps, item.rx_rate_bps),
+      txRateBps: this.firstNumber(item.txRateBps, item.tx_rate_bps),
       privateIp: this.firstText(item.privateIp, item.private_ip, item.hostIp, item.host_ip),
       clientVersion: this.firstText(item.clientVersion, item.client_version),
       lastHeartbeatAt: this.firstNumber(item.lastHeartbeatAt, item.last_heartbeat_at, item.lastSeenTime, item.last_seen_time),
@@ -469,5 +545,40 @@ export class DeviceListComponent implements OnInit {
   private normalizeIcon(icon: string | undefined): string {
     if (icon === 'terminal') return 'code';
     return icon || 'appstore';
+  }
+
+  private networkTypeLabel(value: string | undefined): string {
+    switch (String(value || '').trim().toLowerCase()) {
+      case 'cellular':
+        return '蜂窝';
+      case 'wifi':
+        return 'WiFi';
+      case 'ethernet':
+        return '有线';
+      case 'unknown':
+        return '未知';
+      default:
+        return '';
+    }
+  }
+
+  private formatBitRate(bps: number | undefined): string {
+    const value = Number(bps || 0);
+    if (!Number.isFinite(value) || value <= 0) return '0 bps';
+    const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps'];
+    let current = value;
+    let index = 0;
+    while (current >= 1000 && index < units.length - 1) {
+      current /= 1000;
+      index += 1;
+    }
+    const precision = index === 0 || current >= 10 ? 0 : 1;
+    return `${current.toFixed(precision)} ${units[index]}`;
+  }
+
+  private formatPercent(value: number): string {
+    if (!Number.isFinite(value)) return '0%';
+    const rounded = Math.round(value * 10) / 10;
+    return `${rounded.toFixed(Number.isInteger(rounded) ? 0 : 1)}%`;
   }
 }

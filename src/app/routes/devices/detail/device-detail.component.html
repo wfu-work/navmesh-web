@@ -32,7 +32,7 @@
         </div>
       </section>
 
-      <app-metric-summary class="detail-summary-metrics" [items]="summaryItems(item)" />
+      <app-metric-summary class="detail-summary-metrics" [items]="summaryItems(item)" [columns]="5" />
 
       <nz-card class="card-border device-report-card" [nzBordered]="false">
         <div class="device-report-card-title">
@@ -65,7 +65,7 @@
               </div>
               <div>
                 <dt>Web 映射域名</dt>
-                <dd>{{ displayText(item.webDomain) }}</dd>
+                <dd [title]="webDomainText(item)">{{ webDomainText(item) }}</dd>
               </div>
               <div>
                 <dt>位置</dt>
@@ -100,6 +100,48 @@
               <div>
                 <dt>最后指标</dt>
                 <dd>{{ item.lastMetricAt ? (item.lastMetricAt | _date: 'yyyy-MM-dd HH:mm:ss') : '-' }}</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="device-report-section">
+            <h3>网络质量</h3>
+            <div class="device-resource-grid">
+              <article>
+                <div>
+                  <span class="device-network-title">
+                    <nz-icon [nzType]="networkIcon(item)" />
+                    {{ networkLabel(item) }}
+                  </span>
+                  <strong>{{ signalText(item) }}</strong>
+                </div>
+                <div class="device-resource-bar">
+                  <i [style.width.%]="signalPercent(item)"></i>
+                </div>
+                <p>{{ rateText(item) }}</p>
+                <small>{{ latencyText(item) }}</small>
+              </article>
+            </div>
+            <dl class="device-report-list">
+              <div>
+                <dt>当前速率</dt>
+                <dd>{{ rateText(item) }}</dd>
+              </div>
+              <div>
+                <dt>延迟/丢包</dt>
+                <dd>{{ latencyText(item) }}</dd>
+              </div>
+              <div>
+                <dt>探测目标</dt>
+                <dd [title]="item.pingTarget || '-'">{{ displayText(item.pingTarget) }}</dd>
+              </div>
+              <div>
+                <dt>蜂窝参数</dt>
+                <dd>{{ cellularMetricsText(item) }}</dd>
+              </div>
+              <div>
+                <dt>WiFi 参数</dt>
+                <dd>{{ wifiMetricsText(item) }}</dd>
               </div>
             </dl>
           </section>
@@ -162,7 +204,7 @@
             </sv>
             <sv label="本机 SSH 端口">{{ item.sshPort || '-' }}</sv>
             <sv label="本机 Web 端口">{{ item.webPort || '-' }}</sv>
-            <sv label="Web 映射域名">{{ item.webDomain || '-' }}</sv>
+            <sv label="Web 映射域名">{{ webDomainText(item) }}</sv>
             <sv label="在线连接">{{ activeConnectionCount() }}</sv>
             <sv label="内存">{{ formatUsage(item.memoryUsed, item.memoryTotal) }}</sv>
             <sv label="可用内存">{{ item.memoryFree ? formatBytes(item.memoryFree) : '-' }}</sv>

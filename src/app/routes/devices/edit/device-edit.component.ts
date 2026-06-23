@@ -297,6 +297,7 @@ export class DeviceEditComponent implements OnInit {
       sshPort: this.firstNumber(item.sshPort, item.ssh_port),
       webPort: this.firstNumber(item.webPort, item.web_port),
       webDomain: this.firstText(item.webDomain, item.web_domain),
+      webDomains: this.webDomains(item),
       osVersion: this.firstText(item.osVersion, item.os_version),
       kernelVersion: this.firstText(item.kernelVersion, item.kernel_version),
       privateIp: this.firstText(item.privateIp, item.private_ip),
@@ -341,6 +342,10 @@ export class DeviceEditComponent implements OnInit {
     return values.find((value) => value !== undefined && value !== null) ?? 0;
   }
 
+  protected webDomainText(item: Device): string {
+    return this.webDomains(item).join('、') || '-';
+  }
+
   private defaultTypeIcon(type: string | undefined): string {
     const value = String(type || '').toLowerCase();
     if (value.includes('ssh')) return 'code';
@@ -372,5 +377,27 @@ export class DeviceEditComponent implements OnInit {
   private normalizeIcon(icon: string | undefined): string {
     if (icon === 'terminal') return 'code';
     return icon || 'appstore';
+  }
+
+  private webDomains(item: Device): string[] {
+    const values = [
+      ...(item.webDomains ?? []),
+      ...(item.web_domains ?? []),
+      this.firstText(item.webDomain, item.web_domain),
+    ];
+    const result: string[] = [];
+    const seen = new Set<string>();
+    values.forEach((value) => {
+      `${value ?? ''}`
+        .split(/[,，\n\t]/)
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .forEach((part) => {
+          if (seen.has(part)) return;
+          seen.add(part);
+          result.push(part);
+        });
+    });
+    return result;
   }
 }

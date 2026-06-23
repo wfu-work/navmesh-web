@@ -375,15 +375,19 @@ export class HeaderMessage {
   @Input() set items(value: HeaderMessageItem[] | null | undefined) {
     this.messages.set(value ?? []);
   }
+  @Input() set unreadTotal(value: number | null | undefined) {
+    this.unreadTotalValue.set(typeof value === 'number' ? Math.max(0, value) : null);
+  }
 
   @Output() readonly itemClick = new EventEmitter<HeaderMessageItem>();
   @Output() readonly markAllReadClick = new EventEmitter<HeaderMessageItem[]>();
   @Output() readonly allEventsClick = new EventEmitter<void>();
 
   protected readonly messages = signal<HeaderMessageItem[]>([]);
+  private readonly unreadTotalValue = signal<number | null>(null);
 
   protected readonly unreadCount = computed(
-    () => this.messages().filter((item) => !item.read).length,
+    () => this.unreadTotalValue() ?? this.messages().filter((item) => !item.read).length,
   );
 
   protected markRead(id: string | number): void {
@@ -395,6 +399,7 @@ export class HeaderMessage {
   protected markAllRead(): void {
     const unreadItems = this.messages().filter((item) => !item.read);
     this.messages.update((list) => list.map((item) => ({ ...item, read: true })));
+    this.unreadTotalValue.set(0);
     this.markAllReadClick.emit(unreadItems);
   }
 

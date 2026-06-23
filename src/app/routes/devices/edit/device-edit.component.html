@@ -191,7 +191,7 @@
                   </div>
                   <div>
                     <dt>Web 映射域名</dt>
-                    <dd>{{ displayText(item.webDomain) }}</dd>
+                    <dd [title]="webDomainText(item)">{{ webDomainText(item) }}</dd>
                   </div>
                   <div>
                     <dt>位置</dt>

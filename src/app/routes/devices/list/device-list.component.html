@@ -147,6 +147,20 @@
                   </dd>
                 </div>
                 <div>
+                  <dt>网络质量</dt>
+                  <dd>
+                    @if (hasNetworkSnapshot(item)) {
+                      <div class="device-network-chip" [title]="networkTooltip(item)">
+                        <nz-icon [nzType]="networkIcon(item)" />
+                        <span>{{ networkLabel(item) }}</span>
+                        <strong>{{ signalText(item) }}</strong>
+                      </div>
+                    } @else {
+                      -
+                    }
+                  </dd>
+                </div>
+                <div>
                   <dt>{{ item.status === 1 ? '设备激活' : '设备开关' }}</dt>
                   <dd>
                     @if (item.status === 1) {
@@ -172,6 +186,22 @@
                   </dd>
                 </div>
               </dl>
+
+              @if (hasNetworkSnapshot(item)) {
+                <div class="device-network-summary" [title]="networkTooltip(item)">
+                  <span>
+                    <nz-icon nzType="line-chart" />
+                    {{ rateText(item) }}
+                  </span>
+                  <span>
+                    <nz-icon nzType="dashboard" />
+                    {{ signalText(item) }}
+                  </span>
+                  <div class="device-network-signal">
+                    <i [style.width.%]="signalPercent(item)"></i>
+                  </div>
+                </div>
+              }
 
               <div class="device-access-chips">
                 @for (mapping of httpMappings(item.guid); track mapping.guid) {

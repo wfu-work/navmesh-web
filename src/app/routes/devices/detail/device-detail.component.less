@@ -6,40 +6,6 @@
   color: rgba(255, 255, 255, 0.84);
 }
 
-.status-online {
-  color: #0d8f5d !important;
-}
-
-:host-context([data-theme='dark']) .status-online {
-  color: #67d5c4 !important;
-}
-
-.status-offline {
-  color: #c53a3a !important;
-}
-
-:host-context([data-theme='dark']) .status-offline {
-  color: #ff8e8e !important;
-}
-
-.status-registered {
-  color: #b56a00 !important;
-}
-
-:host-context([data-theme='dark']) .status-registered {
-  color: #f4c26b !important;
-}
-
-.status-disabled,
-.status-unknown {
-  color: #64748b !important;
-}
-
-:host-context([data-theme='dark']) .status-disabled,
-:host-context([data-theme='dark']) .status-unknown {
-  color: #a8b3c5 !important;
-}
-
 .detail-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -145,7 +111,7 @@
 
 .device-report-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(280px, 0.86fr);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
   align-items: stretch;
 }
@@ -256,6 +222,19 @@
     color: #7a8798;
     font-size: 12px;
     font-weight: 720;
+  }
+}
+
+.device-network-title {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  min-width: 0;
+
+  nz-icon {
+    flex: 0 0 auto;
+    color: var(--nm-primary);
+    font-size: 15px;
   }
 }
 
@@ -723,10 +702,6 @@
   }
 }
 
-.detail-tags-card {
-  margin-bottom: 18px;
-}
-
 .detail-card-title {
   display: flex;
   gap: 16px;
@@ -753,12 +728,15 @@
   place-items: center;
 }
 
-@media (max-width: 1199px) {
-  .detail-grid,
-  .profile-meta-grid {
+@media (max-width: 1399px) {
+  .device-report-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+}
 
+@media (max-width: 1199px) {
+  .detail-grid,
+  .profile-meta-grid,
   .device-report-grid {
     grid-template-columns: 1fr;
   }

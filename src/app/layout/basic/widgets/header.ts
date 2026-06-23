@@ -13,7 +13,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { LayoutDefaultModule } from '@delon/theme/layout-default';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
-import { auditTime, filter, forkJoin } from 'rxjs';
+import { auditTime, catchError, filter, forkJoin, map, of, switchMap } from 'rxjs';
 
 import { EventWebSocketService } from '../../../core/net';
 import type { EventNotification } from '../../../core/net';
@@ -52,6 +52,7 @@ import { ThemeColorComponent } from './theme-color';
         <header-message
           class="mr-md"
           [items]="messageItems"
+          [unreadTotal]="unreadMessageCount"
           (itemClick)="openMessage($event)"
           (markAllReadClick)="markMessagesRead($event)"
           (allEventsClick)="openAllEvents()"
@@ -223,6 +224,7 @@ export class BasicHeaderComponent implements OnInit {
   protected pageTitle = 'NavMesh';
   protected hasScrolled = false;
   protected messageItems: HeaderMessageItem[] = [];
+  protected unreadMessageCount = 0;
 
   ngOnInit(): void {
     this.updatePageTitle();
@@ -267,10 +269,27 @@ export class BasicHeaderComponent implements OnInit {
   }
 
   protected markMessagesRead(items: HeaderMessageItem[]): void {
-    const guids = items.map((item) => item.eventGuid).filter((guid): guid is string => !!guid);
-    if (!guids.length) return;
-    forkJoin(guids.map((guid) => this.eventsService.ack(guid)))
-      .pipe(takeUntilDestroyed(this.destroyRef))
+    const visibleGuids = this.messageEventGuids(items);
+    const unreadCount = this.unreadMessageCount;
+    const shouldFetchAllUnread = unreadCount > visibleGuids.length;
+    this.unreadMessageCount = 0;
+    const guids$ = shouldFetchAllUnread
+      ? this.eventsService.list({ page: 1, size: Math.max(unreadCount, 1), status: '1' }).pipe(
+          map((events) => (events.data ?? []).map((item) => item.guid)),
+          catchError(() => of(visibleGuids)),
+        )
+      : of(visibleGuids);
+
+    guids$
+      .pipe(
+        switchMap((guids) => {
+          const uniqueGuids = Array.from(new Set(guids.filter(Boolean)));
+          return uniqueGuids.length
+            ? forkJoin(uniqueGuids.map((guid) => this.eventsService.ack(guid)))
+            : of([]);
+        }),
+        takeUntilDestroyed(this.destroyRef),
+      )
       .subscribe({
         next: () => this.loadMessages(),
         error: () => this.loadMessages(),
@@ -299,9 +318,11 @@ export class BasicHeaderComponent implements OnInit {
           this.messageItems = (events.data ?? []).map((item) =>
             this.toMessageItem(item, deviceMap),
           );
+          this.unreadMessageCount = events.total ?? this.messageItems.length;
         },
         error: () => {
           this.messageItems = [];
+          this.unreadMessageCount = 0;
         },
       });
   }
@@ -380,5 +401,9 @@ export class BasicHeaderComponent implements OnInit {
 
   private firstNumber(...values: Array<number | undefined>): number {
     return values.find((value) => value !== undefined && value !== null) ?? 0;
+  }
+
+  private messageEventGuids(items: HeaderMessageItem[]): string[] {
+    return items.map((item) => item.eventGuid).filter((guid): guid is string => !!guid);
   }
 }

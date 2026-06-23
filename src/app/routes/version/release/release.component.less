@@ -212,6 +212,61 @@
   background: rgb(var(--nm-primary-rgb) / 7%);
 }
 
+:host ::ng-deep .release-table-card {
+  .ant-table-thead > tr > th.ant-table-cell-fix-left,
+  .ant-table-thead > tr > th.ant-table-cell-fix-right {
+    z-index: 4;
+    background: #f1f8f5;
+  }
+
+  .ant-table-tbody > tr > td.ant-table-cell-fix-left,
+  .ant-table-tbody > tr > td.ant-table-cell-fix-right {
+    z-index: 3;
+    background: #fff;
+    background-clip: padding-box;
+  }
+
+  .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+  .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-right {
+    background: #f9fcfb;
+  }
+
+  .ant-table-tbody > tr:hover > td.ant-table-cell-fix-left,
+  .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right {
+    background: #eff8f4;
+  }
+
+  .ant-table-cell-fix-right-first {
+    box-shadow: none;
+  }
+}
+
+:host-context([data-theme='dark']) ::ng-deep .release-table-card {
+  .ant-table-thead > tr > th.ant-table-cell-fix-left,
+  .ant-table-thead > tr > th.ant-table-cell-fix-right {
+    background: #14251f;
+  }
+
+  .ant-table-tbody > tr > td.ant-table-cell-fix-left,
+  .ant-table-tbody > tr > td.ant-table-cell-fix-right {
+    background: #111827;
+  }
+
+  .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+  .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-right {
+    background: #11221d;
+  }
+
+  .ant-table-tbody > tr:hover > td.ant-table-cell-fix-left,
+  .ant-table-tbody > tr:hover > td.ant-table-cell-fix-right {
+    background: #143027;
+  }
+
+  .ant-table-cell-fix-right-first {
+    box-shadow: none;
+  }
+}
+
 .release-file-cell {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);

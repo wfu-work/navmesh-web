@@ -118,11 +118,12 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
     return this.trafficPointsForDays(1).reduce((sum, item) => sum + item.inbound + item.outbound, 0);
   }
 
-  protected summaryItems(item: { status?: DeviceStatus }): MetricSummaryItem[] {
+  protected summaryItems(item: Device): MetricSummaryItem[] {
     return [
       { label: '在线状态', value: this.statusText(item.status), tone: this.statusTone(item.status) },
       { label: '当前连接', value: this.activeConnectionCount(), tone: this.activeConnectionCount() ? 'primary' : 'muted' },
-      { label: '进行中会话', value: this.activeSessionCount(), tone: this.activeSessionCount() ? 'success' : 'muted' },
+      { label: '信号强度', value: this.signalText(item), tone: this.signalPercent(item) ? 'success' : 'muted' },
+      { label: '实时速率', value: this.rateText(item), tone: this.rateText(item) !== '-' ? 'primary' : 'muted' },
       { label: '今日 4G', value: this.formatBytes(this.todayTraffic()), tone: this.todayTraffic() ? 'primary' : 'muted' },
     ];
   }
