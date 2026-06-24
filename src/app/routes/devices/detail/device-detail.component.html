@@ -113,11 +113,13 @@
                     <nz-icon [nzType]="networkIcon(item)" />
                     {{ networkLabel(item) }}
                   </span>
-                  <strong>{{ signalText(item) }}</strong>
+                  <strong>{{ networkQualityText(item) }}</strong>
                 </div>
-                <div class="device-resource-bar">
-                  <i [style.width.%]="signalPercent(item)"></i>
-                </div>
+                @if (showSignalBar(item)) {
+                  <div class="device-resource-bar">
+                    <i [style.width.%]="signalPercent(item)"></i>
+                  </div>
+                }
                 <p>{{ rateText(item) }}</p>
                 <small>{{ latencyText(item) }}</small>
               </article>
@@ -136,12 +138,8 @@
                 <dd [title]="item.pingTarget || '-'">{{ displayText(item.pingTarget) }}</dd>
               </div>
               <div>
-                <dt>蜂窝参数</dt>
-                <dd>{{ cellularMetricsText(item) }}</dd>
-              </div>
-              <div>
-                <dt>WiFi 参数</dt>
-                <dd>{{ wifiMetricsText(item) }}</dd>
+                <dt>{{ networkMetricsLabel(item) }}</dt>
+                <dd>{{ networkMetricsText(item) }}</dd>
               </div>
             </dl>
           </section>

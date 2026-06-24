@@ -186,23 +186,44 @@ export abstract class DevicePageBase {
   }
 
   protected signalPercent(item: Device): number {
-    return Math.min(100, Math.max(0, Math.round(this.firstNumber(item.signalPct, item.signal_pct))));
+    if (!this.hasSignalMetrics(item)) {
+      return 0;
+    }
+    const pct = this.firstNumber(item.signalPct, item.signal_pct);
+    if (pct > 0) {
+      return Math.min(100, Math.max(0, Math.round(pct)));
+    }
+    return this.signalPercentFromDbm(this.signalDbm(item));
   }
 
   protected signalText(item: Device): string {
+    if (!this.hasSignalMetrics(item)) {
+      return '-';
+    }
     const pct = this.signalPercent(item);
-    const dbm = this.firstNumber(item.signalDbm, item.signal_dbm);
+    const dbm = this.signalDbm(item);
     if (pct > 0 && dbm !== 0) return `${pct}% / ${dbm} dBm`;
     if (pct > 0) return `${pct}%`;
     if (dbm !== 0) return `${dbm} dBm`;
     return '-';
   }
 
+  protected networkQualityText(item: Device): string {
+    if (this.normalizedNetworkType(item) === 'ethernet') {
+      return '有线链路';
+    }
+    return this.signalText(item);
+  }
+
+  protected showSignalBar(item: Device): boolean {
+    return this.hasSignalMetrics(item);
+  }
+
   protected rateText(item: Device): string {
     const rx = this.firstNumber(item.rxRateBps, item.rx_rate_bps);
     const tx = this.firstNumber(item.txRateBps, item.tx_rate_bps);
     if (rx <= 0 && tx <= 0) return '-';
-    return `↓ ${this.formatBitRate(rx)} / ↑ ${this.formatBitRate(tx)}`;
+    return `↓ ${this.formatBitRate(rx)}  ↑ ${this.formatBitRate(tx)}`;
   }
 
   protected latencyText(item: Device): string {
@@ -223,6 +244,32 @@ export abstract class DevicePageBase {
     return parts.join(' / ') || '-';
   }
 
+  protected networkMetricsLabel(item: Device): string {
+    switch (this.normalizedNetworkType(item)) {
+      case 'wifi':
+        return 'WiFi 参数';
+      case 'cellular':
+        return '蜂窝参数';
+      case 'ethernet':
+        return '有线参数';
+      default:
+        return '链路参数';
+    }
+  }
+
+  protected networkMetricsText(item: Device): string {
+    switch (this.normalizedNetworkType(item)) {
+      case 'wifi':
+        return this.wifiMetricsText(item);
+      case 'cellular':
+        return this.cellularMetricsText(item);
+      case 'ethernet':
+        return this.ethernetMetricsText(item);
+      default:
+        return '-';
+    }
+  }
+
   protected wifiMetricsText(item: Device): string {
     const ssid = this.firstText(item.wifiSsid, item.wifi_ssid);
     const rssi = this.firstNumber(item.wifiRssi, item.wifi_rssi);
@@ -230,10 +277,15 @@ export abstract class DevicePageBase {
     return parts.join(' / ') || '-';
   }
 
+  protected ethernetMetricsText(item: Device): string {
+    const iface = this.firstText(item.networkIface, item.network_iface);
+    return iface ? `接口 ${iface}` : '-';
+  }
+
   protected formatBitRate(bps: number | undefined): string {
     const value = Number(bps || 0);
-    if (!Number.isFinite(value) || value <= 0) return '0 bps';
-    const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps'];
+    if (!Number.isFinite(value) || value <= 0) return '0 b/s';
+    const units = ['b/s', 'K/s', 'M/s', 'G/s', 'T/s'];
     let current = value;
     let index = 0;
     while (current >= 1000 && index < units.length - 1) {
@@ -273,6 +325,32 @@ export abstract class DevicePageBase {
       default:
         return '';
     }
+  }
+
+  private normalizedNetworkType(item: Device): string {
+    return String(this.firstText(item.networkType, item.network_type)).trim().toLowerCase();
+  }
+
+  private signalDbm(item: Device): number {
+    return this.firstNumber(item.signalDbm, item.signal_dbm, item.wifiRssi, item.wifi_rssi, item.cellularRsrp, item.cellular_rsrp);
+  }
+
+  private hasSignalMetrics(item: Device): boolean {
+    const type = this.normalizedNetworkType(item);
+    if (type !== 'wifi' && type !== 'cellular') {
+      return false;
+    }
+    return Boolean(
+      this.firstNumber(item.signalPct, item.signal_pct, item.signalDbm, item.signal_dbm, item.wifiRssi, item.wifi_rssi, item.cellularRsrp, item.cellular_rsrp) ||
+        this.firstText(item.wifiSsid, item.wifi_ssid),
+    );
+  }
+
+  private signalPercentFromDbm(dbm: number): number {
+    if (!dbm) return 0;
+    if (dbm <= -110) return 0;
+    if (dbm >= -50) return 100;
+    return Math.round(((dbm + 110) * 100) / 60);
   }
 
   private metricPart(label: string, value: number, unit: string): string {

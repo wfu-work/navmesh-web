@@ -153,7 +153,9 @@
                       <div class="device-network-chip" [title]="networkTooltip(item)">
                         <nz-icon [nzType]="networkIcon(item)" />
                         <span>{{ networkLabel(item) }}</span>
-                        <strong>{{ signalText(item) }}</strong>
+                        @if (rateText(item) !== '-') {
+                          <strong>{{ rateText(item) }}</strong>
+                        }
                       </div>
                     } @else {
                       -
@@ -186,22 +188,6 @@
                   </dd>
                 </div>
               </dl>
-
-              @if (hasNetworkSnapshot(item)) {
-                <div class="device-network-summary" [title]="networkTooltip(item)">
-                  <span>
-                    <nz-icon nzType="line-chart" />
-                    {{ rateText(item) }}
-                  </span>
-                  <span>
-                    <nz-icon nzType="dashboard" />
-                    {{ signalText(item) }}
-                  </span>
-                  <div class="device-network-signal">
-                    <i [style.width.%]="signalPercent(item)"></i>
-                  </div>
-                </div>
-              }
 
               <div class="device-access-chips">
                 @for (mapping of httpMappings(item.guid); track mapping.guid) {

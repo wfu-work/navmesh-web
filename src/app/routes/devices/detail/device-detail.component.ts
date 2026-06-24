@@ -119,10 +119,15 @@ export class DeviceDetailComponent extends DevicePageBase implements OnInit {
   }
 
   protected summaryItems(item: Device): MetricSummaryItem[] {
+    const networkType = String(this.firstText(item.networkType, item.network_type)).trim().toLowerCase();
+    const signalItem =
+      networkType === 'ethernet'
+        ? { label: '链路类型', value: this.networkLabel(item), tone: 'primary' as MetricSummaryTone }
+        : { label: '信号强度', value: this.signalText(item), tone: this.signalPercent(item) ? 'success' as MetricSummaryTone : 'muted' as MetricSummaryTone };
     return [
       { label: '在线状态', value: this.statusText(item.status), tone: this.statusTone(item.status) },
       { label: '当前连接', value: this.activeConnectionCount(), tone: this.activeConnectionCount() ? 'primary' : 'muted' },
-      { label: '信号强度', value: this.signalText(item), tone: this.signalPercent(item) ? 'success' : 'muted' },
+      signalItem,
       { label: '实时速率', value: this.rateText(item), tone: this.rateText(item) !== '-' ? 'primary' : 'muted' },
       { label: '今日 4G', value: this.formatBytes(this.todayTraffic()), tone: this.todayTraffic() ? 'primary' : 'muted' },
     ];

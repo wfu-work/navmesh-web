@@ -366,7 +366,7 @@ export class DeviceListComponent implements OnInit {
     const rx = this.firstNumber(item.rxRateBps, item.rx_rate_bps);
     const tx = this.firstNumber(item.txRateBps, item.tx_rate_bps);
     if (rx <= 0 && tx <= 0) return '-';
-    return `↓ ${this.formatBitRate(rx)} / ↑ ${this.formatBitRate(tx)}`;
+    return `↓${this.formatBitRate(rx)}  ↑${this.formatBitRate(tx)}`;
   }
 
   protected networkTooltip(item: Device): string {
@@ -564,8 +564,8 @@ export class DeviceListComponent implements OnInit {
 
   private formatBitRate(bps: number | undefined): string {
     const value = Number(bps || 0);
-    if (!Number.isFinite(value) || value <= 0) return '0 bps';
-    const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps'];
+    if (!Number.isFinite(value) || value <= 0) return '0 b/s';
+    const units = ['b/s', 'K/s', 'M/s', 'G/s', 'T/s'];
     let current = value;
     let index = 0;
     while (current >= 1000 && index < units.length - 1) {
