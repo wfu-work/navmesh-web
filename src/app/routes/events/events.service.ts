@@ -44,6 +44,10 @@ export interface EventItem {
   update_time?: number;
 }
 
+export interface EventAckAllResult {
+  affected: number;
+}
+
 export const WEBSOCKET_MESSAGE_EVENT_TYPES = new Set([
   'device_offline',
   'disk_usage_high',
@@ -180,6 +184,10 @@ export class EventsService {
 
   ack(guid: string): Observable<boolean> {
     return this.http.post<boolean>(`/events/${guid}/ack`, {});
+  }
+
+  ackAll(): Observable<EventAckAllResult> {
+    return this.http.post<EventAckAllResult>('/events/ack-all', {});
   }
 
   close(guid: string): Observable<boolean> {

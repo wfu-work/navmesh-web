@@ -16,6 +16,21 @@
       </nz-select>
     </se>
 
+    <se label="设备" col="1">
+      <nz-select
+        formControlName="deviceGuids"
+        nzMode="multiple"
+        nzShowSearch
+        nzAllowClear
+        [nzLoading]="devicesLoading"
+        nzPlaceHolder="为空表示所有设备都通知"
+      >
+        @for (device of devices; track device.guid) {
+          <nz-option [nzValue]="device.guid" [nzLabel]="deviceOptionLabel(device)" />
+        }
+      </nz-select>
+    </se>
+
     <se label="标签" col="1">
       <input nz-input formControlName="tags" placeholder="多个标签用逗号分隔，例如 offline,upgrade" />
     </se>

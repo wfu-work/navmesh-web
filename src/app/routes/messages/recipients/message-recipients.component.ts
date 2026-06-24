@@ -3,9 +3,10 @@ import { STChange, STColumn, STColumnTag } from '@delon/abc/st';
 import { SHARED_IMPORTS } from '@shared';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzModalService } from 'ng-zorro-antd/modal';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { TitleLabelComponent } from 'src/app/shared/components/title-label/title-label.component';
 
+import { Device, DevicesService } from '../../devices/devices.service';
 import { MESSAGE_TYPE_OPTIONS, messageTypeLabel, normalizeMessageTypes, parseMessageTypes } from '../message-type-options';
 import { MessageRecipient, MessagesService } from '../messages.service';
 import { RecipientEditComponent } from '../recipient-edit/recipient-edit.component';
@@ -19,12 +20,15 @@ import { RecipientEditComponent } from '../recipient-edit/recipient-edit.compone
 })
 export class MessageRecipientsComponent implements OnInit {
   private readonly messagesService = inject(MessagesService);
+  private readonly devicesService = inject(DevicesService);
   private readonly modalService = inject(NzModalService);
   private readonly message = inject(NzMessageService);
   private readonly cdr = inject(ChangeDetectorRef);
 
   protected q = { page: 1, size: 10, keyword: '', status: '', tag: '', messageType: '' };
   protected data: MessageRecipient[] = [];
+  protected devices: Device[] = [];
+  protected deviceNameMap = new Map<string, string>();
   protected totalCount = 0;
   protected loading = false;
   protected readonly messageTypeOptions = MESSAGE_TYPE_OPTIONS;
@@ -38,6 +42,7 @@ export class MessageRecipientsComponent implements OnInit {
     { title: '人员', index: 'name', render: 'nameRender' },
     { title: '邮箱', index: 'email', render: 'emailRender' },
     { title: '消息类型', index: 'messageTypes', render: 'messageTypesRender', width: 220 },
+    { title: '通知设备', index: 'deviceGuids', render: 'deviceScopeRender', width: 240 },
     { title: '标签', index: 'tags', render: 'tagsRender' },
     { title: '状态', index: 'status', type: 'tag', tag: this.statusTag, width: 90 },
     { title: '更新时间', index: 'updateTime', type: 'date', dateFormat: 'yyyy-MM-dd HH:mm:ss', width: 180 },
@@ -69,20 +74,25 @@ export class MessageRecipientsComponent implements OnInit {
 
   protected load(): void {
     this.loading = true;
-    this.messagesService
-      .recipients(this.q)
+    forkJoin({
+      recipients: this.messagesService.recipients(this.q),
+      devices: this.devicesService.list({ page: 1, size: 500 }),
+    })
       .pipe(finalize(() => {
         this.loading = false;
         this.cdr.markForCheck();
       }))
       .subscribe({
-        next: (res) => {
-          this.data = (res.data ?? []).map((item) => ({
+        next: ({ recipients, devices }) => {
+          this.devices = devices.data ?? [];
+          this.deviceNameMap = new Map(this.devices.map((item) => [item.guid, this.deviceOptionLabel(item)]));
+          this.data = (recipients.data ?? []).map((item) => ({
             ...item,
             messageTypes: normalizeMessageTypes(item.messageTypes || item.message_types).join(','),
+            deviceGuids: this.normalizeDeviceGuids(item.deviceGuids || item.device_guids).join(','),
             updateTime: item.updateTime ?? item.update_time,
           }));
-          this.totalCount = res.total ?? 0;
+          this.totalCount = recipients.total ?? 0;
         },
         error: () => this.message.error('通知人员加载失败'),
       });
@@ -117,6 +127,7 @@ export class MessageRecipientsComponent implements OnInit {
         : {
             ...item,
             messageTypes: normalizeMessageTypes(item.messageTypes || item.message_types).join(','),
+            deviceGuids: this.normalizeDeviceGuids(item.deviceGuids || item.device_guids).join(','),
           };
     const modal = this.modalService.create({
       nzTitle: row ? '编辑通知人员' : '新增通知人员',
@@ -174,5 +185,32 @@ export class MessageRecipientsComponent implements OnInit {
 
   protected messageTypeLabel(messageType: string): string {
     return messageTypeLabel(messageType);
+  }
+
+  protected deviceGuidList(deviceGuids: string | undefined): string[] {
+    return this.normalizeDeviceGuids(deviceGuids);
+  }
+
+  protected deviceName(guid: string): string {
+    return this.deviceNameMap.get(guid) || this.guidPrefix(guid);
+  }
+
+  protected deviceOptionLabel(item: Device): string {
+    return this.firstText(item.alias, item.name, item.sncode, item.hostname, item.guid);
+  }
+
+  private normalizeDeviceGuids(value: string | undefined): string[] {
+    return (value || '')
+      .split(',')
+      .map((item) => item.trim())
+      .filter(Boolean);
+  }
+
+  private guidPrefix(guid: string): string {
+    return guid ? `${guid.slice(0, 8)}...` : '-';
+  }
+
+  private firstText(...values: Array<string | undefined | null>): string {
+    return values.find((value) => value !== undefined && value !== null && value !== '') ?? '';
   }
 }

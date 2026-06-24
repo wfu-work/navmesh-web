@@ -65,6 +65,21 @@
         }
       </ng-template>
 
+      <ng-template st-row="deviceScopeRender" let-item>
+        @if (deviceGuidList(item.deviceGuids).length) {
+          <div class="message-tags">
+            @for (guid of deviceGuidList(item.deviceGuids).slice(0, 2); track guid) {
+              <nz-tag>{{ deviceName(guid) }}</nz-tag>
+            }
+            @if (deviceGuidList(item.deviceGuids).length > 2) {
+              <nz-tag>+{{ deviceGuidList(item.deviceGuids).length - 2 }}</nz-tag>
+            }
+          </div>
+        } @else {
+          <nz-tag nzColor="green">全部设备</nz-tag>
+        }
+      </ng-template>
+
       <ng-template st-row="tagsRender" let-item>
         @if (tagList(item.tags).length) {
           <div class="message-tags">

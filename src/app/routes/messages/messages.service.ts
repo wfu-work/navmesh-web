@@ -85,6 +85,8 @@ export interface MessageRecipient {
   email: string;
   messageTypes: string;
   message_types?: string;
+  deviceGuids?: string;
+  device_guids?: string;
   tags: string;
   remark: string;
   status: number;

@@ -13,7 +13,7 @@ import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { LayoutDefaultModule } from '@delon/theme/layout-default';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzNotificationService } from 'ng-zorro-antd/notification';
-import { auditTime, catchError, filter, forkJoin, map, of, switchMap } from 'rxjs';
+import { auditTime, filter, forkJoin } from 'rxjs';
 
 import { EventWebSocketService } from '../../../core/net';
 import type { EventNotification } from '../../../core/net';
@@ -54,7 +54,7 @@ import { ThemeColorComponent } from './theme-color';
           [items]="messageItems"
           [unreadTotal]="unreadMessageCount"
           (itemClick)="openMessage($event)"
-          (markAllReadClick)="markMessagesRead($event)"
+          (markAllReadClick)="markMessagesRead()"
           (allEventsClick)="openAllEvents()"
         />
         <header-avatar />
@@ -260,6 +260,19 @@ export class BasicHeaderComponent implements OnInit {
 
   protected openMessage(item: HeaderMessageItem): void {
     if (item.eventGuid) {
+      if (!item.read) {
+        this.messageItems = this.messageItems.map((message) =>
+          message.eventGuid === item.eventGuid ? { ...message, read: true } : message,
+        );
+        this.unreadMessageCount = Math.max(0, this.unreadMessageCount - 1);
+        this.eventsService
+          .ack(item.eventGuid)
+          .pipe(takeUntilDestroyed(this.destroyRef))
+          .subscribe({
+            next: () => this.loadMessages(),
+            error: () => this.loadMessages(),
+          });
+      }
       this.router.navigate(['/events', item.eventGuid]);
     }
   }
@@ -268,31 +281,22 @@ export class BasicHeaderComponent implements OnInit {
     this.router.navigate(['/events/list']);
   }
 
-  protected markMessagesRead(items: HeaderMessageItem[]): void {
-    const visibleGuids = this.messageEventGuids(items);
-    const unreadCount = this.unreadMessageCount;
-    const shouldFetchAllUnread = unreadCount > visibleGuids.length;
+  protected markMessagesRead(): void {
+    const previousItems = this.messageItems;
+    const previousUnreadCount = this.unreadMessageCount;
+    this.messageItems = this.messageItems.map((item) => ({ ...item, read: true }));
     this.unreadMessageCount = 0;
-    const guids$ = shouldFetchAllUnread
-      ? this.eventsService.list({ page: 1, size: Math.max(unreadCount, 1), status: '1' }).pipe(
-          map((events) => (events.data ?? []).map((item) => item.guid)),
-          catchError(() => of(visibleGuids)),
-        )
-      : of(visibleGuids);
 
-    guids$
-      .pipe(
-        switchMap((guids) => {
-          const uniqueGuids = Array.from(new Set(guids.filter(Boolean)));
-          return uniqueGuids.length
-            ? forkJoin(uniqueGuids.map((guid) => this.eventsService.ack(guid)))
-            : of([]);
-        }),
-        takeUntilDestroyed(this.destroyRef),
-      )
+    this.eventsService
+      .ackAll()
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => this.loadMessages(),
-        error: () => this.loadMessages(),
+        error: () => {
+          this.messageItems = previousItems;
+          this.unreadMessageCount = previousUnreadCount;
+          this.loadMessages();
+        },
       });
   }
 
@@ -403,7 +407,4 @@ export class BasicHeaderComponent implements OnInit {
     return values.find((value) => value !== undefined && value !== null) ?? 0;
   }
 
-  private messageEventGuids(items: HeaderMessageItem[]): string[] {
-    return items.map((item) => item.eventGuid).filter((guid): guid is string => !!guid);
-  }
 }
